@@ -1,0 +1,903 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   Socle visuel commun des apps du hub perso (app-template#39 ; MemoryAI#126).
+
+   Les jetons, le vocabulaire (.carte .bouton .champ .pastille .bandeau …) et les règles
+   viennent d'app-template (`app/globals.css`). Ce qui reste à MemoryAI plus bas est de la mise
+   en page propre à l'app : aucune couleur n'y est écrite, tout emprunte un jeton.
+
+   Règles, verrouillées par tests/theme.test.ts et tests/couleurs.test.ts :
+   - Les couleurs vivent ICI, en variables hexadécimales, et nulle part ailleurs.
+   - Chaque couleur est définie en clair ET en sombre (le thème suit le système).
+   - Les couples texte/fond passent le WCAG, dans les deux thèmes.
+   - Cibles tactiles ≥ 44 px, champs à 16 px (en dessous, iOS zoome tout seul).
+   - `--accent` ne sert QU'À l'action principale. `--repere` : surtitre, navigation active,
+     catégorie — jamais un état.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+:root {
+  color-scheme: light dark;
+
+  /* Fonds et surfaces. */
+  --fond: #f6f7f9;
+  --surface: #ffffff;
+  --surface-douce: #eef0f4;
+  --bordure: #dde1e8;
+  /* Contour de champ, de case et de bouton secondaire : ≥ 3:1 (WCAG 1.4.11). */
+  --bordure-champ: #6b7585;
+
+  /* Textes. */
+  --texte: #0f172a;
+  --texte-doux: #4b5565;
+
+  /* L'accent ne sert QU'À l'action principale. */
+  --accent: #1e293b;
+  --accent-fonce: #0f172a;
+  --sur-accent: #f8fafc;
+
+  /* Le repère : surtitre, navigation active, catégorie. Jamais un état. */
+  --repere: #c2410c;
+  --repere-doux: #ffedd5;
+
+  /* Sémantique : « ça va », « attention », « erreur » — déclarées UNE fois. */
+  --succes-fond: #dcfce7;
+  --succes-texte: #166534;
+  --alerte-fond: #fef3c7;
+  --alerte-texte: #92400e;
+  --erreur-fond: #fee2e2;
+  --erreur-texte: #991b1b;
+
+  /* ⚠️ LE MÊME FOND, EN HEX, POUR LE SYSTÈME. Le manifeste et la barre d'état de l'app
+     installée sont lus par Android AVANT toute feuille de style : une variable CSS n'y
+     arrive jamais. Ces deux valeurs sont donc les SEULES couleurs écrites deux fois dans le
+     dépôt — la valeur de `--fond` dans chaque thème, et `tests/couleurs.test.ts` tient les
+     trois sites ensemble (il lit ces deux lignes, il ne les recopie pas). Une valeur oubliée
+     ici fait un flash au lancement, que personne ne voit parce que personne ne relit un
+     manifeste (leçon JobAI). */
+  --bg-systeme-clair: #f6f7f9;
+  --bg-systeme-sombre: #07090d;
+
+  --rayon: 16px;
+  --rayon-petit: 12px;
+  --police: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --police-code: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+
+  /* Espacement de la mise en page (propre à MemoryAI). */
+  --gap: clamp(0.8rem, 0.5rem + 1vw, 1.3rem);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fond: #07090d;
+    --surface: #0e1014;
+    --surface-douce: #15181e;
+    --bordure: #262a33;
+    --bordure-champ: #6f7b8e;
+
+    --texte: #f8fafc;
+    --texte-doux: #94a3b8;
+
+    --accent: #e6eaf2;
+    --accent-fonce: #c3cad8;
+    --sur-accent: #07090d;
+
+    --repere: #fb923c;
+    --repere-doux: #2a1b14;
+
+    --succes-fond: #0f2a24;
+    --succes-texte: #6ee7b7;
+    --alerte-fond: #2c2410;
+    --alerte-texte: #fbbf24;
+    --erreur-fond: #331618;
+    --erreur-texte: #f87171;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+* {
+  margin: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: var(--fond);
+  color: var(--texte);
+  font-family: var(--police);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+h1 {
+  font-size: clamp(1.75rem, 1.4rem + 1.6vw, 2.25rem);
+  font-weight: 800;
+}
+h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+a {
+  color: inherit;
+}
+
+code {
+  font-family: var(--police-code);
+  font-size: 0.88em;
+  background-color: var(--surface-douce);
+  padding: 0.1em 0.35em;
+  border-radius: 5px;
+}
+
+/* Le contour de focus est une fonctionnalité, pas une verrue : l'app se navigue aussi au
+   clavier, et un contour retiré ne se remarque que par celui qui en a besoin. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ── Mise en page ── */
+.principal {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px 16px;
+}
+.pile {
+  display: grid;
+  gap: 16px;
+}
+.ligne {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+/* ── Surfaces ── */
+/* Une surface posée sur le fond : bordure fine, aucune ombre. */
+.carte {
+  background-color: var(--surface);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+}
+/* Variante d'une carte seule au centre d'une page (connexion) : le socle borne sa largeur. */
+.carte-page {
+  width: 100%;
+  max-width: 34rem;
+}
+.carte-corps {
+  display: grid;
+  gap: 16px;
+  padding: clamp(1.25rem, 1rem + 2vw, 2.25rem);
+}
+
+.surtitre {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--repere);
+}
+.doux {
+  color: var(--texte-doux);
+}
+.lead {
+  color: var(--texte);
+}
+/* `.hint` = `.doux` en petit : la phrase d'explication sous un titre ou un bouton. */
+.hint {
+  color: var(--texte-doux);
+  font-size: 0.9rem;
+}
+
+/* ── Boutons : cibles tactiles de 44 px minimum, la main est souvent occupée. ── */
+.bouton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 2.75rem;
+  padding: 0.625rem 1.125rem;
+  border-radius: var(--rayon-petit);
+  border: 1px solid transparent;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease;
+}
+.bouton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.bouton-principal {
+  background-color: var(--accent);
+  color: var(--sur-accent);
+}
+.bouton-principal:hover:not(:disabled) {
+  background-color: var(--accent-fonce);
+}
+.bouton-second {
+  background-color: var(--surface);
+  color: var(--texte);
+  border-color: var(--bordure-champ);
+}
+.bouton-second:hover:not(:disabled) {
+  background-color: var(--surface-douce);
+}
+.bouton-danger {
+  background-color: transparent;
+  color: var(--erreur-texte);
+  border-color: var(--erreur-texte);
+}
+/* Un bouton qui se lit comme une phrase (« Passer », « Effacer ») : sans contour, souligné.
+   Propre à MemoryAI ; la cible reste de 44 px. */
+.bouton-texte {
+  background: none;
+  border: none;
+  padding: 0 0.25rem;
+  min-height: 2.75rem;
+  color: var(--texte);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ── Champs ── */
+.etiquette {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.champ {
+  width: 100%;
+  max-width: 100%;
+  min-height: 2.75rem;
+  padding: 0.625rem 0.75rem;
+  background-color: var(--surface);
+  color: var(--texte);
+  border: 1px solid var(--bordure-champ);
+  border-radius: var(--rayon-petit);
+  font: inherit;
+  font-size: 1rem; /* 16 px : en dessous, iOS zoome tout seul à la mise au point. */
+  line-height: 1.4;
+}
+.champ::placeholder {
+  color: var(--texte-doux);
+}
+
+/* Pastille : à combiner avec .succes, .alerte ou .erreur.
+   ⚠️ DÉCLARÉE AVANT les états : à spécificité égale la dernière règle gagne, et une pastille
+   déclarée après `.alerte` garde son fond gris au lieu de celui de l'état (le socle
+   d'app-template a l'ordre inverse : défaut du socle, pas de MemoryAI). */
+.pastille {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 2px 10px;
+  border-radius: 9999px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  background-color: var(--surface-douce);
+  color: var(--texte);
+}
+
+/* ── États : fond sémantique ET libellé texte, jamais la couleur seule. ── */
+.succes {
+  background-color: var(--succes-fond);
+  color: var(--succes-texte);
+}
+.alerte {
+  background-color: var(--alerte-fond);
+  color: var(--alerte-texte);
+}
+.erreur {
+  background-color: var(--erreur-fond);
+  color: var(--erreur-texte);
+}
+.texte-succes {
+  color: var(--succes-texte);
+}
+.texte-erreur {
+  color: var(--erreur-texte);
+}
+
+/* Bandeau d'état : fond sémantique + contour de la même couleur. */
+.bandeau {
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid currentColor;
+}
+
+/* ── Pages privées, bento, formulaires, chat. Mobile d'abord ; cibles tactiles ≥ 44 px ;
+   champs à 16 px (sinon iOS zoome). ── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem clamp(1rem, 4vw, 2rem);
+  border-bottom: 1px solid var(--bordure);
+  background-color: var(--surface);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+.nav nav {
+  display: flex;
+  gap: 0.25rem;
+}
+.nav-marque {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+  color: var(--texte);
+}
+.nav-lien {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 0.9rem;
+  border-radius: 999px;
+  text-decoration: none;
+  color: var(--texte-doux);
+  font-weight: 600;
+}
+/* ⚠️ [ADR 0009] SOUS 40rem, LA BARRE PASSE À LA LIGNE. Mesuré le 23/09 dans Chromium : à
+   390 px, la barre faisait 674 px de large — la page entière défilait de côté. Le défaut était là
+   dès quatre onglets (~530 px) ; le cinquième l'a rendu impossible à ignorer. Même seuil que les
+   tuiles (`40rem`) : deux seuils différents ouvriraient une fenêtre où l'un a basculé et pas
+   l'autre. La cible reste à 44 px de haut. */
+@media (max-width: 40rem) {
+  .nav {
+    flex-wrap: wrap;
+    row-gap: 0.25rem;
+  }
+  .nav nav {
+    flex-wrap: wrap;
+  }
+  .nav-lien {
+    padding: 0 0.7rem;
+  }
+}
+.nav-lien.actif {
+  background: var(--repere-doux);
+  color: var(--repere);
+}
+.page {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: clamp(1rem, 4vw, 2rem);
+  display: grid;
+  gap: var(--gap);
+}
+.page h1 {
+  margin: 0;
+}
+.bento {
+  display: grid;
+  gap: var(--gap);
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  grid-auto-flow: dense;
+}
+.tuile {
+  /* Se pose sur `.carte` (surface, contour, rayon) : ici, seulement la mise en page. */
+  padding: clamp(1rem, 0.8rem + 1vw, 1.5rem);
+  display: grid;
+  gap: 0.4rem;
+  align-content: start;
+  color: inherit;
+  text-decoration: none;
+}
+.tuile.grande {
+  grid-column: span 2;
+}
+@media (max-width: 40rem) {
+  .tuile.grande {
+    grid-column: span 1;
+  }
+}
+.tuile.lien:hover {
+  border-color: var(--accent);
+}
+.chiffre {
+  font-size: clamp(2rem, 1.5rem + 2vw, 2.8rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+.liste-simple {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 0.25rem;
+}
+.liste-simple li {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--bordure);
+  padding: 0.25rem 0;
+}
+.zone-rouge {
+  border-color: var(--erreur-texte);
+}
+.liste-faits {
+  display: grid;
+  gap: var(--gap);
+}
+.fait.canari {
+  border-color: var(--erreur-texte);
+}
+.fait-valeur {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+/* [L33a] La PHRASE d'un fait : ce qu'il dit, et d'où il le tient.
+   Elle occupe la place que tenait `.surtitre` (le nom machine du prédicat), donc elle est
+   plus lisible que lui — c'est tout l'objet du lot. ⚠️ Pas de `text-transform` :
+   « Fin du bail » est une phrase, pas une étiquette. */
+.fait-libelle {
+  margin: 0.15rem 0 0;
+  font-size: 0.95rem;
+  color: var(--texte);
+}
+.fait-source {
+  color: var(--texte-doux);
+}
+/* La liste des rattachements d'une fiche (même document, faits liés). */
+.liste-faits {
+  margin: 0.4rem 0 0;
+  padding-left: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.pastilles {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+/* [ADR 0009] L'entonnoir de l'onglet Avancement : un étage par ligne, son écart juste dessous.
+   Aucune couleur neuve — les jetons existants, pour que le dessin suive le thème. */
+.entonnoir {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.9rem;
+}
+.entonnoir-etage {
+  margin: 0 0 0.25rem;
+}
+.entonnoir-ecart {
+  color: var(--texte-doux);
+  font-size: 0.9rem;
+  margin: 0.25rem 0 0;
+  padding-left: 0.75rem;
+  border-left: 2px solid var(--texte-doux);
+}
+
+.attributs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+.attributs dt {
+  color: var(--texte-doux);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.actions-fait {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+}
+.actions-fait form {
+  display: contents;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+.table th,
+.table td {
+  text-align: left;
+  padding: 0.4rem 0.3rem;
+  border-bottom: 1px solid var(--bordure);
+}
+/* Chat */
+/* [L2, ADR 0011] L'historique à GAUCHE sur un écran large ; replié au-dessus sur un téléphone,
+   pour que la conversation garde tout l'écran. Aucune couleur neuve : les tokens existants. */
+.chat-cadre {
+  display: grid;
+  grid-template-columns: minmax(14rem, 18rem) minmax(0, 1fr);
+  gap: 0;
+  max-width: 72rem;
+  margin: 0 auto;
+}
+.chat-historique {
+  border-right: 1px solid var(--bordure);
+  padding: clamp(0.75rem, 3vw, 1.25rem) 0.75rem;
+  display: grid;
+  align-content: start;
+  gap: 0.75rem;
+  max-height: calc(100dvh - 4.5rem);
+  position: sticky;
+  top: 0;
+  overflow-y: auto;
+}
+.chat-historique-tete {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+/* La bascule n'a de sens que sur un écran étroit : sur un écran large la liste est toujours là. */
+.chat-historique-bascule {
+  display: none;
+}
+.chat-historique-liste ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.25rem;
+}
+.chat-historique-item {
+  width: 100%;
+  min-height: 44px;
+  display: grid;
+  gap: 0.15rem;
+  text-align: left;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid transparent;
+  border-radius: var(--rayon-petit);
+  background: transparent;
+  color: var(--texte);
+  font: inherit;
+  cursor: pointer;
+}
+.chat-historique-item:hover,
+.chat-historique-item:focus-visible {
+  background: var(--surface);
+  border-color: var(--bordure);
+}
+/* Revue #71 : au clavier, le focus doit se distinguer du survol — même anneau qu'ailleurs. */
+.chat-historique-item:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.chat-historique-item.actif {
+  background: var(--surface-douce);
+  border-color: var(--bordure);
+}
+.chat-historique-titre {
+  overflow-wrap: anywhere;
+  font-size: 0.92rem;
+}
+@media (max-width: 760px) {
+  .chat-cadre {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .chat-historique {
+    border-right: 0;
+    border-bottom: 1px solid var(--bordure);
+    position: static;
+    max-height: none;
+    padding-bottom: 0.75rem;
+  }
+  .chat-historique-bascule {
+    display: inline-flex;
+    align-items: center;
+  }
+  .chat-historique:not(.ouvert) .chat-historique-liste {
+    display: none;
+  }
+  .chat-historique.ouvert .chat-historique-liste {
+    max-height: 50dvh;
+    overflow-y: auto;
+  }
+}
+.chat {
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: clamp(0.75rem, 3vw, 1.5rem);
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  gap: 0.75rem;
+  min-height: calc(100dvh - 4.5rem);
+}
+.chat-barre {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1rem;
+  align-items: center;
+  font-size: 0.9rem;
+}
+.chat-fil {
+  display: grid;
+  gap: 0.6rem;
+  align-content: start;
+  overflow-y: auto;
+}
+.chat-vide {
+  padding: 2rem 0;
+  text-align: center;
+}
+.bulle {
+  max-width: 85%;
+  padding: 0.7rem 1rem;
+  border-radius: var(--rayon);
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+}
+.bulle.user {
+  justify-self: end;
+  background: var(--surface-douce);
+}
+.bulle-texte {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+/* [L25] Le lien vers la fiche d'un fait cité, et la marque qui dit ce que la valeur vaut.
+   Épuré par intention (Marc, 17/09) : le lien est DISCRET mais cliquable, la marque est plus
+   calme que le texte sans disparaître. Aucune couleur neuve — les tokens existants et
+   `prefers-color-scheme` suffisent (ADR 0005 §4 B2 : le CSS se reprend, il ne se remplace pas). */
+.lien-fait {
+  color: var(--texte);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  font-weight: 600;
+  /* Cible tactile : un lien d'un seul caractère n'est pas atteignable au doigt sans ça. */
+  display: inline-block;
+  min-width: 1.5rem;
+  text-align: center;
+  border-radius: 0.25rem;
+}
+.lien-fait:hover,
+.lien-fait:focus-visible {
+  background: var(--surface-douce);
+}
+/* [L38] La région défilante d'un histogramme.
+   ⚠️ Elle porte `tabIndex={0}` parce qu'une zone qui défile et qu'on ne peut pas atteindre
+   au clavier rend son contenu inaccessible à qui n'a pas de souris (WCAG 2.1.1). Un arrêt de
+   tabulation INVISIBLE serait pire qu'un arrêt de trop : d'où l'indicateur de focus ici, et
+   `:focus-visible` plutôt que `:focus` pour ne pas cadrer le graphe à chaque clic de souris. */
+.graphe-defilant:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--rayon-petit);
+}
+
+/* [L26] Les sections REPLIÉES de Régler, et le bandeau replié de l'accueil.
+   « Des informations cachées en cliquant sur certains boutons » (Marc, 17/09).
+   ⚠️ Un `<details>` NATIF, pas un `useState` : clavier et lecteur d'écran gratuits, et
+   l'état ouvert/fermé est porté par le navigateur. Un état de repli dans un `useState`
+   retomberait à chaque remontage — c'est exactement le défaut que FinanceAI a payé avec
+   `showDuplicates`, où Marc a cru à une perte de données. */
+.repli {
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+  background: var(--surface);
+  padding: 0.6rem 0.9rem;
+  margin-bottom: 0.6rem;
+}
+.repli > summary {
+  cursor: pointer;
+  font-weight: 600;
+  /* Cible tactile : un résumé cliquable doit se prendre au doigt. */
+  min-height: 2.75rem;
+  display: flex;
+  align-items: center;
+}
+.repli > summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.repli-accueil {
+  margin: 0.8rem auto;
+  max-width: 48rem;
+}
+
+/* [L25c] Le lien vers le PAPIER. Distinct du lien vers la fiche : ce ne sont pas les mêmes
+   questions. Libellé en MOT (« papier »), pas en icône — « où est mon avis de cotisation »
+   attend un document, et un mot le dit sans qu'on devine. */
+.lien-doc {
+  color: var(--texte);
+  font-size: 0.85em;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  padding: 0 0.15rem;
+  border-radius: 0.2rem;
+}
+.lien-doc:hover,
+.lien-doc:focus-visible {
+  background: var(--surface-douce);
+  text-decoration-style: solid;
+}
+.marque-fait {
+  color: var(--texte-doux);
+  font-size: 0.85em;
+}
+.bulle-meta {
+  color: var(--texte-doux);
+  font-size: 0.8rem;
+  margin-top: 0.3rem;
+}
+.epingle {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--bordure);
+}
+.epingle label {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+}
+.chat-saisie {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+  align-items: end;
+  position: sticky;
+  bottom: 0;
+  background: var(--fond);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.chat-saisie textarea {
+  resize: vertical;
+}
+
+/* Une option de QCM : la valeur en bouton, sa provenance dessous (page /questions).
+   ⚠️ Définie ICI et pas seulement employée dans le JSX : le BACKLOG note deux classes
+   (`.actions-ligne`, `.secondaire`) employées et définies NULLE PART — une règle qui ne
+   s'applique pas ne laisse aucune trace, contrairement à une règle fausse. */
+.option-qcm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: flex-start;
+}
+
+.option-qcm button {
+  /* Une valeur peut être longue (200 caractères) : le bouton se plie plutôt que de déborder,
+     et il reste au-dessus de la cible tactile de 44 px sur un téléphone. */
+  text-align: left;
+  white-space: normal;
+  min-height: 44px;
+  width: 100%;
+}
+
+/* [L41] Le total « ce que la mémoire sait de toi » — le premier chiffre de la page.
+   ⚠️ Aucune couleur en dur : `tests/couleurs.test.ts` refuse tout `#rrggbb` et tout
+   `var()` non déclaré ici même. Les trois lignes sont un seul bloc parce que le nombre
+   ne doit jamais pouvoir être lu sans sa décomposition. */
+.total-infos {
+  margin: 0 0 var(--gap);
+  padding: var(--gap);
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+  text-align: center;
+}
+
+.total-infos-nombre {
+  display: block;
+  font-size: clamp(2.6rem, 1.6rem + 5vw, 4rem);
+  font-weight: 700;
+  line-height: 1.05;
+  color: var(--texte);
+  font-variant-numeric: tabular-nums;
+}
+
+.total-infos-quoi {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 1.05rem;
+  color: var(--texte);
+}
+
+.total-infos-detail {
+  display: block;
+  margin-top: 0.45rem;
+  font-size: 0.95rem;
+  color: var(--texte-doux);
+}
+
+/* ── [L3] La pile « vrai / faux » (ADR 0012) ─────────────────────────────────────────────
+   Une carte, trois gestes toujours visibles. Le glisser déplace la carte et teinte son bord
+   quand le seuil est franchi — la couleur n'est jamais le seul signal : le mot du bouton reste. */
+.pile-carte {
+  display: grid;
+  gap: 0.6rem;
+}
+.pile-gestes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: stretch;
+}
+.pile-gestes .bouton {
+  min-width: 6rem;
+}
+.pile-faux {
+  display: flex;
+  flex: 1 1 16rem;
+  gap: 0.6rem;
+}
+.pile-faux .champ {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.pile-valeur {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+.pile-alerte {
+  border-left: 3px solid var(--erreur-texte);
+  padding-left: 0.6rem;
+}
+.carte-glissable {
+  touch-action: pan-y;
+  transition: transform 0.18s ease-out;
+}
+.carte-glissable[data-sens="vrai"] .pile-carte {
+  border-color: var(--succes-texte);
+}
+.carte-glissable[data-sens="faux"] .pile-carte {
+  border-color: var(--erreur-texte);
+}
+@media (prefers-reduced-motion: reduce) {
+  .carte-glissable {
+    transition: none;
+  }
+}
+@media (max-width: 560px) {
+  .pile-gestes > form,
+  .pile-gestes .bouton {
+    flex: 1 1 100%;
+  }
+}

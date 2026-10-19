@@ -1,0 +1,624 @@
+{
+  "id": "666bd50a-cd49-4b01-8b5b-7616c41acefb",
+  "prevId": "f32b8827-79c3-4b64-ae41-bf7e013ce952",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.acces_journal": {
+      "name": "acces_journal",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "ts": {
+          "name": "ts",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "lecteur": {
+          "name": "lecteur",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "outil": {
+          "name": "outil",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "usage": {
+          "name": "usage",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "niveau_max_servi": {
+          "name": "niveau_max_servi",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ids_faits": {
+          "name": "ids_faits",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'"
+        },
+        "question_empreinte": {
+          "name": "question_empreinte",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cout_usd": {
+          "name": "cout_usd",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hmac_precedent": {
+          "name": "hmac_precedent",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hmac": {
+          "name": "hmac",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "acces_journal_ts": {
+          "name": "acces_journal_ts",
+          "columns": [
+            {
+              "expression": "ts",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "acces_journal_hmac_precedent": {
+          "name": "acces_journal_hmac_precedent",
+          "columns": [
+            {
+              "expression": "hmac_precedent",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.faits": {
+      "name": "faits",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "sujet": {
+          "name": "sujet",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "predicat": {
+          "name": "predicat",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "valeur": {
+          "name": "valeur",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "valeur_type": {
+          "name": "valeur_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "attributs": {
+          "name": "attributs",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "valide_de": {
+          "name": "valide_de",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "valide_a": {
+          "name": "valide_a",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "domaine": {
+          "name": "domaine",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "niveau": {
+          "name": "niveau",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "statut": {
+          "name": "statut",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'propose'"
+        },
+        "confiance": {
+          "name": "confiance",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "fiabilite_source": {
+          "name": "fiabilite_source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "remplace_id": {
+          "name": "remplace_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "canari": {
+          "name": "canari",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "version_vocabulaire": {
+          "name": "version_vocabulaire",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "empreinte": {
+          "name": "empreinte",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cree_le": {
+          "name": "cree_le",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "valide_le": {
+          "name": "valide_le",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "supprime_le": {
+          "name": "supprime_le",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "faits_empreinte": {
+          "name": "faits_empreinte",
+          "columns": [
+            {
+              "expression": "empreinte",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "faits_sujet_predicat": {
+          "name": "faits_sujet_predicat",
+          "columns": [
+            {
+              "expression": "sujet",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "predicat",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "faits_statut_niveau": {
+          "name": "faits_statut_niveau",
+          "columns": [
+            {
+              "expression": "statut",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "niveau",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "faits_niveau_0_3": {
+          "name": "faits_niveau_0_3",
+          "value": "\"faits\".\"niveau\" BETWEEN 0 AND 3"
+        },
+        "faits_n3_sans_texte": {
+          "name": "faits_n3_sans_texte",
+          "value": "\"faits\".\"niveau\" < 3 OR \"faits\".\"valeur\" IS NULL OR \"faits\".\"valeur_type\" IN ('date', 'ref_document')"
+        },
+        "faits_confiance_0_1": {
+          "name": "faits_confiance_0_1",
+          "value": "\"faits\".\"confiance\" BETWEEN 0 AND 1"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.oublis": {
+      "name": "oublis",
+      "schema": "",
+      "columns": {
+        "empreinte": {
+          "name": "empreinte",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "raison": {
+          "name": "raison",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cree_le": {
+          "name": "cree_le",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.perimetres": {
+      "name": "perimetres",
+      "schema": "",
+      "columns": {
+        "app_id": {
+          "name": "app_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "domaines": {
+          "name": "domaines",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'"
+        },
+        "niveau_max": {
+          "name": "niveau_max",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "role": {
+          "name": "role",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'lecture'"
+        },
+        "admet_invites": {
+          "name": "admet_invites",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "domicile": {
+          "name": "domicile",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "modifie_le": {
+          "name": "modifie_le",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.predicats_refuses": {
+      "name": "predicats_refuses",
+      "schema": "",
+      "columns": {
+        "predicat": {
+          "name": "predicat",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "appelant": {
+          "name": "appelant",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "version_vocabulaire": {
+          "name": "version_vocabulaire",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "derniere_vue": {
+          "name": "derniere_vue",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "predicats_refuses_predicat_appelant_pk": {
+          "name": "predicats_refuses_predicat_appelant_pk",
+          "columns": [
+            "predicat",
+            "appelant"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.provenances": {
+      "name": "provenances",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "fait_id": {
+          "name": "fait_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source_type": {
+          "name": "source_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source_ref": {
+          "name": "source_ref",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "extracteur": {
+          "name": "extracteur",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "date_source": {
+          "name": "date_source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cree_le": {
+          "name": "cree_le",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "provenances_fait": {
+          "name": "provenances_fait",
+          "columns": [
+            {
+              "expression": "fait_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "provenances_source": {
+          "name": "provenances_source",
+          "columns": [
+            {
+              "expression": "source_ref",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "provenances_fait_id_faits_id_fk": {
+          "name": "provenances_fait_id_faits_id_fk",
+          "tableFrom": "provenances",
+          "tableTo": "faits",
+          "columnsFrom": [
+            "fait_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.sujets": {
+      "name": "sujets",
+      "schema": "",
+      "columns": {
+        "slug": {
+          "name": "slug",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nom_chiffre": {
+          "name": "nom_chiffre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cree_le": {
+          "name": "cree_le",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

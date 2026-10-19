@@ -1,0 +1,17 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "ignoreCommand": "node .github/ci/ignore-command.mjs",
+  "git": {
+    "deploymentEnabled": {
+      "**": false,
+      "*": false,
+      "main": true
+    }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/apprentissage",
+      "schedule": "0 9 * * *"
+    }
+  ]
+}

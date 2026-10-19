@@ -1,0 +1,58 @@
+{
+  "name": "memoryai",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MemoryAI - la mémoire de l'écosystème hub perso : une base de faits typés sur Marc, servie à claude.ai (MCP), à un chat et plus tard aux autres apps.",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "portes": "node qualite/portes.mjs",
+    "portes:maj": "node qualite/portes.mjs --maj",
+    "db:generate": "drizzle-kit generate",
+    "sentry:essai": "node scripts/sentry-essai.mjs"
+  },
+  "//vercel-build": "AU FORK, dès que l'app a une base : ajouter \"vercel-build\": \"npm run db:migrate && next build\". Vercel utilise ce script à la place de \"build\" quand il existe → les migrations s'appliquent à CHAQUE déploiement, prod et previews. Exigence de Marc : ne JAMAIS avoir à lancer une commande sur son PC. Idempotent (table de suivi Drizzle). Alternative vue chez JobAI : migrations appliquées au DÉMARRAGE de l'app (lib/migrations.ts, mémorisées par processus) — à préférer si l'app doit aussi se réparer seule hors déploiement.",
+  "//hub-contract": "Épinglé sur le tag v1.3.0 (le tag reste un point immuable, le lockfile fige le commit). Re-pinner n'est PAS optionnel pour consommer un champ neuf : Zod STRIPPE les clés inconnues, donc sur un pin antérieur validateSummary retire dataAsOf, details et primary en silence — et les tests passent en n'affirmant plus rien sur eux. Re-pinné sur v1.3.1 (23/09/2026) : MÊME contrat que v1.3.0, avec dist/ commité — sous Node 24, npm 11 ne construit plus une dépendance git en --ignore-scripts, donc v1.3.0 et antérieurs cassent la CI. Re-pinné sur v1.4.0 (29/09/2026) : sous-chemin /session (`verifierSession`, plan auth-asym-hubperso, phase 1) — voir lib/sessionAsymetrique.ts. Re-pinné sur v1.5.0 (16/10/2026) : le contrat passe à zod 4, donc un seul zod 4 dans l'arbre (plus de copie zod 3 sous le contrat) ; aucun changement de forme du summary.",
+  "//jose": "Dépendance DIRECTE et épinglée (pas seulement transitive via next-auth) : plan auth-asym-hubperso §3, pour que la version qui vérifie le cookie signé ES256 soit un choix explicite de l'app, pas un hasard de résolution.",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.127.0",
+    "@mokarade/hub-contract": "github:MoKarade/hub-contract#v1.5.0",
+    "@neondatabase/serverless": "^1.1.0",
+    "@sentry/nextjs": "^11.8.0",
+    "drizzle-orm": "^0.45.3",
+    "jose": "6.2.6",
+    "next": "^16.4.1",
+    "next-auth": "^5.0.0-beta.31",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
+    "@sentry/node": "^11.8.0",
+    "@types/node": "^22.20.4",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitest/coverage-v8": "^5.0.1",
+    "dependency-cruiser": "^18.4.0",
+    "drizzle-kit": "^0.31.11",
+    "eslint": "^9.18.0",
+    "eslint-config-next": "^16.4.2",
+    "knip": "^6.38.0",
+    "typescript": "^5.7.0",
+    "vitest": "^5.0.1"
+  },
+  "overrides": {
+    "postcss": "^8.5.24",
+    "sharp": "^0.35.4",
+    "@esbuild-kit/core-utils": {
+      "esbuild": "^0.25.12"
+    }
+  },
+  "//planchers": "Planchers de version, jamais redescendus (CLAUDE.md §2 du gabarit). next >= 16.4.1 : GHSA-673q-mjm6-r5xr et GHSA-2464-fhr4-w9xw (RCE non authentifiée, CRITICAL) et GHSA-p3m5-59mp-jv5r (DoS Server Actions, HIGH), avis du 14/10/2026 ; remplace le plancher 15.5.24 (GHSA-p293-qw3h-jr36 et GHSA-2xp9-vwfh-vxw4, 15/09/2026). sharp >= 0.35.4 : GHSA-rgj7-g3m4-5g8c (libheif, HIGH). Le job `audit` de la CI etait rouge sur le commit initial du fork pour ces deux avis."
+}

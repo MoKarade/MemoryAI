@@ -1,0 +1,40 @@
+{
+  "_doc": "Configuration du commit-gate de MemoryAI (Next 15 + Vitest), adaptée de modeles/qualite/commit-gate.json (kit 1.13.0). Avant tout git commit : typecheck, lint, tests AFFECTÉS (vitest related + gardes transverses qui lisent le source), build. La suite complète reste jouée en CI et par npm run portes. Configuration illisible ou invalide = le hook BLOQUE.",
+  "sans_effet": ["\\.md$", "^docs/"],
+  "config_globale": [
+    "^(package(-lock)?\\.json|tsconfig[^/]*\\.json|vitest[^/]*\\.[cm]?[jt]s|next\\.config\\.[cm]?[jt]s|eslint[^/]*|postcss[^/]*)$",
+    "^(drizzle\\.config\\.[cm]?[jt]s|knip\\.json|vercel\\.json|middleware\\.ts|\\.npmrc|\\.nvmrc)$",
+    "^drizzle/",
+    "^\\.github/",
+    "^modeles/",
+    "^scripts/hooks/",
+    "^qualite/",
+    "\\.css$"
+  ],
+  "etapes": [
+    { "nom": "typecheck", "commande": ["npm", "run", "typecheck"] },
+    { "nom": "lint", "commande": ["npm", "run", "lint"] },
+    {
+      "nom": "tests (affectés)",
+      "commande": ["npm", "test"],
+      "cible": {
+        "outil": ["node", "node_modules/vitest/vitest.mjs"],
+        "extensions": ["ts", "tsx", "mjs", "js"],
+        "args_related": ["related", "--run", "--passWithNoTests"],
+        "args_run": ["run"],
+        "toujours": [
+          "tests/gardePages.test.ts",
+          "tests/sansInvite.test.ts",
+          "tests/csp.test.ts",
+          "tests/couleurs.test.ts",
+          "tests/perimetres.test.ts",
+          "tests/quarantaine.test.ts",
+          "tests/honneteteOutils.test.ts",
+          "tests/niveau3Lecteurs.test.ts",
+          "tests/migrations.test.ts"
+        ]
+      }
+    },
+    { "nom": "build", "commande": ["npm", "run", "build"] }
+  ]
+}

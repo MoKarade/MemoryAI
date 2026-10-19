@@ -1,0 +1,87 @@
+name: Apprentissage continu
+
+# ⚠️ POURQUOI CE WORKFLOW EXISTE, alors que `vercel.json` a déjà un cron.
+#
+# Décision de Marc, 17/09 : « je veux que ça feed memoryai en continu ». Mesuré le même jour :
+# le compte Vercel est au plan **hobby**, qui plafonne les crons à **un par jour** — c'est ce
+# que `vercel.json` déclare (`0 9 * * *`), et ça ne peut pas être augmenté sans payer. La règle
+# « tout gratuit » du CLAUDE.md global interdit de changer de plan pour ça.
+#
+# GitHub Actions, lui, est déjà dans le parc et sa planification est gratuite. Ce workflow ne
+# fait qu'UN appel HTTP : aucun code n'y tourne, aucune donnée de Marc n'y transite, et le
+# runner n'a jamais accès à la base. C'est un réveil, pas un traitement.
+#
+# ⚠️ Le cron de `vercel.json` RESTE, et ce n'est pas une redondance à nettoyer : il est le
+# filet si les secrets GitHub sont retirés, et l'apprentissage est idempotent par construction
+# (une passe qui n'a rien à lire rend « rien-a-faire » sans rien dépenser). Deux réveils valent
+# mieux qu'aucun.
+#
+# ⚠️ CE QUI BORNE LA DÉPENSE N'EST PAS LA FRÉQUENCE, c'est le budget par poste : 2 $/jour pour
+# l'apprentissage (`lib/coutChat.ts`), relu en base AVANT chaque appel de modèle. Réveiller
+# huit fois par jour ne peut donc pas dépenser plus qu'une fois — les passes suivantes sortent
+# sur « budget » sans rien appeler. Et la détection des contradictions, qui n'appelle aucun
+# modèle, tourne à chaque réveil quoi qu'il arrive : c'est elle qui rend le « continu » utile.
+
+on:
+  schedule:
+    # Toutes les trois heures. ⚠️ Pas plus souvent, et la raison n'est pas le coût : GitHub
+    # décale les crons planifiés de plusieurs minutes sous charge, et un intervalle plus court
+    # que le temps d'une passe ferait se chevaucher deux réveils sur la même base.
+    - cron: "0 */3 * * *"
+  # Pour pouvoir le déclencher à la main sans attendre trois heures — c'est aussi le seul moyen
+  # de VÉRIFIER que les secrets sont bien posés, et de le lire dans le journal du run.
+  workflow_dispatch:
+
+# Aucune permission sur le dépôt : ce workflow ne lit ni n'écrit rien ici.
+permissions: {}
+
+concurrency:
+  # Deux passes en parallèle liraient les mêmes conversations et dépenseraient deux fois le
+  # même budget. La précédente est annulée : un réveil manqué se rattrape au suivant.
+  group: apprentissage
+  cancel-in-progress: true
+
+jobs:
+  reveiller:
+    runs-on: [self-hosted, pc-marc]
+    timeout-minutes: 10
+    steps:
+      - name: Réveiller l'apprentissage
+        env:
+          URL: ${{ secrets.MEMORYAI_URL }}
+          SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          set -u
+          # ⚠️ SECRETS ABSENTS ⇒ SUCCÈS, jamais un échec. Un workflow qui rougit chaque jour
+          # pour une intégration simplement pas encore branchée apprend à être ignoré, et le
+          # jour d'une vraie panne personne ne regarde. C'est la règle du dépôt (CLAUDE.md §1,
+          # « un gel, une base ou une clé absentes rendent 200 avec leur motif ») appliquée au
+          # planificateur lui-même.
+          if [ -z "${URL:-}" ] || [ -z "${SECRET:-}" ]; then
+            echo "Éteint : MEMORYAI_URL ou CRON_SECRET absent des secrets du dépôt."
+            echo "Ce n'est pas une panne — pose les deux dans Settings > Secrets > Actions."
+            exit 0
+          fi
+
+          # `-sS` : silencieux mais les erreurs parlent. Le corps ET le code HTTP sont
+          # affichés : la route rend 200 avec un MOTIF même quand elle n'a rien fait (gel, clé
+          # absente, budget épuisé), et c'est ce motif qui vaut d'être lu dans le journal.
+          code=$(curl -sS -o reponse.json -w '%{http_code}' \
+            -X POST "${URL%/}/api/cron/apprentissage" \
+            -H "Authorization: Bearer ${SECRET}" \
+            --max-time 120)
+          echo "HTTP ${code}"
+          cat reponse.json
+          echo
+
+          # ⚠️ 503 n'est PAS un échec de ce workflow : la route le rend quand `CRON_SECRET`
+          # manque CÔTÉ SERVEUR, ce qui est un état de configuration, pas une panne. 401 non
+          # plus — il dit que le secret d'ici ne correspond pas à celui de Vercel, et c'est
+          # une information, pas un incident. Seul un 5xx autre, ou une absence de réponse,
+          # méritent de rougir.
+          case "$code" in
+            200) exit 0 ;;
+            401) echo "::warning::Le CRON_SECRET du dépôt ne correspond pas à celui de Vercel." ; exit 0 ;;
+            503) echo "::warning::CRON_SECRET absent côté Vercel — l'apprentissage est éteint, pas en panne." ; exit 0 ;;
+            *) echo "::error::Réponse inattendue (${code})." ; exit 1 ;;
+          esac

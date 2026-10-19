@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "acces_journal_hmac_precedent" ON "acces_journal" USING btree ("hmac_precedent");

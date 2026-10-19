@@ -1,0 +1,18 @@
+# Fins de ligne : LF partout dans le dépôt — les tests et la CI (Linux) lisent les mêmes
+# octets que le poste de Marc (Windows). Gabarit de l'atelier (C:\dev\atelier\.gitattributes).
+#
+# ⚠️ INC-01 (pole-architecture, 29/09) : la règle bornée aux `.mjs` (ci-dessous à l'origine)
+# était trop étroite. Elle venait d'un défaut mesuré le 17/09 — `scripts/seed.mjs` et
+# `scripts/pousser-session.mjs` arrivaient en CRLF au checkout (poste de Marc,
+# `core.autocrlf = true`, aucun `.gitattributes` alors) ; leur shebang
+# (`#!/usr/bin/env node`) faisait planter Vite sur les deux tests qui les importent —
+# `SyntaxError: Invalid or unexpected token`. Le correctif du 17/09 s'était borné aux `.mjs`
+# par prudence (« un diff énorme pour un défaut qui ne touche que deux fichiers »). Mais rien
+# ne borne le RISQUE aux `.mjs` : n'importe quel `.ts`/`.tsx`/`.sql` commité en CRLF depuis
+# souffrirait du même défaut, invisible en CI (Linux, LF) — donc invisible là où on regarde.
+# `* text=auto eol=lf` ferme la classe entière, pas les deux fichiers qui l'ont révélée. Ce
+# dépôt n'a aucun script PowerShell/BAT (contrairement à l'atelier) : rien à excepter.
+* text=auto eol=lf
+
+# Binaires : jamais touchés par la normalisation de fin de ligne.
+*.png binary

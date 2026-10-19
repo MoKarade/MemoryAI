@@ -1,0 +1,14 @@
+{
+  "$commentaire": "La FORME d'un fichier de seed. Le vrai seed vit dans seed/*.local.json (hors git). Deux entrées fictives, pour que tests/seed.test.ts ne soit jamais vide.",
+  "extracteur": "seed-exemple",
+  "date_source": "2026-09-15",
+  "documents": {
+    "un-document": "1AbCdEfGhIjKlMnOpQrStUv",
+    "sans-pointeur": null
+  },
+  "faits": [
+    { "predicat": "preference.langue", "valeur": "Français", "valeur_type": "texte", "confiance": 1, "source": "session" },
+    { "predicat": "document.existe", "valeur": "1AbCdEfGhIjKlMnOpQrStUv", "valeur_type": "ref_document", "attributs": { "type": "Exemple", "annee": "2026" }, "dossier": "08 · Perso & projets" },
+    { "predicat": "gout.activite", "valeur": "Un exemple d'activité", "valeur_type": "texte", "source": "doc:sans-pointeur" }
+  ]
+}

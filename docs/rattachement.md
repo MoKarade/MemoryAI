@@ -1,0 +1,9 @@
+# Rattachement de MemoryAI à l'Atelier
+
+> Caduc depuis le 15/10/2026 : l'Atelier est arrêté. Le travail passe par une PR par tâche, les tests sur le robot du PC de Marc et la fusion par Mergify. Gardé comme historique.
+
+- Chef de projet : `atelier-chef` (MemoryAI n'a pas de session propre dans l'agence ; `atelier-git` y travaille depuis l'Atelier, dans un worktree).
+- Dernière PR : structure commune (CI + voie rapide, auto-merge, ignoreCommand Vercel, CLAUDE.md court, couts.md), brouillon, relecture pole-securite.
+- Prochaine étape : mesurer les minutes Actions après fusion (`node modeles/couts/compter-runs.mjs`) et remplir `docs/couts.md`.
+- Branche par défaut : `main` ; auto-merge : mécanisme propre au dépôt (`scripts/autoMerge.mjs`, `workflow_run`), voir `docs/couts.md` (exceptions au gabarit).
+- Décisions ouvertes : voir le rapport de la PR (kit `modeles/auto-merge` complet, cron d'apprentissage).
