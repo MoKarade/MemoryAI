@@ -1,7 +1,9 @@
 # Faux positifs gitleaks : valeurs FACTICES de tests (détection de secrets, masquage, jetons de test).
-# Vérifiées une par une le 23/09/2026. Une vraie fuite ne s'ajoute JAMAIS ici : elle se révoque.
-# Pour une NOUVELLE valeur factice : commentaire `gitleaks:allow` en fin de ligne, pas une empreinte
-# ici — l'empreinte contient le SHA du commit, qui change à la fusion en squash (main rougirait).
-8aa2d2b16ffa472605f0aee6950ee271886c3680:tests/perimetres.test.ts:generic-api-key:78
-0bbfbcf46a7ddbc9c5b815e77cb71790af5188ba:tests/secrets.test.ts:generic-api-key:19
-374dddf71b4f8b276e49b8b5ad146137abb0aa3e:tests/jetons.test.ts:generic-api-key:9
+# Vérifiées une par une le 23/09/2026, revérifiées le 21/10/2026 après la republication en un seul commit.
+# Une vraie fuite ne s'ajoute JAMAIS ici : elle se révoque.
+# Le SHA des empreintes est celui de la RACINE de main (f3ceb4d, publication du 19/10/2026) : il ne change
+# plus à la fusion en squash. Pour une NOUVELLE valeur factice : commentaire `gitleaks:allow` en fin de
+# ligne, pas une empreinte ici.
+f3ceb4ddba5208303edd737cf5cb7fa048af47df:tests/perimetres.test.ts:generic-api-key:79
+f3ceb4ddba5208303edd737cf5cb7fa048af47df:tests/secrets.test.ts:generic-api-key:19
+f3ceb4ddba5208303edd737cf5cb7fa048af47df:tests/jetons.test.ts:generic-api-key:9
