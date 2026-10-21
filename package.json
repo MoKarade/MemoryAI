@@ -38,14 +38,14 @@
     "@types/node": "^22.20.4",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
-    "@vitest/coverage-v8": "^5.0.1",
+    "@vitest/coverage-v8": "^5.0.5",
     "dependency-cruiser": "^18.4.0",
     "drizzle-kit": "^0.31.11",
     "eslint": "^9.18.0",
     "eslint-config-next": "^16.4.2",
     "knip": "^6.38.0",
     "typescript": "^5.7.0",
-    "vitest": "^5.0.1"
+    "vitest": "^5.0.5"
   },
   "overrides": {
     "postcss": "^8.5.24",
@@ -54,5 +54,5 @@
       "esbuild": "^0.25.12"
     }
   },
-  "//planchers": "Planchers de version, jamais redescendus (CLAUDE.md §2 du gabarit). next >= 16.4.1 : GHSA-673q-mjm6-r5xr et GHSA-2464-fhr4-w9xw (RCE non authentifiée, CRITICAL) et GHSA-p3m5-59mp-jv5r (DoS Server Actions, HIGH), avis du 14/10/2026 ; remplace le plancher 15.5.24 (GHSA-p293-qw3h-jr36 et GHSA-2xp9-vwfh-vxw4, 15/09/2026). sharp >= 0.35.4 : GHSA-rgj7-g3m4-5g8c (libheif, HIGH). Le job `audit` de la CI etait rouge sur le commit initial du fork pour ces deux avis."
+  "//planchers": "Planchers de version, jamais redescendus (CLAUDE.md §2 du gabarit). next >= 16.4.1 : GHSA-673q-mjm6-r5xr et GHSA-2464-fhr4-w9xw (RCE non authentifiée, CRITICAL) et GHSA-p3m5-59mp-jv5r (DoS Server Actions, HIGH), avis du 14/10/2026 ; remplace le plancher 15.5.24 (GHSA-p293-qw3h-jr36 et GHSA-2xp9-vwfh-vxw4, 15/09/2026). sharp >= 0.35.4 : GHSA-rgj7-g3m4-5g8c (libheif, HIGH). Le job `audit` de la CI etait rouge sur le commit initial du fork pour ces deux avis. vitest >= 5.0.5 : embarque vite >= 8.3.5 pour fermer les alertes launch-editor GHSA-587h-7wmj-h5pm, GHSA-r825-w8mm-5pxw et GHSA-698v-4r3x-3vcv."
 }
