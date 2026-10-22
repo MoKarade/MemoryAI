@@ -2,7 +2,9 @@ import type { Metadata, Viewport } from "next";
 // Outfit, police commune du hub, auto-hébergée via @fontsource : aucune requête externe.
 import "@fontsource-variable/outfit";
 import "./globals.css";
+import { LiaMaison } from "@/components/LiaMaison";
 import { ServiceWorker } from "@/components/ServiceWorker";
+import { liaAutorisee } from "@/lib/lia/monter";
 
 export const metadata: Metadata = {
   title: "MemoryAI",
@@ -24,11 +26,14 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // LIA vit chez elle sur toutes les pages connectées (ADR 0017) ; jamais sur /login.
+  const lia = await liaAutorisee();
   return (
     <html lang="fr-CA">
       <body>
         {children}
+        {lia ? <LiaMaison /> : null}
         <ServiceWorker />
       </body>
     </html>

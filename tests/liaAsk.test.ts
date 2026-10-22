@@ -106,9 +106,9 @@ describe("ce que LIA peut faire depuis le hub", () => {
     expect(lecteurPeutN3(LECTEUR_LIA_HUB)).toBe(false);
   });
 
-  it("la route n'ouvre jamais N2 ni N3", async () => {
+  it("le tour commun aux deux portes n'ouvre jamais N2 ni N3", async () => {
     const { readFileSync } = await import("node:fs");
-    const src = readFileSync("app/api/ask/route.ts", "utf8");
+    const src = readFileSync("lib/lia/repondre.ts", "utf8");
     expect(src).toContain("inclureN2: false");
     expect(src).toContain("inclureN3: false");
     expect(src).toContain("outilsPermis: OUTILS_LIA_HUB");
