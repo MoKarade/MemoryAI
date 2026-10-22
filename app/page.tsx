@@ -86,22 +86,22 @@ export default async function ParlerPage({
 
   return (
     <>
-      <Nav active="parler" />
-      {/* ⚠️ REPLIÉ par défaut (`<details>` sans `open`) : « des informations cachées en
-          cliquant sur certains boutons » (Marc, 17/09). Et il ne s'affiche QUE s'il y a
-          quelque chose à faire — un bandeau permanent qui dit « 0 à juger » est du décor
-          qu'on cesse de lire, comme un avertissement permanent. */}
-      {aJuger && (
-        <details className="repli repli-accueil">
-          <summary>{aJuger.titre}</summary>
-          <p className="hint">
-            {aJuger.detail}. Juger une carte (vrai, faux ou passer) corrige la mémoire sans que tu aies à raconter ta vie.
-          </p>
-          <Link href="/questions" className="bouton bouton-second">
-            Voir la pile
-          </Link>
-        </details>
-      )}
+      {/* ⚠️ Une PASTILLE dans l'en-tête, plus un `<details>` sous lui : « des informations cachées en
+          cliquant » (Marc, 17/09) ne veut pas dire un bandeau de plus au-dessus de la conversation.
+          Elle ne s'affiche QUE s'il y a quelque chose à juger — un « 0 à juger » permanent est du
+          décor qu'on cesse de lire. Le détail (« 1 papier lu, 1 déduction ») est dans son nom
+          accessible. */}
+      <Nav
+        active="parler"
+        droite={
+          aJuger && (
+            <Link href="/questions" className="pastille-juger" aria-label={`${aJuger.titre} : ${aJuger.detail}`}>
+              <span className="pastille-point" aria-hidden="true" />
+              {aJuger.titre}
+            </Link>
+          )
+        }
+      />
       <ChatClient
         modeles={MODELES.map((m) => ({ id: m.id, nom: m.nom }))}
         modeleDefaut={MODELE_DEFAUT}

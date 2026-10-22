@@ -3,6 +3,21 @@
 > L'état RÉEL, à lire en premier. Ce qui est décidé vit dans `docs/adr/0001-…`, ce qui reste
 > à faire dans `BACKLOG.md`. Ce fichier dit où on en est, et ce qui attend un geste de Marc.
 
+## ✅ FAIT — 22/10/2026 : Lia est l'écran principal, redessiné (MemoryAI#10, [R2])
+
+`app/chat/ChatClient.tsx` et `app/globals.css` : la réponse de Lia est du texte sur le fond, grand et léger en sombre
+(`--poids-lia`), sans bulle ; seul Marc a sa bulle. Les liens de fiche (`→`) et de papier (« papier ») deviennent des
+pastilles, zone de toucher portée à 44 px. En bas, trois suggestions (« Quand finit mon bail ? »…) puis la saisie
+arrondie avec un bouton d'envoi rond. La réponse arrive en fondu (éteint par `prefers-reduced-motion`).
+- **Une suggestion préremplit le champ, elle n'envoie pas** : un appel payant ne part jamais d'un simple clic. Elles
+  disparaissent quand on écrit ou qu'une réponse est en cours.
+- **« N à juger » passe dans l'en-tête** (`Nav` accepte une prop `droite`) ; l'ancien `<details>` sous l'en-tête est retiré.
+  Toujours absente quand il n'y a rien à juger.
+- **Modèle, niveaux 2 et 3, coût et historique** sont repliés derrière « Options et historique (N) ». L'historique
+  n'est plus une colonne fixe sur PC : un seul écran, une colonne. Ouvrir une conversation ou en commencer une referme le panneau.
+- Verrou : `tests/ecranLia.test.ts`. Les verrous des citations (`liensPapiers`, `liensCites`) sont inchangés et verts.
+- Reste hors de ce lot : le fil n'est pas encore en flux (réponse entière), les entrées du menu n'ont pas leur phrase d'état.
+
 ## ✅ FAIT — 22/10/2026 : le socle visuel « Nuit » est posé, la barre d'onglets est remplacée par un menu (MemoryAI#9, [R1])
 
 Direction B « Nuit » (choix de Marc, 22/10) : en thème sombre, fond bleu-nuit `#10141c`, accent doré clair `#e6ce94`,
