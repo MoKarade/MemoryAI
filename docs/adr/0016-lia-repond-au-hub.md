@@ -5,7 +5,7 @@
   que celui du chat : rien de ce que Marc ne voyait déjà dans son chat ne sort ailleurs.
 - **Déclencheur** : MemoryAI#91. LIA est montée sur le hub (Hubperso#335) et répond « indisponible »
   tant que sa maison n'a pas de point d'entrée.
-- **Portée** : `app/api/ask/route.ts`, `lib/lia/ask.ts`, `lib/lia/blocs.ts`, `lib/chat/agent.ts` (`outilsPermis`, `blocs`),
+- **Portée** : `app/api/ask/route.ts`, `app/api/lia/ask/route.ts`, `lib/lia/repondre.ts`, `lib/lia/ask.ts`, `lib/lia/blocs.ts`, `lib/chat/agent.ts` (`outilsPermis`, `blocs`),
   `lib/chat/couches.ts` (`lecteur`), `lib/authGuard.ts`, `middleware.ts`.
 - **Amont** : ADR 0017 (LIA vit dans MemoryAI ; « LIA ne répond qu'au propriétaire » est la décision 5 de
   Marc, pas un choix de ce fil) ; contrat « ask » du fil Assistant (trois sauts, `commun/assistant/CONTRAT-ask-lia.md`) ;
@@ -84,3 +84,21 @@ v5) ; le paquet `lia-ui` ne fait que les dessiner. Copie lisible pour les autres
   nomme des champs, jamais des valeurs.
 - **L'outil `lia_blocs` n'est offert qu'à la route ask** (`blocs: true`) ; le chat de MemoryAI ne
   l'a pas encore. Tests : `tests/liaBlocs.test.ts`, `tests/chat.test.ts` (« lia_blocs »).
+
+## 7. La maison : LIA sur les pages de MemoryAI
+
+LIA vit aussi chez elle (ADR 0017) : `components/LiaMaison.tsx` monte `@mokarade/lia-ui` (tag
+`v0.3.0`) sur toutes les pages connectées, sauf `/login` et `/widget`, et dessine ses blocs par
+`rendreBlocs` de `@mokarade/lia-ui/blocs`. Elle demande à `POST /api/lia/ask`.
+
+- **Une deuxième porte, le même tour.** `lib/lia/repondre.ts` porte ce qui suit le contrôle
+  d'accès, à l'identique pour les deux portes : niveaux 0 et 1, `OUTILS_LIA_HUB`, blocs sourcés.
+  Rien de plus ne sort que par le hub.
+- **Qui peut appeler.** La session de Marc (middleware PUIS `requireSession()` dans la route), même
+  origine, aucun jeton dans le navigateur. `source` (`memoryai`) et `proprietaire` (`true`) sont
+  IMPOSÉS par la route (`DEMANDE_MAISON`), jamais lus du corps : MemoryAI n'a pas d'invités.
+- **Journal.** Lecteur `lia-maison`, hors de `LECTEURS_N3`.
+- **Le chat plein écran ne change pas** : il garde ses bascules N2 et N3. La bulle de LIA est la
+  voix courte, partout ; le chat est l'endroit où Marc ouvre plus.
+- Tests : `tests/liaMaison.test.ts` (source et propriétaire imposés, 401 sans session, échec
+  fermé du navigateur).

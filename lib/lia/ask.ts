@@ -24,6 +24,10 @@ export const LONGUEUR_MAX_TEXTE = 8000;
 
 /** Le lecteur inscrit au journal d'accès. Hors de `LECTEURS_N3` : le niveau 3 lui reste fermé. */
 export const LECTEUR_LIA_HUB = "lia-hub";
+/** LIA dans sa maison : le navigateur de Marc, sur MemoryAI même, par sa session (ADR 0016 § 7). */
+export const LECTEUR_LIA_MAISON = "lia-maison";
+/** Ce que la route de la maison IMPOSE : MemoryAI n'a pas d'invités, et la source, c'est elle. */
+export const DEMANDE_MAISON = { source: "memoryai", proprietaire: true } as const;
 
 /** Les outils offerts au modèle quand LIA répond au hub : lire, jamais écrire. */
 export const OUTILS_LIA_HUB: ReadonlySet<string> = new Set([
@@ -67,8 +71,9 @@ export type LectureDemande =
 /**
  * Lit le corps BRUT. La taille se mesure en octets avant le JSON ; le refus « pas le
  * propriétaire » vient APRÈS la validation, pour qu'un corps mal formé reste un 400.
+ * `impose` : la route de la maison (session de Marc) fixe `source` et `proprietaire` elle-même.
  */
-export function lireDemande(brut: string): LectureDemande {
+export function lireDemande(brut: string, impose?: typeof DEMANDE_MAISON): LectureDemande {
   if (Buffer.byteLength(brut, "utf8") > TAILLE_MAX_CORPS) {
     return { ok: false, status: 413, code: "corps_trop_gros", message: `Corps au-delà de ${TAILLE_MAX_CORPS} octets.` };
   }
@@ -78,7 +83,8 @@ export function lireDemande(brut: string): LectureDemande {
   } catch {
     return { ok: false, status: 400, code: "corps_invalide", message: "JSON attendu." };
   }
-  const r = DemandeAsk.safeParse(json);
+  // `impose` ÉCRASE ce que le navigateur envoie : il ne choisit ni la source ni le propriétaire.
+  const r = DemandeAsk.safeParse(impose && typeof json === "object" && json !== null && !Array.isArray(json) ? { ...json, ...impose } : json);
   if (!r.success) {
     // Les CHEMINS des champs fautifs, jamais leur valeur : la question ne se répète nulle part.
     const champs = [...new Set(r.error.issues.map((i) => i.path.join(".") || "(racine)"))].join(", ");
