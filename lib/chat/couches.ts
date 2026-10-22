@@ -40,6 +40,8 @@ export async function chargerCouches(p: {
   cle: Cle;
   env: Record<string, string | undefined>;
   maintenant: () => Date;
+  /** Qui lit le profil, pour le journal : `chat` par défaut, `lia-hub` pour la route ask (ADR 0016). */
+  lecteur?: string;
 }): Promise<Couches> {
   const voix = baliserVoix(await p.admin.voixLia());
 
@@ -59,7 +61,7 @@ export async function chargerCouches(p: {
       p.lecture,
       cleJournalDepuisEnv(p.env),
       {
-        lecteur: "chat",
+        lecteur: p.lecteur ?? "chat",
         outil: "profil",
         usage: "conversation",
         niveauMaxServi: Math.max(0, ...servis.map((f) => f.niveau)),

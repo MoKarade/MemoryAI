@@ -34,6 +34,8 @@ const ROUTES_A_MARQUEUR: Record<string, { route: string; marqueur: RegExp }> = {
   // de la variable. Une route à jeton doit PROUVER son authentification de remplacement,
   // sinon la liste d'exceptions devient la porte de sortie du test (leçon Hubperso n° 6).
   "app/api/cron/apprentissage/route.ts": { route: "/api/cron/apprentissage", marqueur: /timingSafeEqual\(/ },
+  // Le jeton du hub, comparé en temps constant par le helper du contrat (ADR 0016).
+  "app/api/ask/route.ts": { route: "/api/ask", marqueur: /jetonsEgaux\(/ },
   "app/api/mcp/authorize/route.ts": { route: "/api/mcp/authorize", marqueur: /ctx\.auth\.authorize\(/ },
   "app/api/mcp/token/route.ts": { route: "/api/mcp/token", marqueur: /exchangeCode\(/ },
   "app/api/mcp/register/route.ts": { route: "/api/mcp/register", marqueur: /registerClient\(/ },
