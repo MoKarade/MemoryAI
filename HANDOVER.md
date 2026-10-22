@@ -3,6 +3,10 @@
 > L'état RÉEL, à lire en premier. Ce qui est décidé vit dans `docs/adr/0001-…`, ce qui reste
 > à faire dans `BACKLOG.md`. Ce fichier dit où on en est, et ce qui attend un geste de Marc.
 
+## ✅ FAIT — 22/10/2026 : icône d'écran d'accueil iPhone en logo série A (MemoryAI#60, mission .github#467)
+
+`app/apple-icon.png` (180 x 180, strates sur tuile `#0B0D12`, même dessin que `app/icon.svg`) est publié par Next.js en `apple-touch-icon` ; avant, iOS faisait une capture de la page. iOS ne rafraîchit pas une icône déjà posée : retirer l'app de l'écran d'accueil puis la rajouter. La marque du menu (« Lia ») est du texte, rien à changer.
+
 ## ✅ FAIT — 22/10/2026 : le socle visuel « Nuit » est posé, la barre d'onglets est remplacée par un menu (MemoryAI#9, [R1])
 
 Direction B « Nuit » (choix de Marc, 22/10) : en thème sombre, fond bleu-nuit `#10141c`, accent doré clair `#e6ce94`,
