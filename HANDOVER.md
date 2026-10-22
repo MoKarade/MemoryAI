@@ -31,8 +31,13 @@ clé Anthropic : coût nul. `memoryai_etat` rend les comptes et la dernière mes
 - Deuxième pas : le **moteur 3D** du réseau (`lib/graphe3d/`, sans bibliothèque, tout pur) : placement déterministe
   (`disposer.ts`, graine fixe : même mémoire, même nuage), caméra en perspective (`camera.ts`), scène et gestes
   (`scene.ts` : opacités, étiquettes, bascule, élan, clavier) et peinture sur un `Pinceau` (`peindre.ts`, les couleurs
-  arrivent des jetons, la transparence par `globalAlpha`). Verrous : `tests/graphe3d*.test.ts`. La page Mémoire qui
-  le monte arrive dans la PR suivante.
+  arrivent des jetons, la transparence par `globalAlpha`). Verrous : `tests/graphe3d*.test.ts`.
+- Troisième pas : la **page Mémoire** (`/memoire`, entrée « Mémoire » du menu juste après Lia). Un point par fait
+  validé, un centre par domaine, les liens ENREGISTRÉS (`depotLiens.tous`) ; filtres de niveau et recherche, fiche du
+  point choisi qui renvoie à `/fait/[id]`. ⚠️ Le réseau ne porte que des prédicats : aucune valeur n'est déchiffrée
+  pour le dessiner (`lib/memoire/reseau.ts`, verrou `tests/memoireReseau.test.ts`). Borné à `MAX_NOEUDS_3D`, les
+  plus reliés d'abord, le reste compté et dit. Les autres onglets de la maquette (réseau de LIA, apprentissage,
+  historique, accès) viennent avec les lots qui produisent leurs données.
 
 **LIA répond au hub (MemoryAI#91, ADR 0016)**, avant la suite du lot 5 : Marc veut LIA publiée dans toutes les apps
 (22/10 21:22Z). `POST /api/ask` (`app/api/ask/route.ts`, logique pure dans `lib/lia/ask.ts`) : `x-hub-token` seul,
