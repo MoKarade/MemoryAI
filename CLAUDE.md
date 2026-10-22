@@ -36,7 +36,7 @@
 - Coûts (minutes Actions, quota, appels IA) : `docs/couts.md`. Rattachement : `docs/rattachement.md`.
 
 ## CI (dépôt privé)
-Les jobs déclenchés par une PR choisissent leur machine selon la visibilité du dépôt : privé, robot de tests du PC de Marc (`[self-hosted, pc-marc]`) ; public, machines GitHub (gratuites). Un robot du PC ne doit jamais servir une PR d'un dépôt public. `apprentissage.yml` (planifié) reste sur le PC.
+Les jobs déclenchés par une PR choisissent leur machine selon la visibilité du dépôt : privé, robot de tests du PC de Marc (`[self-hosted, pc-marc]`) ; public, machines GitHub (gratuites). Un robot du PC ne doit jamais servir une PR d'un dépôt public. `apprentissage.yml` (planifié) va sur le PC seulement si le dépôt est privé.
 
 ## Compte-rendu
 Règles de forme : instructions du projet « Apps ». Copie lisible à la demande dans `docs/COMPTE-RENDU.md` (non chargée à chaque session ; sa synchro reste vérifiée par la CI).

@@ -43,7 +43,12 @@ concurrency:
 
 jobs:
   reveiller:
-    runs-on: [self-hosted, pc-marc]
+    # ⚠️ Le robot du PC seulement si le dépôt est PRIVÉ. Public (depuis le 21/10), aucun robot
+    # ne prenait ces runs : ils attendaient des heures puis étaient annulés par le suivant, et le
+    # réveil de 3 h était éteint sans que rien ne rougisse (MemoryAI#83). Le test porte sur
+    # « private » et non sur « public » : si l'événement planifié ne porte pas la visibilité, le
+    # réveil part sur une machine GitHub plutôt que d'attendre un robot qui ne viendra pas.
+    runs-on: ${{ github.event.repository.visibility == 'private' && fromJSON('["self-hosted","pc-marc"]') || 'ubuntu-latest' }}
     timeout-minutes: 10
     steps:
       - name: Réveiller l'apprentissage
