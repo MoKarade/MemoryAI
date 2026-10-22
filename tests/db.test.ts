@@ -77,8 +77,9 @@ async function inserer(champs: Partial<typeof FAIT> & { id: string; empreinte: s
 // que quelqu'un l'ait voulue : une migration générée à l'aveugle, un `drizzle-kit` qui
 // invente une table de jointure, un reliquat d'essai. Sept de l'ADR 0001, puis les dépenses
 // du chat, les questions, les conversations et leurs messages (ADR 0002), les liens du
-// graphe (ADR 0002 §5.3), puis les pièces et leurs exemplaires (ADR 0004 §6.2).
-describe("les vingt tables", () => {
+// graphe (ADR 0002 §5.3), puis les pièces et leurs exemplaires (ADR 0004 §6.2), puis le banc
+// de la refonte LIA (MemoryAI#69).
+describe("les vingt-deux tables", () => {
   it("existent, et pas une de plus", async () => {
     const r = await pg.query<{ table_name: string }>(
       `SELECT table_name FROM information_schema.tables WHERE table_schema='public' ORDER BY 1`,
@@ -89,6 +90,10 @@ describe("les vingt tables", () => {
       "avancement_sources",
       // [ADR 0012] Les avis de Marc sur la pile « vrai / faux », en ajout seul (migration 0018).
       "avis_pile",
+      // [MemoryAI#69] Le banc de la refonte LIA : ses mesures (des nombres) et ses questions
+      // (chiffrées) (migration 0023).
+      "banc_mesures",
+      "banc_questions",
       "conversations",
       "depenses_chat",
       "faits",

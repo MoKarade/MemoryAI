@@ -15,6 +15,11 @@ l'état de chaque lot et ce qui a été découvert en chemin.
 | 5 | UI `/moi` `/a-valider` `/fait/[id]` + chat + `/hub/summary` + PR hub | ✅ (PR hub #59) |
 | 6 | Seed 80-150 faits depuis la session, validés en lot par Marc | ✅ 105 faits envoyés le 15/09 à 20:44 (3 lots, 0 refusé), 98 validés par Marc, 7 rejetés |
 
+## Refonte LIA (Marc, 22/10/2026) 🔨
+
+Le suivi vit dans les issues : chantier MemoryAI#67, lots #69 (banc) à #77. Elle remplace la suite de la refonte
+d'interface ci-dessous à partir de R3 (#11 à #15 fermées, reprises par le lot 5, #74).
+
 ## Refonte de l'interface (Marc, 25/09/2026) ⬜
 
 Brief, cadrage et plan : [`docs/REFONTE-INTERFACE.md`](docs/REFONTE-INTERFACE.md). Porte de plan :

@@ -3,6 +3,23 @@
 > L'état RÉEL, à lire en premier. Ce qui est décidé vit dans `docs/adr/0001-…`, ce qui reste
 > à faire dans `BACKLOG.md`. Ce fichier dit où on en est, et ce qui attend un geste de Marc.
 
+## 🔨 EN COURS — 22/10/2026 : refonte LIA, MemoryAI devient sa maison (chantier MemoryAI#67)
+
+Go de Marc le 22/10 sur les 11 décisions (plan : https://claude.ai/artifact/FjSqJYh6apLY8CPbwrRivY ; décisions
+communes : https://claude.ai/artifact/GYPmaFBG46skpc86zAV2Si). Neuf lots enchaînés, fonctions d'abord (#69 à #77) ;
+les anciennes tâches d'écran R3 à R7 (#11 à #15) et #56 sont remplacées par le lot 5.
+
+**Lot 0, le banc de questions (MemoryAI#69).** `lib/banc/banc.ts` (pur) tire 40 questions d'un parc de papiers N0 à N2 :
+huit par capacité (extraction, multi-sources, temporel, mise à jour, abstention, soit 20 % d'abstention), les note
+(rappel@20, abstention correcte = rien rendu). `lib/banc/passe.ts` fige le banc `papiers-v1` UNE fois, chiffré
+(`banc_questions`, AAD `banc|<id>`, migration 0023), puis le mesure au plus une fois par jour avec la recherche plein
+texte nourrie des mots-clés (`banc_mesures`, des nombres seulement). Elle tourne au réveil de l'apprentissage, avant la
+clé Anthropic : coût nul. `memoryai_etat` rend les comptes et la dernière mesure, jamais une question.
+- Le dépôt est public : seuls les gabarits sont versionnés, les questions réelles ne vivent qu'en base, chiffrées.
+- Le N3 (identité, santé) n'est pas dans ce banc ; il aura le sien avec le lot 6. Un banc neuf prend un nom neuf
+  (`messages-v1`…), jamais celui-ci : les lots suivants se comparent à la mesure de base de `papiers-v1`.
+- Verrou : `tests/banc.test.ts` (papiers fictifs).
+
 ## ✅ FAIT — 22/10/2026 : Lia est l'écran principal, redessiné (MemoryAI#10, [R2])
 
 `app/chat/ChatClient.tsx` et `app/globals.css` : la réponse de Lia est du texte sur le fond, grand et léger en sombre
