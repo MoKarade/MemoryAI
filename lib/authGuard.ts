@@ -63,6 +63,12 @@ export const ROUTES_A_AUTH_PROPRE = [
    */
   "/api/cron/apprentissage",
   /**
+   * LIA répond au hub, et par lui à toutes les apps (ADR 0016). `x-hub-token` seul, en temps
+   * constant ; propriétaire seul (`proprietaire: true` dit par le hub), niveaux 0 et 1, outils
+   * en lecture seule. 503 sans `HUB_TOKEN`, 401 jeton faux.
+   */
+  "/api/ask",
+  /**
    * Les quatre endpoints du flux OAuth et les deux de métadonnées. Publics par nécessité :
    * claude.ai les appelle AVANT d'avoir le moindre jeton. Ce qui les garde : PKCE S256,
    * `redirect_uri` sur allowlist, et la clé d'accès de Marc sur `/api/mcp/authorize`.
