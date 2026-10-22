@@ -28,6 +28,11 @@ clé Anthropic : coût nul. `memoryai_etat` rend les comptes et la dernière mes
   auto-hébergée par `@fontsource-variable/outfit`). Les noms des jetons ne changent pas : `--accent` = indigo du hub
   (LIA et action principale), `--repere` = violet de MemoryAI. Verrous : `tests/theme.test.ts` (sombre seul, WCAG),
   `tests/couleurs.test.ts` (manifeste et barre système = `--bg-systeme`).
+- Deuxième pas : le **moteur 3D** du réseau (`lib/graphe3d/`, sans bibliothèque, tout pur) : placement déterministe
+  (`disposer.ts`, graine fixe : même mémoire, même nuage), caméra en perspective (`camera.ts`), scène et gestes
+  (`scene.ts` : opacités, étiquettes, bascule, élan, clavier) et peinture sur un `Pinceau` (`peindre.ts`, les couleurs
+  arrivent des jetons, la transparence par `globalAlpha`). Verrous : `tests/graphe3d*.test.ts`. La page Mémoire qui
+  le monte arrive dans la PR suivante.
 
 ## ✅ FAIT — 22/10/2026 : Lia est l'écran principal, redessiné (MemoryAI#10, [R2])
 
