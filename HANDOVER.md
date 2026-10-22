@@ -20,6 +20,15 @@ clé Anthropic : coût nul. `memoryai_etat` rend les comptes et la dernière mes
   (`messages-v1`…), jamais celui-ci : les lots suivants se comparent à la mesure de base de `papiers-v1`.
 - Verrou : `tests/banc.test.ts` (papiers fictifs).
 
+**Lot 5, l'interface de la maquette v5 (MemoryAI#74), avancé avant les lots 1 à 4** (Marc valide la maquette le 22/10,
+« peaufine et ship » ; accord des fils MemoryAI et Assistant). Maquette : https://claude.ai/artifact/Qkp5DzqqPnmkFUVZCT1aE6.
+États vides honnêtes tant que les lots 1 à 4 n'ont pas rempli les données. LIA vivante viendra du paquet partagé `lia-ui`
+(construit par le fil Assistant, tag épinglé).
+- Premier pas : le socle passe **sombre seul**, style du hub (`app/globals.css`, un seul `:root`, police Outfit
+  auto-hébergée par `@fontsource-variable/outfit`). Les noms des jetons ne changent pas : `--accent` = indigo du hub
+  (LIA et action principale), `--repere` = violet de MemoryAI. Verrous : `tests/theme.test.ts` (sombre seul, WCAG),
+  `tests/couleurs.test.ts` (manifeste et barre système = `--bg-systeme`).
+
 ## ✅ FAIT — 22/10/2026 : Lia est l'écran principal, redessiné (MemoryAI#10, [R2])
 
 `app/chat/ChatClient.tsx` et `app/globals.css` : la réponse de Lia est du texte sur le fond, grand et léger en sombre

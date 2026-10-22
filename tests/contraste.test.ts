@@ -49,10 +49,9 @@ function hexVersSrgb(hex: string): readonly [number, number, number] {
  * La valeur d'un jeton, telle qu'elle est DÉCLARÉE dans `globals.css` (hexadécimal, depuis le
  * socle commun : MemoryAI#126).
  *
- * ⚠️ `occurrence` choisit quel bloc `:root` : le fichier en a deux, et le second redéclare les
- * jetons sous `prefers-color-scheme: dark`. Lire la PREMIÈRE et croire avoir mesuré les deux
- * thèmes est exactement l'erreur que ce test doit rendre impossible — un jeton qui passe en
- * clair peut échouer en sombre, et c'est invisible à la relecture.
+ * ⚠️ `occurrence` reste en paramètre : depuis le 22/10/2026 l'app est sombre seule et chaque
+ * jeton n'a qu'UNE déclaration (cas « le scan lit une seule déclaration » plus bas). Si un
+ * second thème revenait, ce test devrait le mesurer aussi, et c'est ce cas qui le dirait.
  */
 function token(nom: string, occurrence: number): readonly [number, number, number] {
   const trouves = [...CSS.matchAll(new RegExp(`--${nom}:\\s*(#[0-9a-fA-F]{6})\\s*;`, "g"))];
@@ -81,12 +80,8 @@ describe("le convertisseur est juste — ancré sur des références CONNUES", (
 });
 
 describe("les paires que les graphes de [L38] emploient vraiment", () => {
-  // ⚠️ Chaque jeton est déclaré deux fois (clair, puis sombre) : on mesure chaque paire dans
-  // les DEUX thèmes, en prenant l'occurrence qui correspond.
-  const THEMES = [
-    { nom: "clair", i: 0 },
-    { nom: "sombre", i: 1 },
-  ];
+  // Sombre seul (Marc, 22/10/2026) : un seul thème, une seule déclaration par jeton.
+  const THEMES = [{ nom: "sombre", i: 0 }];
 
   it("⚠️ la barre de l'histogramme sur son fond de colonne — non-texte, 3:1", () => {
     for (const t of THEMES) {
@@ -113,11 +108,12 @@ describe("les paires que les graphes de [L38] emploient vraiment", () => {
     }
   });
 
-  it("le scan lit bien DEUX thèmes, et ils diffèrent — anti-vacuité", () => {
-    // Sans ce cas, une regex qui ne trouverait qu'une occurrence ferait passer les trois cas
-    // ci-dessus en mesurant deux fois le thème clair : « conforme en sombre » serait vrai par
-    // vacuité, ce qui est exactement le défaut qu'on veut rendre impossible.
-    expect(token("surface-douce", 0)).not.toEqual(token("surface-douce", 1));
-    expect(token("texte-doux", 0)).not.toEqual(token("texte-doux", 1));
+  it("le scan lit UNE déclaration par jeton, sombre seul — anti-vacuité", () => {
+    // Sans ce cas, un second thème revenu en douce ne serait pas mesuré : les cas ci-dessus ne
+    // lisent que la première occurrence, et « conforme » serait vrai pour un thème sur deux.
+    for (const nom of ["accent", "succes-texte", "surface-douce", "surface", "texte-doux"]) {
+      const n = [...CSS.matchAll(new RegExp(`--${nom}:\\s*#[0-9a-fA-F]{6}\\s*;`, "g"))].length;
+      expect(n, `--${nom} déclaré ${n} fois`).toBe(1);
+    }
   });
 });

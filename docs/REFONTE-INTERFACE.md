@@ -98,7 +98,7 @@ que s'il y a des cartes. En bas : deux ou trois suggestions et la saisie. Pas de
 - `app/rafraichirCompteurs.ts` : source UNIQUE des `revalidatePath` (leçon n° 20) — à
   refaire suivre si des pages fusionnent.
 - `tests/couleurs.test.ts` : aucune couleur en dur, tout token employé est déclaré, contrastes
-  mesurés (leçons n° 16 et 32). Les deux thèmes suivent `prefers-color-scheme`.
+  mesurés (leçons n° 16 et 32). Depuis le 22/10/2026 : sombre seul, style du hub (refonte LIA, MemoryAI#74).
 - Une LISTE ne déchiffre jamais le contenu N3/N2 de cent papiers (leçon n° 41, ADR 0012 §2.5).
 - Un `<details>` replié EXPÉDIE quand même son contenu (leçon n° 21) : pas de contenu
   sensible « caché » dans un dépli d'une page de liste.

@@ -7,100 +7,68 @@
 
    Règles, verrouillées par tests/theme.test.ts et tests/couleurs.test.ts :
    - Les couleurs vivent ICI, en variables hexadécimales, et nulle part ailleurs.
-   - Chaque couleur est définie en clair ET en sombre (le thème suit le système).
-   - Les couples texte/fond passent le WCAG, dans les deux thèmes.
+   - Sombre seul (Marc, 22/10/2026) : chaque couleur est définie UNE fois, dans `:root`.
+   - Les couples texte/fond passent le WCAG.
    - Cibles tactiles ≥ 44 px, champs à 16 px (en dessous, iOS zoome tout seul).
    - `--accent` ne sert QU'À l'action principale. `--repere` : surtitre, navigation active,
      catégorie — jamais un état.
    ───────────────────────────────────────────────────────────────────────────── */
 
+/* ⚠️ SOMBRE SEUL (Marc, 22/10/2026, refonte LIA, MemoryAI#74) : le style du hub, un seul jeu
+   de jetons, plus de bascule selon le système. Valeurs = celles de Hubperso et de la maquette
+   validée (encre #07090D, surfaces #0E1014 / #15181E). Les NOMS restent ceux du socle commun :
+   les pages existantes ne changent pas de vocabulaire, elles changent de couleurs. */
 :root {
-  color-scheme: light dark;
+  color-scheme: dark;
 
   /* Fonds et surfaces. */
-  --fond: #f6f7f9;
-  --surface: #ffffff;
-  --surface-douce: #eef0f4;
-  --bordure: #dde1e8;
+  --fond: #07090d;
+  --surface: #0e1014;
+  --surface-douce: #15181e;
+  --bordure: #23262c;
   /* Contour de champ, de case et de bouton secondaire : ≥ 3:1 (WCAG 1.4.11). */
-  --bordure-champ: #6b7585;
+  --bordure-champ: #687387;
 
   /* Textes. */
-  --texte: #0f172a;
-  --texte-doux: #4b5565;
+  --texte: #e2e8f0;
+  --texte-doux: #a3afc2;
 
-  /* L'accent ne sert QU'À l'action principale. */
-  --accent: #1e293b;
-  --accent-fonce: #0f172a;
-  --sur-accent: #f8fafc;
+  /* L'accent (indigo du hub) ne sert QU'À LIA et à l'action principale. */
+  --accent: #93a0ff;
+  --accent-fonce: #7f8df7;
+  --sur-accent: #07090d;
 
-  /* Le repère : surtitre, navigation active, catégorie. Jamais un état. */
-  --repere: #c2410c;
-  --repere-doux: #ffedd5;
+  /* Le repère : le violet de MemoryAI, en filet, surtitre, navigation active. Jamais un état. */
+  --repere: #a78bfa;
+  --repere-doux: #1d1830;
 
   /* Sémantique : « ça va », « attention », « erreur » — déclarées UNE fois. */
-  --succes-fond: #dcfce7;
-  --succes-texte: #166534;
-  --alerte-fond: #fef3c7;
-  --alerte-texte: #92400e;
-  --erreur-fond: #fee2e2;
-  --erreur-texte: #991b1b;
+  --succes-fond: #0c2620;
+  --succes-texte: #34d399;
+  --alerte-fond: #2a210c;
+  --alerte-texte: #fbbf24;
+  --erreur-fond: #2c1416;
+  --erreur-texte: #f87171;
 
   /* ⚠️ LE MÊME FOND, EN HEX, POUR LE SYSTÈME. Le manifeste et la barre d'état de l'app
      installée sont lus par Android AVANT toute feuille de style : une variable CSS n'y
-     arrive jamais. Ces deux valeurs sont donc les SEULES couleurs écrites deux fois dans le
-     dépôt — la valeur de `--fond` dans chaque thème, et `tests/couleurs.test.ts` tient les
-     trois sites ensemble (il lit ces deux lignes, il ne les recopie pas). Une valeur oubliée
-     ici fait un flash au lancement, que personne ne voit parce que personne ne relit un
-     manifeste (leçon JobAI). */
-  --bg-systeme-clair: #f6f7f9;
-  --bg-systeme-sombre: #10141c;
+     arrive jamais. Cette valeur est donc la SEULE couleur écrite plusieurs fois dans le
+     dépôt (`--fond`, le manifeste, la barre système), et `tests/couleurs.test.ts` tient les
+     trois sites ensemble. */
+  --bg-systeme: #07090d;
 
-  /* Poids des titres : plein en clair, léger en sombre (direction « Nuit »). */
-  --poids-titre: 800;
-  /* La réponse de Lia : texte courant en clair, léger en sombre. */
-  --poids-lia: 400;
+  /* Titres pleins, réponse de Lia légère : le contraste de poids du style du hub. */
+  --poids-titre: 600;
+  --poids-lia: 300;
 
   --rayon: 16px;
   --rayon-petit: 12px;
-  --police: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* Outfit, police commune du hub, auto-hébergée (@fontsource) : aucune requête externe. */
+  --police: "Outfit Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --police-code: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
 
   /* Espacement de la mise en page (propre à MemoryAI). */
   --gap: clamp(0.8rem, 0.5rem + 1vw, 1.3rem);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    /* Thème sombre = la direction B « Nuit » choisie par Marc le 22/10/2026 (MemoryAI#8) :
-       bleu-nuit calme, un seul accent doré clair. Les valeurs sont celles de la maquette. */
-    --fond: #10141c;
-    --surface: #181d28;
-    --surface-douce: #212836;
-    --bordure: #2a3140;
-    --bordure-champ: #67738b;
-
-    --texte: #e8eaf0;
-    --texte-doux: #a5aebf;
-
-    --accent: #e6ce94;
-    --accent-fonce: #d3b873;
-    --sur-accent: #10141c;
-
-    --repere: #e6ce94;
-    --repere-doux: #2a2618;
-
-    --succes-fond: #0f2a24;
-    --succes-texte: #6ee7b7;
-    --alerte-fond: #2c2410;
-    --alerte-texte: #fbbf24;
-    --erreur-fond: #331618;
-    --erreur-texte: #f87171;
-
-    /* Titres légers, comme sur la maquette : la finesse fait la calme de « Nuit ». */
-    --poids-titre: 300;
-    --poids-lia: 300;
-  }
 }
 
 *,

@@ -103,31 +103,25 @@ describe("les couleurs vivent dans globals.css, et nulle part ailleurs", () => {
     // se verrait qu'en installant l'app. La garde dérive donc la valeur attendue de la
     // SOURCE, elle ne la recopie pas.
     const css = readFileSync(SOURCE, "utf8");
-    const clair = /--bg-systeme-clair:\s*(#[0-9a-fA-F]{6})/.exec(css)?.[1]?.toLowerCase();
-    const sombre = /--bg-systeme-sombre:\s*(#[0-9a-fA-F]{6})/.exec(css)?.[1]?.toLowerCase();
-    expect(clair, "`--bg-systeme-clair` doit exister dans globals.css").toBeTruthy();
-    expect(sombre, "`--bg-systeme-sombre` doit exister dans globals.css").toBeTruthy();
-    expect(clair).not.toBe(sombre);
+    const fond = /--bg-systeme:\s*(#[0-9a-fA-F]{6})/.exec(css)?.[1]?.toLowerCase();
+    expect(fond, "`--bg-systeme` doit exister dans globals.css").toBeTruthy();
 
-    const permises = new Set([clair, sombre]);
     for (const nom of ["app/manifest.ts", "app/layout.tsx"] as const) {
       const couleurs = [...readFileSync(nom, "utf8").matchAll(/#[0-9a-fA-F]{6}\b/g)].map((m) => m[0].toLowerCase());
       expect(couleurs.length, nom).toBeGreaterThan(0);
       for (const c of couleurs) {
-        expect(permises.has(c), `${nom} : « ${c} » ne suit ni le fond clair ni le fond sombre`).toBe(true);
+        expect(c, `${nom} : « ${c} » ne suit pas le fond de l'app`).toBe(fond);
       }
     }
-    // ⚠️ Le MANIFESTE n'a qu'une valeur, et c'est le thème PAR DÉFAUT — le clair. Y mettre du
-    // sombre ferait un flash noir au lancement chez quelqu'un en thème clair : la faute de
-    // JobAI, dans l'autre sens. Ce cas est ce qui empêche de « corriger » vers le sombre.
+    // Sombre seul (Marc, 22/10/2026) : le manifeste et la barre système portent la MÊME
+    // valeur, celle du fond. Une barre système à deux valeurs reviendrait à un thème clair
+    // que l'app n'a plus.
     const m = readFileSync("app/manifest.ts", "utf8");
-    expect(m).toContain(`background_color: "${clair}"`);
-    expect(m).toContain(`theme_color: "${clair}"`);
-    // La barre système, elle, suit les DEUX : une seule couleur y serait à contre-emploi la
-    // moitié du temps, et ça ne se voit qu'une fois l'app installée.
+    expect(m).toContain(`background_color: "${fond}"`);
+    expect(m).toContain(`theme_color: "${fond}"`);
     const l = readFileSync("app/layout.tsx", "utf8");
-    expect(l).toContain("prefers-color-scheme: light");
-    expect(l).toContain("prefers-color-scheme: dark");
+    expect(l).toContain(`themeColor: "${fond}"`);
+    expect(l).not.toContain("prefers-color-scheme");
   });
 
   it("chaque exception EXISTE encore, et porte toujours une couleur", () => {
