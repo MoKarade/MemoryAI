@@ -36,6 +36,7 @@ import { niveauServi, rendreServablesPieces } from "../pieces/lecture";
 import { pieceCorrespond } from "../pieces/rechercheEnMemoire";
 import { cleFacette, FAMILLES_FACETTE, type FamilleFacette } from "../pieces/facettes";
 import { dechiffrer, DechiffrementError } from "../chiffrement";
+import { BANC_COURANT, type DepotBanc } from "../banc/passe";
 
 export interface ContexteOutils {
   lecture: DepotLecture;
@@ -60,6 +61,11 @@ export interface ContexteOutils {
    * hors de portée. `tests/conversations.test.ts` le prouve par mutation.
    */
   conversations: Pick<DepotConversations, "demarrer" | "consigner" | "parId">;
+  /**
+   * Le banc de questions de la refonte LIA (MemoryAI#69), en LECTURE de nombres seulement.
+   * Facultatif : absent, `memoryai_etat` dit « non branché » (`null`), jamais un zéro.
+   */
+  banc?: Pick<DepotBanc, "derniereMesure" | "comptesParCapacite">;
   cle: Cle;
   env: Record<string, string | undefined>;
   /** `claude-ai` pour le MCP ; `chat` pour le chat plein écran (lot 5). */
@@ -398,7 +404,7 @@ export const OUTILS: readonly Outil[] = [
   {
     name: "memoryai_etat",
     description:
-      "L'état de la mémoire : nombre de faits par statut et par niveau, faits en attente de validation, canaris, dernier fait validé, prédicats refusés, et si le niveau 2 peut être servi. Aucun contenu.",
+      "L'état de la mémoire : nombre de faits par statut et par niveau, faits en attente de validation, canaris, dernier fait validé, prédicats refusés, si le niveau 2 peut être servi, et la dernière mesure du banc de questions. Aucun contenu.",
     inputSchema: { type: "object", properties: {} },
     async executer(_args, ctx) {
       const c = await ctx.lecture.comptes();
@@ -413,6 +419,7 @@ export const OUTILS: readonly Outil[] = [
         niveau2Servable: n2Autorise(ctx.env),
         predicatsRefuses: c.refus.slice(0, 20),
         lotMaximal: LOT_MAX,
+        banc: await etatBanc(ctx),
       };
       return { texte: JSON.stringify(etat, null, 2), usage: "conversation", faitsServis: [], niveauMaxServi: 0, questionEmpreinte: null };
     },
@@ -641,6 +648,20 @@ export function schemaPourLecteur(o: Outil, lecteur: string): Outil["inputSchema
   const { inclure_n3: _retire, ...reste } = o.inputSchema.properties;
   void _retire;
   return { ...o.inputSchema, properties: reste };
+}
+
+/**
+ * Le banc en NOMBRES : combien de questions par capacité, et la dernière mesure. Jamais une
+ * question, jamais un identifiant de papier — `memoryai_etat` promet « aucun contenu ».
+ */
+async function etatBanc(ctx: ContexteOutils) {
+  if (!ctx.banc) return null;
+  const [questions, derniere] = await Promise.all([ctx.banc.comptesParCapacite(BANC_COURANT), ctx.banc.derniereMesure(BANC_COURANT)]);
+  return {
+    nom: BANC_COURANT,
+    questions,
+    derniereMesure: derniere ? { le: derniere.mesureLe.toISOString(), chercheur: derniere.chercheur, ...derniere.resultat } : null,
+  };
 }
 
 export function outilParNom(nom: string): Outil | undefined {
