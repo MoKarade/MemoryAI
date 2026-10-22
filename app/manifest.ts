@@ -54,13 +54,11 @@ export default function manifest(): MetadataRoute.Manifest {
     scope: "/",
     display: "standalone",
     orientation: "portrait",
-    // ⚠️ Le thème PAR DÉFAUT de l'app est CLAIR (`--bg` de `globals.css` ; le sombre vient de
-    // `prefers-color-scheme`). Le manifeste, lui, ne prend qu'UNE valeur : c'est donc le fond
-    // clair, converti en sRGB. Mettre du sombre ici ferait un flash noir au lancement chez
-    // quelqu'un en thème clair — l'erreur exacte, dans l'autre sens, que JobAI a payée.
-    // La barre système, elle, suit les DEUX thèmes (`viewport.themeColor`, `layout.tsx`).
-    background_color: "#f6f7f9",
-    theme_color: "#f6f7f9",
+    // ⚠️ Sombre seul (Marc, 22/10/2026) : le fond de l'app, `--bg-systeme` de `globals.css`,
+    // converti en sRGB. Une autre valeur ferait un flash au lancement de l'app installée
+    // (l'erreur que JobAI a payée) ; `tests/couleurs.test.ts` tient les trois sites ensemble.
+    background_color: "#07090d",
+    theme_color: "#07090d",
     lang: "fr-CA",
     icons: [
       { src: "/icone-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
