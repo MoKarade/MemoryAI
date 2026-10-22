@@ -2,7 +2,7 @@
 //
 // [R1, MemoryAI#9] PLUS DE BARRE D'ONGLETS. L'en-tête porte le bouton du menu et le nom de
 // l'app ; les sections vivent dans le menu (`MenuLia`), celui de `docs/REFONTE-INTERFACE.md` §4 :
-// Lia · Vrai ou faux · Ce qu'elle sait · Lecture des papiers · Dépenses · Anciennes
+// Lia · Mémoire (MemoryAI#74, le réseau en 3D) · Vrai ou faux · Ce qu'elle sait · Lecture des papiers · Dépenses · Anciennes
 // conversations · Réglages. Chaque entrée est une SECTION, pas une page : un détail
 // (`/fait/[id]`) ou un cadre embarqué (`/widget`) n'y figure pas.
 //
@@ -24,6 +24,7 @@ import { MenuLia } from "@/components/MenuLia";
  */
 export const SECTIONS = [
   { cle: "parler", href: "/", libelle: "Lia" },
+  { cle: "memoire", href: "/memoire", libelle: "Mémoire" },
   { cle: "vrai-faux", href: "/questions", libelle: "Vrai ou faux" },
   { cle: "savoir", href: "/pieces", libelle: "Ce qu'elle sait" },
   { cle: "lecture", href: "/avancement", libelle: "Lecture des papiers" },
@@ -47,7 +48,8 @@ export type CleNav =
   | "apps"
   | "graphe"
   | "fait"
-  | "pieces";
+  | "pieces"
+  | "memoire";
 
 /**
  * Où vit chaque ancienne page dans le menu. ⚠️ Écrit comme une table plutôt que deviné par une
@@ -57,6 +59,7 @@ export type CleNav =
 const SECTION_DE: Record<CleNav, (typeof SECTIONS)[number]["cle"] | null> = {
   parler: "parler",
   chat: "parler",
+  memoire: "memoire",
   questions: "vrai-faux",
   "a-valider": "vrai-faux",
   chercher: "savoir",
