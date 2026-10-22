@@ -24,7 +24,8 @@ maquettes → choix de Marc → plan court → OK.
   le 15/10/2026 (MemoryAI#90). Le bandeau de `app/page.tsx` compte maintenant la pile elle-même
   (`composerPile` + `restantParGenre`, via `lib/pile/charger.ts` et `lib/pile/bandeau.ts`) : « N à
   juger » dès qu'il reste une carte non jugée et non passée, rien quand la pile est vide.
-- [ ] **[R0] Maquettes** — A « Carnet » en brouillon, B « Nuit » et C « Bento » à dessiner.
+- [ ] **[R0] Maquettes** — A « Carnet », B « Nuit » et C « Bento » sont sur la toile (B et C dessinées le
+  22/10/2026, MemoryAI#7) ; reste le choix de Marc (MemoryAI#8).
 - [ ] **[R1…R7]** — le plan de `docs/REFONTE-INTERFACE.md` §6, lot par lot.
 
 ## [L3] La pile « vrai / faux » (ADR 0012, 24/09/2026) 🟦
