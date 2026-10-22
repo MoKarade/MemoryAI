@@ -58,6 +58,8 @@
 
   /* Poids des titres : plein en clair, léger en sombre (direction « Nuit »). */
   --poids-titre: 800;
+  /* La réponse de Lia : texte courant en clair, léger en sombre. */
+  --poids-lia: 400;
 
   --rayon: 16px;
   --rayon-petit: 12px;
@@ -97,6 +99,7 @@
 
     /* Titres légers, comme sur la maquette : la finesse fait la calme de « Nuit ». */
     --poids-titre: 300;
+    --poids-lia: 300;
   }
 }
 
@@ -366,6 +369,9 @@ code {
   z-index: 2;
 }
 .nav-marque {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   font-size: 1.375rem;
   font-weight: var(--poids-titre);
   letter-spacing: 0.08em;
@@ -596,35 +602,75 @@ code {
   padding: 0.4rem 0.3rem;
   border-bottom: 1px solid var(--bordure);
 }
-/* Chat */
-/* [L2, ADR 0011] L'historique à GAUCHE sur un écran large ; replié au-dessus sur un téléphone,
-   pour que la conversation garde tout l'écran. Aucune couleur neuve : les tokens existants. */
-.chat-cadre {
-  display: grid;
-  grid-template-columns: minmax(14rem, 18rem) minmax(0, 1fr);
-  gap: 0;
-  max-width: 72rem;
+/* ── Chat : l'écran de Lia (R2 de la refonte, MemoryAI#10). Une colonne calme : la réponse de Lia
+   est du TEXTE sur le fond, sans bulle ; seul Marc a sa bulle. Les réglages et l'historique sont
+   repliés dans un `<details>` natif (clavier et lecteur d'écran gratuits). Aucune couleur neuve. ── */
+.chat {
+  max-width: 44rem;
   margin: 0 auto;
-}
-.chat-historique {
-  border-right: 1px solid var(--bordure);
-  padding: clamp(0.75rem, 3vw, 1.25rem) 0.75rem;
-  display: grid;
-  align-content: start;
+  padding: 0 clamp(1rem, 4vw, 1.5rem);
+  display: flex;
+  flex-direction: column;
   gap: 0.75rem;
-  max-height: calc(100dvh - 4.5rem);
-  position: sticky;
-  top: 0;
+  /* Sous l'en-tête (44 px + marges) : la saisie reste en bas même quand le fil est court. */
+  min-height: calc(100dvh - 3.75rem);
+}
+.chat-outils {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.75rem;
+}
+/* La bascule se lit comme une phrase, pas comme un bouton : l'action de la page est ailleurs. */
+.chat-bascule {
+  flex: 1 1 auto;
+  min-height: 2.75rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--texte-doux);
+  font: inherit;
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+}
+/* « Nouvelle » : même registre calme que la bascule — la pastille de l'en-tête reste le seul
+   bouton cerclé du haut de l'écran. */
+.chat-nouvelle {
+  flex: none;
+  padding: 0 0.25rem;
+  color: var(--texte);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+.chat-nouvelle:disabled {
+  color: var(--texte-doux);
+  text-decoration: none;
+  cursor: not-allowed;
+}
+.chat-bascule:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--rayon-petit);
+}
+.chat-options-corps {
+  flex: 0 0 100%;
+  display: grid;
+  gap: 1rem;
+  padding: 0.9rem;
+  background-color: var(--surface);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+  max-height: 60dvh;
   overflow-y: auto;
 }
-.chat-historique-tete {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-/* La bascule n'a de sens que sur un écran étroit : sur un écran large la liste est toujours là. */
-.chat-historique-bascule {
+/* ⚠️ `hidden` perd contre un `display` de classe : sans cette ligne le panneau serait toujours ouvert. */
+.chat-options-corps[hidden] {
   display: none;
+}
+.chat-reglages {
+  display: grid;
+  gap: 0.6rem;
 }
 .chat-historique-liste ul {
   list-style: none;
@@ -649,7 +695,7 @@ code {
 }
 .chat-historique-item:hover,
 .chat-historique-item:focus-visible {
-  background: var(--surface);
+  background: var(--surface-douce);
   border-color: var(--bordure);
 }
 /* Revue #71 : au clavier, le focus doit se distinguer du survol — même anneau qu'ailleurs. */
@@ -665,84 +711,86 @@ code {
   overflow-wrap: anywhere;
   font-size: 0.92rem;
 }
-@media (max-width: 760px) {
-  .chat-cadre {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .chat-historique {
-    border-right: 0;
-    border-bottom: 1px solid var(--bordure);
-    position: static;
-    max-height: none;
-    padding-bottom: 0.75rem;
-  }
-  .chat-historique-bascule {
-    display: inline-flex;
-    align-items: center;
-  }
-  .chat-historique:not(.ouvert) .chat-historique-liste {
-    display: none;
-  }
-  .chat-historique.ouvert .chat-historique-liste {
-    max-height: 50dvh;
-    overflow-y: auto;
-  }
-}
-.chat {
-  max-width: 48rem;
-  margin: 0 auto;
-  padding: clamp(0.75rem, 3vw, 1.5rem);
-  display: grid;
-  grid-template-rows: auto auto 1fr auto;
-  gap: 0.75rem;
-  min-height: calc(100dvh - 4.5rem);
-}
-.chat-barre {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem 1rem;
-  align-items: center;
-  font-size: 0.9rem;
-}
 .chat-fil {
-  display: grid;
-  gap: 0.6rem;
-  align-content: start;
-  overflow-y: auto;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  padding: 1rem 0;
 }
 .chat-vide {
-  padding: 2rem 0;
-  text-align: center;
+  padding-top: 2rem;
+  font-size: clamp(1.2rem, 1rem + 1vw, 1.45rem);
+  font-weight: var(--poids-lia);
+  line-height: 1.5;
+}
+.chat-attente {
+  margin: 0;
 }
 .bulle {
-  max-width: 85%;
-  padding: 0.7rem 1rem;
-  border-radius: var(--rayon);
-  background: var(--surface);
-  border: 1px solid var(--bordure);
+  max-width: 100%;
 }
 .bulle.user {
-  justify-self: end;
-  background: var(--surface-douce);
+  align-self: flex-end;
+  max-width: 80%;
+  padding: 0.75rem 1.125rem;
+  border-radius: 20px;
+  background: var(--surface);
+  border: 1px solid var(--bordure);
 }
 .bulle-texte {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+/* La réponse de Lia : grande, légère en sombre, sans cadre. Le seul mouvement de l'écran est son
+   arrivée (un fondu) ; il répond à l'envoi d'une question, et s'éteint si on l'a demandé. */
+.bulle.assistant .bulle-texte {
+  font-size: clamp(1.2rem, 1rem + 1vw, 1.45rem);
+  font-weight: var(--poids-lia);
+  line-height: 1.5;
+}
+@keyframes arrivee-lia {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.chat-fil > .bulle.assistant:last-of-type .bulle-texte {
+  animation: arrivee-lia 320ms ease-out backwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .chat-fil > .bulle.assistant:last-of-type .bulle-texte {
+    animation: none;
+  }
+}
 /* [L25] Le lien vers la fiche d'un fait cité, et la marque qui dit ce que la valeur vaut.
    Épuré par intention (Marc, 17/09) : le lien est DISCRET mais cliquable, la marque est plus
-   calme que le texte sans disparaître. Aucune couleur neuve — les tokens existants et
-   `prefers-color-scheme` suffisent (ADR 0005 §4 B2 : le CSS se reprend, il ne se remplace pas). */
+   calme que le texte sans disparaître. Une pastille ronde, dont la zone de toucher déborde
+   jusqu'à 44 px (`::after`) sans changer la hauteur de la ligne. */
 .lien-fait {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.75rem;
+  height: 1.75rem;
+  margin: 0 0.15rem;
+  border: 1px solid var(--bordure-champ);
+  border-radius: 999px;
   color: var(--texte);
-  text-decoration: underline;
-  text-underline-offset: 0.15em;
+  font-size: 0.9rem;
   font-weight: 600;
-  /* Cible tactile : un lien d'un seul caractère n'est pas atteignable au doigt sans ça. */
-  display: inline-block;
-  min-width: 1.5rem;
-  text-align: center;
-  border-radius: 0.25rem;
+  line-height: 1;
+  text-decoration: none;
+  vertical-align: middle;
+}
+.lien-fait::after,
+.lien-doc::after {
+  content: "";
+  position: absolute;
+  inset: -0.5rem;
 }
 .lien-fait:hover,
 .lien-fait:focus-visible {
@@ -784,26 +832,28 @@ code {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
-.repli-accueil {
-  margin: 0.8rem auto;
-  max-width: 48rem;
-}
 
 /* [L25c] Le lien vers le PAPIER. Distinct du lien vers la fiche : ce ne sont pas les mêmes
    questions. Libellé en MOT (« papier »), pas en icône — « où est mon avis de cotisation »
-   attend un document, et un mot le dit sans qu'on devine. */
+   attend un document, et un mot le dit sans qu'on devine. Une pastille, comme une source. */
 .lien-doc {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.875rem;
+  padding: 0 0.75rem;
+  margin: 0 0.15rem;
+  border: 1px solid var(--bordure);
+  border-radius: 999px;
   color: var(--texte);
-  font-size: 0.85em;
-  text-decoration: underline;
-  text-decoration-style: dotted;
-  padding: 0 0.15rem;
-  border-radius: 0.2rem;
+  font-size: 0.875rem;
+  line-height: 1;
+  text-decoration: none;
+  vertical-align: middle;
 }
 .lien-doc:hover,
 .lien-doc:focus-visible {
   background: var(--surface-douce);
-  text-decoration-style: solid;
 }
 .marque-fait {
   color: var(--texte-doux);
@@ -826,18 +876,116 @@ code {
   gap: 0.25rem;
   font-size: 0.85rem;
 }
-.chat-saisie {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 0.5rem;
-  align-items: end;
+/* Le bas de l'écran : suggestions puis saisie, collés au bas, marges de sécurité comprises. */
+.chat-bas {
   position: sticky;
   bottom: 0;
   background: var(--fond);
-  padding-bottom: env(safe-area-inset-bottom);
+  padding-top: 0.5rem;
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+.chat-suggestions {
+  list-style: none;
+  margin: 0 0 0.5rem;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.suggestion {
+  min-height: 44px;
+  padding: 0 0.875rem;
+  border: 1px solid var(--bordure-champ);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--texte);
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+.suggestion:hover {
+  background: var(--surface-douce);
+}
+.suggestion:focus-visible,
+.chat-envoyer:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.chat-saisie {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  padding: 0.25rem 0.25rem 0.25rem 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--bordure-champ);
+  border-radius: 28px;
+}
+.chat-saisie:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 .chat-saisie textarea {
-  resize: vertical;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 44px;
+  max-height: 8rem;
+  padding: 0.65rem 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--texte);
+  font: inherit;
+  font-size: 1rem; /* 16 px : en dessous, iOS zoome tout seul à la mise au point. */
+  line-height: 1.4;
+  resize: none;
+  field-sizing: content;
+}
+.chat-saisie textarea::placeholder {
+  color: var(--texte-doux);
+}
+.chat-envoyer {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 22px;
+  background-color: var(--accent);
+  color: var(--sur-accent);
+  cursor: pointer;
+}
+.chat-envoyer:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* « N à juger » : la pastille de l'en-tête de l'accueil, qui mène à la pile. */
+.nav-droite {
+  margin-left: auto;
+}
+.pastille-juger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0 1rem;
+  border: 1px solid var(--bordure-champ);
+  border-radius: 999px;
+  color: var(--texte);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+.pastille-juger:hover {
+  background: var(--surface-douce);
+}
+.pastille-point {
+  width: 8px;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--accent);
 }
 
 /* Une option de QCM : la valeur en bouton, sa provenance dessous (page /questions).
