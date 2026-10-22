@@ -18,6 +18,10 @@ arrondie avec un bouton d'envoi rond. La réponse arrive en fondu (éteint par `
 - Verrou : `tests/ecranLia.test.ts`. Les verrous des citations (`liensPapiers`, `liensCites`) sont inchangés et verts.
 - Reste hors de ce lot : le fil n'est pas encore en flux (réponse entière), les entrées du menu n'ont pas leur phrase d'état.
 
+## ✅ FAIT — 22/10/2026 : icône d'écran d'accueil iPhone en logo série A (MemoryAI#60, mission .github#467)
+
+`app/apple-icon.png` (180 x 180, strates sur tuile `#0B0D12`, même dessin que `app/icon.svg`) est publié par Next.js en `apple-touch-icon` ; avant, iOS faisait une capture de la page. iOS ne rafraîchit pas une icône déjà posée : retirer l'app de l'écran d'accueil puis la rajouter. La marque du menu (« Lia ») est du texte, rien à changer.
+
 ## ✅ FAIT — 22/10/2026 : le socle visuel « Nuit » est posé, la barre d'onglets est remplacée par un menu (MemoryAI#9, [R1])
 
 Direction B « Nuit » (choix de Marc, 22/10) : en thème sombre, fond bleu-nuit `#10141c`, accent doré clair `#e6ce94`,
