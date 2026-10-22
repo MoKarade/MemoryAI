@@ -61,8 +61,11 @@ Toile : <https://claude.ai/artifact/BUpBxx4n5n2YwUtiWuYZDe> (privée, à Marc).
   Outfit, mêmes jetons que le hub (`#07090D` / `#0E1014` / `#15181E`) ; l'accent est l'orange de MemoryAI
   (réglable). Le menu est une grille de tuiles de tailles différentes. Trois écrans : Lia · menu · pile.
 
-Les trois sont sur la même toile, côte à côte, lisibles à 390 px, en données fictives. Le choix de Marc
-est la tâche MemoryAI#8.
+Les trois sont sur la même toile, côte à côte, lisibles à 390 px, en données fictives.
+
+**Choix de Marc (22/10/2026, 8 h 20, heure du Québec, tâche MemoryAI#8) : direction B « Nuit », sans
+mélange.** C'est elle que R1 (le socle) met en jeton : fond bleu-nuit, Albert Sans léger, accent doré clair,
+pas de cartes, menu en liste de lignes à filets. A et C restent sur la toile à titre d'archive.
 
 Les trois partagent la même STRUCTURE (celle de la §4), pour que Marc choisisse un style et non
 une architecture. Les valeurs entre [CROCHETS] sont des emplacements, jamais des chiffres
@@ -104,7 +107,7 @@ que s'il y a des cartes. En bas : deux ou trois suggestions et la saisie. Pas de
 
 ## 6. Le plan proposé (un lot = une PR, en ligne avant le suivant)
 
-0. **Maquettes** : finir A, dessiner B et C ; Marc choisit (et peut mélanger).
+0. **Maquettes** *(fait : B « Nuit » choisie par Marc le 22/10/2026)* : finir A, dessiner B et C ; Marc choisit (et peut mélanger).
 1. **R0 — `[L3-acces]`** *(avant tout, petit)* : la pile atteignable (pastille « à juger »
    comptée sur TOUTES les cartes de la pile). C'est un défaut du lot 3, pas de la refonte.
 2. **R1 — le socle** : tokens (couleurs, typo, espacements) de la direction choisie, gabarit
