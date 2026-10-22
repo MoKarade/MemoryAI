@@ -115,7 +115,7 @@ Marc, 25/09 : « lis tout tout tout, ensuite refonte de l'interface en entier »
   mal fait sur téléphone) · **Lia au centre** · **maquettes d'abord**.
 - **Maquettes** : <https://claude.ai/artifact/BUpBxx4n5n2YwUtiWuYZDe> — direction A « Carnet »
   en brouillon, B « Nuit » et C « Bento » dessinées le 22/10/2026 (MemoryAI#7), côte à côte sur la
-  même toile ; Marc choisit (MemoryAI#8), puis plan court, puis OK.
+  même toile ; **Marc a choisi B « Nuit » le 22/10/2026 (MemoryAI#8)**, puis plan court, puis OK.
 - ✅ **`[L3-acces]` corrigé le 15/10/2026 (MemoryAI#90)** : le bandeau de l'accueil compte la pile
   (papiers lus, déductions, questions non jugés), plus seulement les questions ouvertes.
 - **La lecture de tous les papiers tourne** (DriveAI C49-32, #421, 25/09) : plus de limite de
