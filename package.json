@@ -21,6 +21,7 @@
   "//jose": "Dépendance DIRECTE et épinglée (pas seulement transitive via next-auth) : plan auth-asym-hubperso §3, pour que la version qui vérifie le cookie signé ES256 soit un choix explicite de l'app, pas un hasard de résolution.",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.127.0",
+    "@fontsource-variable/outfit": "^5.3.0",
     "@mokarade/hub-contract": "github:MoKarade/hub-contract#v1.5.0",
     "@neondatabase/serverless": "^1.1.0",
     "@sentry/nextjs": "^11.8.0",
