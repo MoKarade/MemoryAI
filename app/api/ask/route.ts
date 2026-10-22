@@ -6,7 +6,7 @@
 //
 // Réponses : 503 `HUB_TOKEN` absent · 401 jeton absent ou faux · 503 gelée · 413 corps > 8 Ko ·
 // 400 corps invalide · 403 pas le propriétaire · 503 LIA indisponible (clé, base, API absente,
-// budget épuisé, refus du modèle, réponse vide) · 500 le reste · 200 `{ text }`. Toujours
+// budget épuisé, refus du modèle, réponse vide) · 500 le reste · 200 `{ text, blocks? }`. Toujours
 // `no-store`, toujours un corps JSON. ⚠️ La question n'est JAMAIS journalisée en clair : ni ici,
 // ni dans un message d'erreur (`lireDemande` ne cite que des noms de champs).
 
@@ -82,6 +82,7 @@ export async function POST(request: Request): Promise<Response> {
       inclureN2: false,
       inclureN3: false,
       outilsPermis: OUTILS_LIA_HUB,
+      blocs: true,
       outils: {
         lecture: depotLectureDrizzle(db),
         // Requis par le type ; aucun outil de `OUTILS_LIA_HUB` n'écrit.
@@ -98,7 +99,8 @@ export async function POST(request: Request): Promise<Response> {
       admin: depotAdminDrizzle(db),
       couches,
     });
-    const reponse = composerReponse(r.reponse, new URL(request.url).origin);
+    if (r.blocsRejetes > 0) console.error(`[ask] ${r.blocsRejetes} bloc(s) rejeté(s)`);
+    const reponse = composerReponse(r.reponse, new URL(request.url).origin, r.blocs);
     if (!reponse) return erreur(503, "reponse_vide", "Le modèle n'a rien répondu.");
     return Response.json(reponse, { headers: NO_STORE });
   } catch (err) {

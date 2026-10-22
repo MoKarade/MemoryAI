@@ -44,6 +44,11 @@ clé Anthropic : coût nul. `memoryai_etat` rend les comptes et la dernière mes
 propriétaire seul (`proprietaire: true` dit par le hub, sinon 403), niveaux 0 et 1, outils en lecture seule
 (`OUTILS_LIA_HUB`, tenus aux deux bouts par `outilsPermis` dans `tourDeChat`), lecteur `lia-hub`, question jamais
 journalisée, conversation non consignée en v1. Verrous : `tests/liaAsk.test.ts`, `tests/chat.test.ts` (« outilsPermis »).
+Depuis MemoryAI#74 (étape blocs), la réponse est `{ text, blocks? }` : catalogue FERMÉ de 22 formes dans
+`lib/lia/blocs.ts` (copie lisible : `commun/assistant/BLOCS-lia.md`), offert par l'outil `lia_blocs` à la route ask
+seule ; un bloc ne cite que des faits servis pendant le tour, sinon il est rejeté (ADR 0016 § 6).
+⚠️ Au 22/10 22:09Z, la clé `ANTHROPIC_API_KEY` de production est refusée (401 `invalid x-api-key`) : la route rend
+503 « indisponible » tant que Marc ne l'a pas remplacée dans Vercel.
 
 ## ✅ FAIT — 22/10/2026 : Lia est l'écran principal, redessiné (MemoryAI#10, [R2])
 

@@ -5,7 +5,7 @@
   que celui du chat : rien de ce que Marc ne voyait déjà dans son chat ne sort ailleurs.
 - **Déclencheur** : MemoryAI#91. LIA est montée sur le hub (Hubperso#335) et répond « indisponible »
   tant que sa maison n'a pas de point d'entrée.
-- **Portée** : `app/api/ask/route.ts`, `lib/lia/ask.ts`, `lib/chat/agent.ts` (`outilsPermis`),
+- **Portée** : `app/api/ask/route.ts`, `lib/lia/ask.ts`, `lib/lia/blocs.ts`, `lib/chat/agent.ts` (`outilsPermis`, `blocs`),
   `lib/chat/couches.ts` (`lecteur`), `lib/authGuard.ts`, `middleware.ts`.
 - **Amont** : ADR 0017 (LIA vit dans MemoryAI ; « LIA ne répond qu'au propriétaire » est la décision 5 de
   Marc, pas un choix de ce fil) ; contrat « ask » du fil Assistant (trois sauts, `commun/assistant/CONTRAT-ask-lia.md`) ;
@@ -63,3 +63,24 @@ indisponible », pas « trop de requêtes »).
 Limite dite franchement : si le hub se trompe sur `proprietaire`, MemoryAI le croit. C'est la
 même confiance que pour le jeton : le hub est l'unique appelant, et c'est lui qui tient la
 session et les accès.
+
+## 6. Les blocs (lot 5, MemoryAI#74)
+
+La réponse devient `{ text, blocks? }` : LIA peut MONTRER (carte, frise, jauge, tableau…) en plus de
+dire. Le catalogue est FERMÉ et vit ici, dans `lib/lia/blocs.ts` (22 formes, celles de la maquette
+v5) ; le paquet `lia-ui` ne fait que les dessiner. Copie lisible pour les autres fils :
+`commun/assistant/BLOCS-lia.md`.
+
+- **Rien de neuf ne sort.** Un bloc porte les valeurs que le modèle a lues dans les faits SERVIS du
+  tour (niveaux 0 et 1, mêmes outils) et leurs identifiants, qui sortaient déjà dans les liens
+  `→ /fait/<id>` et `/pieces/<id>` du texte.
+- **Chaque bloc de données cite ses sources** (`sources`, 1 à 50 identifiants de faits ou de papiers). Une source
+  qui n'a pas été servie pendant CE tour rejette le bloc entier : le modèle ne peut pas citer un
+  fait qu'il n'a pas lu, ni en inventer un. Seule `confirmation` n'en porte pas (c'est une action
+  proposée, que le hub exécute après le oui de Marc, ADR 0017).
+- **Chaque bloc est validé seul** par Zod, avec ses cohérences (frise, réseau, grille, arbre ≤ 4
+  niveaux, lien `https` seulement) ; un bloc faux ne tue pas les autres ; au-delà de 20, le reste
+  est rejeté et compté. Les clés inconnues sont retirées, jamais rendues. La raison d'un rejet
+  nomme des champs, jamais des valeurs.
+- **L'outil `lia_blocs` n'est offert qu'à la route ask** (`blocs: true`) ; le chat de MemoryAI ne
+  l'a pas encore. Tests : `tests/liaBlocs.test.ts`, `tests/chat.test.ts` (« lia_blocs »).
