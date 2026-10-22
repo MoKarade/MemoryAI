@@ -7,7 +7,8 @@
   tant que sa maison n'a pas de point d'entrée.
 - **Portée** : `app/api/ask/route.ts`, `lib/lia/ask.ts`, `lib/chat/agent.ts` (`outilsPermis`),
   `lib/chat/couches.ts` (`lecteur`), `lib/authGuard.ts`, `middleware.ts`.
-- **Amont** : contrat « ask » du fil Assistant (trois sauts, `commun/assistant/CONTRAT-ask-lia.md`) ;
+- **Amont** : ADR 0017 (LIA vit dans MemoryAI ; « LIA ne répond qu'au propriétaire » est la décision 5 de
+  Marc, pas un choix de ce fil) ; contrat « ask » du fil Assistant (trois sauts, `commun/assistant/CONTRAT-ask-lia.md`) ;
   ADR 0001 (frontière), ADR 0011 (niveau 3 au chat seul).
 
 ## 1. Ce qui change à la frontière

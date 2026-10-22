@@ -21,3 +21,4 @@
 | 0014 | Le journal d'accès dit aussi les papiers lus, et le bon niveau pour un sommaire | accepté | PR du journal (branche `agence/memoryai-code/journal-adr0014`) |
 | 0015 | Le jeton dit qui écrit (INC-31) | proposé | branche `agence/memoryai-securite/cloisonnement-croise` |
 | 0016 | LIA répond au hub, et par lui à toutes les apps | accepté | MemoryAI#91 |
+| 0017 | LIA vit dans MemoryAI, le hub exécute | accepté (décision 5 de Marc, 22/10) | MemoryAI#96 |
