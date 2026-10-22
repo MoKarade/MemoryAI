@@ -1066,3 +1066,106 @@ code {
     flex: 1 1 100%;
   }
 }
+
+/* ── Graphe 3D (page Mémoire, réseau de LIA ; MemoryAI#74) ─────────────────────────────── */
+.graphe3d {
+  display: block;
+  width: 100%;
+  border-radius: var(--rayon);
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  touch-action: none;
+  cursor: grab;
+}
+.graphe3d:focus-visible {
+  outline: 3px solid var(--texte);
+  outline-offset: 2px;
+}
+
+/* ── Page Mémoire (MemoryAI#74) : chiffres, filtres de niveau, scène et fiche du point choisi. */
+.memoire-chiffres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1rem;
+  color: var(--texte-doux);
+}
+.memoire-chiffres b {
+  color: var(--texte);
+  font-size: 1.35rem;
+  font-weight: var(--poids-titre);
+  margin-right: 0.3rem;
+}
+.memoire-filtres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.memoire-niveaux {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.memoire-niveau {
+  /* La teinte du niveau, posée par la page (`JETON_NIVEAU`) ; défaut neutre. */
+  --teinte: var(--texte-doux);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 44px;
+  padding: 0 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--bordure);
+  background: var(--surface);
+  color: var(--texte);
+  font: inherit;
+  cursor: pointer;
+}
+.memoire-niveau i {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  background: var(--teinte);
+}
+.memoire-niveau[aria-pressed="false"] {
+  color: var(--texte-doux);
+  border-style: dashed;
+}
+.memoire-niveau[aria-pressed="false"] i {
+  background: transparent;
+  box-shadow: inset 0 0 0 2px var(--teinte);
+}
+.memoire-niveau:focus-visible {
+  outline: 3px solid var(--texte);
+  outline-offset: 2px;
+}
+.memoire-recherche {
+  flex: 1 1 14rem;
+}
+.memoire-scene {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: 900px) {
+  .memoire-scene {
+    grid-template-columns: minmax(0, 1fr) 18rem;
+    align-items: start;
+  }
+}
+.memoire-fiche h2 {
+  margin: 0.2rem 0 0.6rem;
+  overflow-wrap: anywhere;
+}
+.memoire-niveau-pastille {
+  --teinte: var(--texte-doux);
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--teinte);
+  color: var(--teinte);
+}
