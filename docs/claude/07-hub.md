@@ -9,7 +9,8 @@
   questions à LIA sur `POST /api/ask` (ADR 0016). Le sens sortant (`POST /api/acces`) n'existe
   pas : MemoryAI n'a pas d'invités.
 - **`POST /api/ask`** (contrat « ask » du fil Assistant) : corps `{ question, page?, source,
-  proprietaire }`, réponse `{ text }`. `proprietaire: true` est OBLIGATOIRE, sinon 403 : le hub
+  proprietaire }`, réponse `{ text, blocks? }` (blocs du catalogue fermé `lib/lia/blocs.ts`,
+  ADR 0016 § 6). `proprietaire: true` est OBLIGATOIRE, sinon 403 : le hub
   dit que c'est Marc qui parle, jamais un invité d'une app. Niveaux 0 et 1, outils en lecture
   seule, lecteur `lia-hub` au journal, budget du poste `chat`. Tout refus (401, 403, 503…) se lit
   « LIA indisponible » côté hub.

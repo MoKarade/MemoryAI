@@ -15,6 +15,7 @@
 
 import { z } from "zod";
 import type { ContexteOutils } from "../mcp/outils";
+import type { Bloc } from "./blocs";
 
 /** Au-delà, 413 avant même de lire le JSON (contrat : « corps > 8 Ko »). */
 export const TAILLE_MAX_CORPS = 8 * 1024;
@@ -104,9 +105,10 @@ export function composerQuestion(d: DemandeAsk): string {
  * mèneraient nulle part depuis une autre app, donc elles deviennent absolues. Le texte est
  * borné au contrat ; une réponse vide n'est pas une réponse (l'appelant rend 503).
  */
-export function composerReponse(texte: string, origine: string): { text: string } | null {
+export function composerReponse(texte: string, origine: string, blocs: readonly Bloc[] = []): { text: string; blocks?: Bloc[] } | null {
   const absolu = texte.replace(/\[→\/(fait|pieces)\//g, `[→${origine}/$1/`).trim();
   if (absolu.length === 0) return null;
   const text = absolu.length > LONGUEUR_MAX_TEXTE ? `${absolu.slice(0, LONGUEUR_MAX_TEXTE - 1)}…` : absolu;
-  return { text };
+  // Les blocs n'emportent aucun lien relatif : leurs `sources` sont des identifiants, pas des URL.
+  return blocs.length > 0 ? { text, blocks: [...blocs] } : { text };
 }
