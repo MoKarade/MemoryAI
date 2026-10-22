@@ -66,14 +66,7 @@ export default function manifest(): MetadataRoute.Manifest {
       { src: "/icone-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
       { src: "/icone-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
       // [PWA-ANDROID] Était `/icone-192.png`, donc le MÊME fichier que l'icône normale, et
-      // sous les 512 px attendus. Fichier distinct désormais. ⚠️ Son contenu est identique, et
-      // ce n'est pas un raccourci : l'icône de ce dépôt est un APLAT UNIFORME (mesuré : une
-      // seule couleur sur les 262 144 pixels), donc il n'y a rien à ramener dans la zone sûre —
-      // ⚠️ et la teinte ne se recopie PAS ici : `tests/couleurs.test.ts` exige que tout code
-      // hexadécimal de ce fichier suive le fond du thème, COMMENTAIRES COMPRIS. Il a attrapé
-      // la première version de cette phrase. Un aplat rogné
-      // reste le même aplat. Le jour où cette icône reçoit un vrai motif, c'est CETTE variante
-      // qu'il faut redessiner avec ses marges.
+      // sous les 512 px attendus. Fichier distinct désormais. Le maskable est un fichier distinct : le dessin y est réduit (zone sûre) sur une tuile pleine.
       { src: "/icone-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
     share_target: {
