@@ -74,13 +74,15 @@ const SECTION_DE: Record<CleNav, (typeof SECTIONS)[number]["cle"] | null> = {
   fait: null,
 };
 
-export function Nav({ active }: { active: CleNav }) {
+export function Nav({ active, droite }: { active: CleNav; droite?: React.ReactNode }) {
   return (
     <header className="nav">
       <MenuLia entrees={SECTIONS} allumee={SECTION_DE[active]} />
       <Link href="/" className="nav-marque">
         Lia
       </Link>
+      {/* Une seule chose à droite, et c'est la page qui la choisit (l'accueil : « N à juger »). */}
+      {droite ? <div className="nav-droite">{droite}</div> : null}
     </header>
   );
 }

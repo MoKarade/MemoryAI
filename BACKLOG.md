@@ -26,7 +26,7 @@ maquettes → choix de Marc → plan court → OK.
   juger » dès qu'il reste une carte non jugée et non passée, rien quand la pile est vide.
 - [x] **[R0] Maquettes** — A « Carnet », B « Nuit » et C « Bento » sont sur la toile (B et C dessinées le
   22/10/2026, MemoryAI#7) ; Marc a choisi B « Nuit » le 22/10/2026 (MemoryAI#8).
-- [ ] **[R1…R7]** — le plan de `docs/REFONTE-INTERFACE.md` §6, lot par lot. **[R1] fait le 22/10 (MemoryAI#9)** : socle Nuit + menu ; reste R2–R7.
+- [ ] **[R1…R7]** — le plan de `docs/REFONTE-INTERFACE.md` §6, lot par lot. **[R1] fait le 22/10 (MemoryAI#9)** : socle Nuit + menu ; **[R2] fait le 22/10 (MemoryAI#10)** : écran de Lia ; reste R3–R7.
 
 ## [L3] La pile « vrai / faux » (ADR 0012, 24/09/2026) 🟦
 

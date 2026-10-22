@@ -44,6 +44,14 @@ interface Props {
 
 const CLE_SESSION = "memoryai-chat";
 
+/**
+ * Trois amorces, écrites une fois. ⚠️ Elles PRÉREMPLISSENT le champ, elles n'envoient rien :
+ * un clic sur une suggestion qui partirait seul dépenserait un appel payant sans que Marc ait
+ * relu la question (même règle que `saisieInitiale`). Aucune ne contient de donnée perso : ce
+ * sont des questions, pas des réponses.
+ */
+const SUGGESTIONS = ["Quand finit mon bail ?", "Ce que tu sais de moi", "Où est mon passeport ?"] as const;
+
 const sansAbonnement = () => () => {};
 
 function lireStockage(cle: string): string | null {
@@ -102,13 +110,15 @@ function ChatClientInterne({
   // suivants s'ajoutent à la MÊME conversation plutôt que d'en ouvrir une par message.
   const [conversationId, setConversationId] = useState<string | null>(depart.conversationId);
   const [historique, setHistorique] = useState<ApercuHistorique[] | null>(historiqueInitial);
-  const [historiqueOuvert, setHistoriqueOuvert] = useState(false);
   const [avisHistorique, setAvisHistorique] = useState<string | null>(null);
   // Revue #71 : pendant qu'une conversation se rouvre, rien ne part — sinon un envoi ou un
   // second clic mêlerait les messages de l'une à l'identifiant de l'autre.
   const [ouverture, setOuverture] = useState(false);
   const occupe = enCours || ouverture;
   const fin = useRef<HTMLDivElement>(null);
+  const champ = useRef<HTMLTextAreaElement>(null);
+  // Les réglages et l'historique, repliés par défaut : la conversation garde l'écran.
+  const [optionsOuvertes, setOptionsOuvertes] = useState(false);
 
   /**
    * Le brouillon laissé par `/partage` (socle S6). Consommé UNE fois, puis retiré : un
@@ -192,7 +202,7 @@ function ChatClientInterne({
     setErreur(null);
     setAvisHistorique(null);
     setInclureN3(n3Possible);
-    setHistoriqueOuvert(false);
+    setOptionsOuvertes(false);
   }
 
   async function ouvrir(id: string) {
@@ -209,13 +219,18 @@ function ChatClientInterne({
       setMessages(r.messages.map((m) => ({ role: m.role, content: m.content })));
       setConversationId(id);
       setEpingle(null);
-      setHistoriqueOuvert(false);
+      setOptionsOuvertes(false);
       if (r.tronquee) setAvisHistorique(`Les ${r.tronquee} premiers messages ne sont pas affichés.`);
     } catch (err) {
       setAvisHistorique(err instanceof Error ? `Impossible de rouvrir : ${err.message}` : "Impossible de rouvrir cette conversation.");
     } finally {
       setOuverture(false);
     }
+  }
+
+  function choisirSuggestion(texte: string) {
+    setSaisie(texte);
+    champ.current?.focus();
   }
 
   async function confirmerEpingle() {
@@ -231,83 +246,78 @@ function ChatClientInterne({
   const epingleDef = epingle ? predicats.find((p) => p.predicat === epingle.predicat) : undefined;
 
   return (
-    <div className="chat-cadre">
-      <aside className={`chat-historique${historiqueOuvert ? " ouvert" : ""}`} aria-label="Conversations">
-        <div className="chat-historique-tete">
-          <button type="button" className="bouton bouton-principal" onClick={nouvelleConversation} disabled={occupe}>
-            Nouvelle conversation
-          </button>
-          {/* Sur téléphone, la liste se replie : la conversation garde tout l'écran. */}
-          <button
-            type="button"
-            className="bouton bouton-second chat-historique-bascule"
-            aria-expanded={historiqueOuvert}
-            aria-controls="chat-historique-liste"
-            onClick={() => setHistoriqueOuvert((o) => !o)}
-          >
-            Historique{historique?.length ? ` (${historique.length})` : ""}
-          </button>
-        </div>
-        <nav id="chat-historique-liste" className="chat-historique-liste">
-          {historique === null && <p className="hint">Historique indisponible : la base ne répond pas.</p>}
-          {historique?.length === 0 && <p className="hint">Aucune conversation gardée pour l’instant.</p>}
-          {historique && historique.length > 0 && (
-            <ul>
-              {historique.map((c) => (
-                <li key={c.id}>
-                  <button
-                    type="button"
-                    className={`chat-historique-item${c.id === conversationId ? " actif" : ""}`}
-                    aria-current={c.id === conversationId ? "true" : undefined}
-                    onClick={() => void ouvrir(c.id)}
-                    disabled={occupe}
-                  >
-                    <span className="chat-historique-titre">{c.titre ?? "(titre illisible)"}</span>
-                    <span className="hint">
-                      {new Intl.DateTimeFormat("fr-CA", { dateStyle: "medium", timeStyle: "short", timeZone: FUSEAU }).format(new Date(c.quand))}
-                      {" · "}
-                      {c.nbMessages} message{c.nbMessages > 1 ? "s" : ""}
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-          {avisHistorique && <p className="hint">{avisHistorique}</p>}
-        </nav>
-      </aside>
     <main className="chat">
-      <div className="chat-barre">
-        <label>
-          Modèle{" "}
-          <select className="champ" value={modele} onChange={(e) => setModele(e.target.value)} disabled={occupe}>
-            {modeles.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.nom}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label title={n2Possible ? "Autorise, pour cette conversation, les faits de niveau 2 (domicile, santé, relations, famille, finances). Journalisé." : "MEMORYAI_N2_CHAT n'est pas posée : le niveau 2 n'est jamais servi."}>
-          <input type="checkbox" checked={inclureN2} disabled={!n2Possible || enCours} onChange={(e) => setInclureN2(e.target.checked)} /> Niveau 2 pour cette conversation
-        </label>
-        <label title={n3Possible ? "Ouvert par défaut : le CONTENU de tes papiers d'identité et d'immigration (niveau 3), numéros compris, pour cette conversation. Jamais servi au connecteur claude.ai. Journalisé." : "MEMORYAI_N3_CHAT n'est pas posée : le contenu des papiers d'identité n'est jamais servi."}>
-          <input type="checkbox" checked={inclureN3} disabled={!n3Possible || enCours} onChange={(e) => setInclureN3(e.target.checked)} /> Papiers d’identité (niveau 3)
-        </label>
-        <span className="hint">
-          {totalSession.toFixed(4)} $ US cette conversation · plafond {plafondUsd.toFixed(2)} $/jour
-        </span>
-        <button type="button" className="bouton bouton-second" onClick={nouvelleConversation} disabled={occupe || messages.length === 0}>
+      <div className="chat-outils">
+        <button
+          type="button"
+          className="chat-bascule"
+          aria-expanded={optionsOuvertes}
+          aria-controls="chat-options"
+          onClick={() => setOptionsOuvertes((o) => !o)}
+        >
+          Options et historique{historique?.length ? ` (${historique.length})` : ""}
+        </button>
+        <button type="button" className="chat-bascule chat-nouvelle" onClick={nouvelleConversation} disabled={occupe || messages.length === 0}>
           Nouvelle
         </button>
+        <div id="chat-options" className="chat-options-corps" hidden={!optionsOuvertes}>
+          <div className="chat-reglages">
+            <label>
+              Modèle{" "}
+              <select className="champ" value={modele} onChange={(e) => setModele(e.target.value)} disabled={occupe}>
+                {modeles.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.nom}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label title={n2Possible ? "Autorise, pour cette conversation, les faits de niveau 2 (domicile, santé, relations, famille, finances). Journalisé." : "MEMORYAI_N2_CHAT n'est pas posée : le niveau 2 n'est jamais servi."}>
+              <input type="checkbox" checked={inclureN2} disabled={!n2Possible || enCours} onChange={(e) => setInclureN2(e.target.checked)} /> Niveau 2 pour cette conversation
+            </label>
+            <label title={n3Possible ? "Ouvert par défaut : le CONTENU de tes papiers d'identité et d'immigration (niveau 3), numéros compris, pour cette conversation. Jamais servi au connecteur claude.ai. Journalisé." : "MEMORYAI_N3_CHAT n'est pas posée : le contenu des papiers d'identité n'est jamais servi."}>
+              <input type="checkbox" checked={inclureN3} disabled={!n3Possible || enCours} onChange={(e) => setInclureN3(e.target.checked)} /> Papiers d’identité (niveau 3)
+            </label>
+            <p className="hint">
+              {totalSession.toFixed(4)} $ US cette conversation · plafond {plafondUsd.toFixed(2)} $/jour
+            </p>
+          </div>
+          <nav aria-label="Conversations gardées" className="chat-historique-liste">
+            {historique === null && <p className="hint">Historique indisponible : la base ne répond pas.</p>}
+            {historique?.length === 0 && <p className="hint">Aucune conversation gardée pour l’instant.</p>}
+            {historique && historique.length > 0 && (
+              <ul>
+                {historique.map((c) => (
+                  <li key={c.id}>
+                    <button
+                      type="button"
+                      className={`chat-historique-item${c.id === conversationId ? " actif" : ""}`}
+                      aria-current={c.id === conversationId ? "true" : undefined}
+                      onClick={() => void ouvrir(c.id)}
+                      disabled={occupe}
+                    >
+                      <span className="chat-historique-titre">{c.titre ?? "(titre illisible)"}</span>
+                      <span className="hint">
+                        {new Intl.DateTimeFormat("fr-CA", { dateStyle: "medium", timeStyle: "short", timeZone: FUSEAU }).format(new Date(c.quand))}
+                        {" · "}
+                        {c.nbMessages} message{c.nbMessages > 1 ? "s" : ""}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {avisHistorique && <p className="hint">{avisHistorique}</p>}
+          </nav>
+        </div>
       </div>
 
       {!configure && <p className="alerte bandeau">ANTHROPIC_API_KEY manquante : le chat est désactivé. Les autres pages marchent.</p>}
 
       <section className="chat-fil" aria-live="polite" aria-label="Conversation">
         {messages.length === 0 && (
-          <p className="hint chat-vide">
-            Pose une question sur ce que la mémoire sait de toi (« quand finit mon bail ? »). La conversation est gardée, chiffrée : tu la retrouves dans l’historique.
+          <p className="chat-vide">
+            Pose une question sur ce que la mémoire sait de toi. La conversation est gardée, chiffrée : tu la retrouves dans l’historique.
           </p>
         )}
         {messages.map((m, i) => (
@@ -420,35 +430,52 @@ function ChatClientInterne({
             )}
           </article>
         ))}
-        {enCours && <p className="hint">…</p>}
+        {enCours && <p className="hint chat-attente">Lia cherche…</p>}
         {erreur && <p className="alerte bandeau">{erreur}</p>}
         <div ref={fin} />
       </section>
 
-      <form className="chat-saisie" onSubmit={envoyer}>
-        <label htmlFor="saisie" className="sr-only">
-          Message
-        </label>
-        <textarea
-          className="champ"
-          id="saisie"
-          value={saisie}
-          onChange={(e) => setSaisie(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              void envoyer(e as unknown as React.FormEvent);
-            }
-          }}
-          rows={2}
-          placeholder="Écris à ta mémoire…"
-          disabled={!configure || occupe}
-        />
-        <button type="submit" className="bouton bouton-principal" disabled={!configure || occupe || !saisie.trim()}>
-          Envoyer
-        </button>
-      </form>
+      <div className="chat-bas">
+        {/* Les suggestions ne se montrent que champ vide et rien en cours : tant qu'on écrit ou
+            qu'on attend, elles ne servent qu'à encombrer. */}
+        {configure && !occupe && !saisie.trim() && (
+          <ul className="chat-suggestions" aria-label="Suggestions de questions">
+            {SUGGESTIONS.map((q) => (
+              <li key={q}>
+                <button type="button" className="suggestion" onClick={() => choisirSuggestion(q)}>
+                  {q}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+        <form className="chat-saisie" onSubmit={envoyer}>
+          <label htmlFor="saisie" className="sr-only">
+            Message
+          </label>
+          <textarea
+            ref={champ}
+            className="champ"
+            id="saisie"
+            value={saisie}
+            onChange={(e) => setSaisie(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                void envoyer(e as unknown as React.FormEvent);
+              }
+            }}
+            rows={1}
+            placeholder="Demande-moi n'importe quoi…"
+            disabled={!configure || occupe}
+          />
+          <button type="submit" className="chat-envoyer" aria-label="Envoyer" disabled={!configure || occupe || !saisie.trim()}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M12 19V5M5 12l7-7 7 7" />
+            </svg>
+          </button>
+        </form>
+      </div>
     </main>
-    </div>
   );
 }
