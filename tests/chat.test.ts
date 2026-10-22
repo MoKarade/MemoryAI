@@ -121,6 +121,30 @@ describe("tourDeChat", () => {
     expect(dernier(second.recus[1]!)).toContain("Arachides");
   });
 
+  // ADR 0016 : la liste blanche tient aux DEUX bouts — décrire et exécuter.
+  it("outilsPermis : seuls ces outils sont décrits, et un autre nommé quand même n'est pas exécuté", async () => {
+    const outilsVus: string[][] = [];
+    const reponses = [appel("memoryai_proposer", { predicat: "x", valeur: "y" }), texte("ok")];
+    const client: ClientModele = {
+      async create(p) {
+        outilsVus.push(p.tools.map((t) => t.name));
+        return reponses.shift()!;
+      },
+    };
+    const r = await tourDeChat({
+      client,
+      modele: "claude-haiku-4-5",
+      messages: [{ role: "user", content: "retiens ça" }],
+      inclureN2: false,
+      inclureN3: false,
+      outils: outils(),
+      admin: depotAdminDrizzle(db),
+      outilsPermis: new Set(["memoryai_chercher"]),
+    });
+    expect(outilsVus[0]).toEqual(["memoryai_chercher"]);
+    expect(r.outilsAppeles).toEqual([]);
+  });
+
   it("le plafond ferme la porte AVANT l'appel, y compris entre deux tours d'outils", async () => {
     const admin = depotAdminDrizzle(db);
     await admin.enregistrerDepense({ jour: "2026-09-15", modele: "claude-opus-5", entree: 0, sortie: 0, coutUsd: 0.999 });

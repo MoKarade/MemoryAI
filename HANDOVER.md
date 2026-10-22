@@ -34,6 +34,12 @@ clé Anthropic : coût nul. `memoryai_etat` rend les comptes et la dernière mes
   arrivent des jetons, la transparence par `globalAlpha`). Verrous : `tests/graphe3d*.test.ts`. La page Mémoire qui
   le monte arrive dans la PR suivante.
 
+**LIA répond au hub (MemoryAI#91, ADR 0016)**, avant la suite du lot 5 : Marc veut LIA publiée dans toutes les apps
+(22/10 21:22Z). `POST /api/ask` (`app/api/ask/route.ts`, logique pure dans `lib/lia/ask.ts`) : `x-hub-token` seul,
+propriétaire seul (`proprietaire: true` dit par le hub, sinon 403), niveaux 0 et 1, outils en lecture seule
+(`OUTILS_LIA_HUB`, tenus aux deux bouts par `outilsPermis` dans `tourDeChat`), lecteur `lia-hub`, question jamais
+journalisée, conversation non consignée en v1. Verrous : `tests/liaAsk.test.ts`, `tests/chat.test.ts` (« outilsPermis »).
+
 ## ✅ FAIT — 22/10/2026 : Lia est l'écran principal, redessiné (MemoryAI#10, [R2])
 
 `app/chat/ChatClient.tsx` et `app/globals.css` : la réponse de Lia est du texte sur le fond, grand et léger en sombre

@@ -107,15 +107,22 @@ export async function tourDeChat(params: {
    * route, elle, les passe toujours.
    */
   couches?: Couches;
+  /**
+   * Les SEULS outils offerts au modèle (ADR 0016). Absent, tous : c'est le chat de Marc. Une
+   * liste blanche, et tenue aux DEUX bouts : l'outil absent n'est pas décrit au modèle, et un
+   * appel qui le nommerait quand même reçoit « Outil inconnu » au lieu d'être exécuté.
+   */
+  outilsPermis?: ReadonlySet<string>;
 }): Promise<ResultatTour> {
-  const { client, modele, inclureN2, inclureN3, outils, admin } = params;
+  const { client, modele, inclureN2, inclureN3, outils, admin, outilsPermis } = params;
+  const offerts = outilsPermis ? OUTILS.filter((o) => outilsPermis.has(o.name)) : OUTILS;
   const systeme = construirePrompt(params.couches);
   const historique = params.messages.slice(-MAX_MESSAGES);
   if (historique.length === 0 || historique[historique.length - 1]!.role !== "user") {
     throw new Error("Le dernier message doit venir de Marc.");
   }
   const jour = jourQuebec(outils.maintenant());
-  const tools = OUTILS.map((o) => ({ name: o.name, description: o.description, input_schema: o.inputSchema as Record<string, unknown> }));
+  const tools = offerts.map((o) => ({ name: o.name, description: o.description, input_schema: o.inputSchema as Record<string, unknown> }));
   const conversation: unknown[] = historique.map((m) => ({ role: m.role, content: m.content }));
   // ⚠️ Les faits servis s'ACCUMULENT sur tout le tour, pas sur le dernier appel d'outil.
   // Un tour agentique en fait jusqu'à 6 : ne garder que le dernier laisserait sans lien
@@ -167,7 +174,7 @@ export async function tourDeChat(params: {
     conversation.push({ role: "assistant", content: reponse.content });
     const retours = [];
     for (const appel of appels) {
-      const outil = OUTILS.find((o) => o.name === appel.name);
+      const outil = offerts.find((o) => o.name === appel.name);
       let texte: string;
       let erreur = false;
       if (!outil) {
