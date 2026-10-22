@@ -110,7 +110,7 @@ que s'il y a des cartes. En bas : deux ou trois suggestions et la saisie. Pas de
 0. **Maquettes** : A, B et C dessinées ; Marc a choisi B « Nuit » le 22/10/2026 (§3).
 1. **R0 — `[L3-acces]`** *(avant tout, petit)* : la pile atteignable (pastille « à juger »
    comptée sur TOUTES les cartes de la pile). C'est un défaut du lot 3, pas de la refonte.
-2. **R1 — le socle** : tokens (couleurs, typo, espacements) de la direction choisie, gabarit
+2. **R1 — le socle** *(livré le 22/10, MemoryAI#9)* : tokens (couleurs, typo, espacements) de la direction choisie, gabarit
    d'écran, menu ; la barre d'onglets disparaît.
 3. **R2 — Lia** : l'écran de conversation redessiné (bulles, sources, suggestions, saisie).
 4. **R3 — Vrai ou faux** : la pile + `/a-valider` fusionnés.

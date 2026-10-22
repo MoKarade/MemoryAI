@@ -3,6 +3,18 @@
 > L'état RÉEL, à lire en premier. Ce qui est décidé vit dans `docs/adr/0001-…`, ce qui reste
 > à faire dans `BACKLOG.md`. Ce fichier dit où on en est, et ce qui attend un geste de Marc.
 
+## ✅ FAIT — 22/10/2026 : le socle visuel « Nuit » est posé, la barre d'onglets est remplacée par un menu (MemoryAI#9, [R1])
+
+Direction B « Nuit » (choix de Marc, 22/10) : en thème sombre, fond bleu-nuit `#10141c`, accent doré clair `#e6ce94`,
+titres légers (`--poids-titre: 300`) ; tous les tokens restent dans `app/globals.css`. La barre d'onglets disparaît :
+`components/Nav.tsx` rend un en-tête (bouton menu + « Lia ») et `components/MenuLia.tsx` un `<dialog>` natif
+(plein écran sur téléphone, tiroir de 22 rem sur PC ; Échap ferme, le focus revient au bouton). Sept entrées
+(`SECTIONS`), la première reste `/` : le `start_url` du manifeste continue d'en être dérivé. Verrou : `tests/menuLia.test.ts`.
+- **Thème clair inchangé** (jetons clairs d'avant) : le passer en sombre seul est une décision de Marc.
+- **Pas de police téléchargée** (convention du dépôt, CSP `font-src 'self'`) : Albert Sans de la maquette n'est pas livrée ;
+  la servir depuis le dépôt (fontsource) demanderait une exception écrite.
+- Les entrées du menu n'ont pas encore leur phrase d'état : R2 et R3.
+
 ## ✅ FAIT — 16/10/2026 : les erreurs du serveur peuvent partir à Sentry, sans texte d'erreur (MemoryAI#127)
 
 `instrumentation.ts` branche `@sentry/nextjs` côté SERVEUR, réglé par `lib/sentryConfig.ts`. **Éteint tant que
