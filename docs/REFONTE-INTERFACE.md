@@ -54,8 +54,15 @@ Toile : <https://claude.ai/artifact/BUpBxx4n5n2YwUtiWuYZDe> (privée, à Marc).
 
 - **A — Carnet** *(brouillon posé, interactif)* : papier chaud, titres en serif (Fraunces),
   texte en Source Sans 3, un seul accent terre cuite. Trois écrans : Lia · menu · pile.
-- **B — Nuit** *(à dessiner)* : sombre et calme, un accent clair, pour le soir.
-- **C — Bento** *(à dessiner)* : tuiles arrondies, la même famille que le hub.
+- **B — Nuit** *(dessinée le 22/10/2026, interactive)* : fond bleu-nuit, texte en Albert Sans léger, un accent
+  doré clair (réglable). Pas de cartes : les réponses de Lia s'écrivent à même le fond, le menu est une
+  liste de lignes séparées par des filets. Trois écrans : Lia · menu · pile.
+- **C — Bento** *(dessinée le 22/10/2026, interactive)* : tuiles plates à bordure fine et coins de 16 px,
+  Outfit, mêmes jetons que le hub (`#07090D` / `#0E1014` / `#15181E`) ; l'accent est l'orange de MemoryAI
+  (réglable). Le menu est une grille de tuiles de tailles différentes. Trois écrans : Lia · menu · pile.
+
+Les trois sont sur la même toile, côte à côte, lisibles à 390 px, en données fictives. Le choix de Marc
+est la tâche MemoryAI#8.
 
 Les trois partagent la même STRUCTURE (celle de la §4), pour que Marc choisisse un style et non
 une architecture. Les valeurs entre [CROCHETS] sont des emplacements, jamais des chiffres
