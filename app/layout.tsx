@@ -21,7 +21,7 @@ export const viewport: Viewport = {
   // emploi à la moitié des lancements, et ça ne se voit qu'une fois l'app installée.
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#f6f7f9" },
-    { media: "(prefers-color-scheme: dark)", color: "#07090d" },
+    { media: "(prefers-color-scheme: dark)", color: "#10141c" },
   ],
   viewportFit: "cover",
 };

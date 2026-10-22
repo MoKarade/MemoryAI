@@ -54,7 +54,10 @@
      ici fait un flash au lancement, que personne ne voit parce que personne ne relit un
      manifeste (leçon JobAI). */
   --bg-systeme-clair: #f6f7f9;
-  --bg-systeme-sombre: #07090d;
+  --bg-systeme-sombre: #10141c;
+
+  /* Poids des titres : plein en clair, léger en sombre (direction « Nuit »). */
+  --poids-titre: 800;
 
   --rayon: 16px;
   --rayon-petit: 12px;
@@ -67,21 +70,23 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --fond: #07090d;
-    --surface: #0e1014;
-    --surface-douce: #15181e;
-    --bordure: #262a33;
-    --bordure-champ: #6f7b8e;
+    /* Thème sombre = la direction B « Nuit » choisie par Marc le 22/10/2026 (MemoryAI#8) :
+       bleu-nuit calme, un seul accent doré clair. Les valeurs sont celles de la maquette. */
+    --fond: #10141c;
+    --surface: #181d28;
+    --surface-douce: #212836;
+    --bordure: #2a3140;
+    --bordure-champ: #67738b;
 
-    --texte: #f8fafc;
-    --texte-doux: #94a3b8;
+    --texte: #e8eaf0;
+    --texte-doux: #a5aebf;
 
-    --accent: #e6eaf2;
-    --accent-fonce: #c3cad8;
-    --sur-accent: #07090d;
+    --accent: #e6ce94;
+    --accent-fonce: #d3b873;
+    --sur-accent: #10141c;
 
-    --repere: #fb923c;
-    --repere-doux: #2a1b14;
+    --repere: #e6ce94;
+    --repere-doux: #2a2618;
 
     --succes-fond: #0f2a24;
     --succes-texte: #6ee7b7;
@@ -89,6 +94,9 @@
     --alerte-texte: #fbbf24;
     --erreur-fond: #331618;
     --erreur-texte: #f87171;
+
+    /* Titres légers, comme sur la maquette : la finesse fait la calme de « Nuit ». */
+    --poids-titre: 300;
   }
 }
 
@@ -121,11 +129,11 @@ h3 {
 }
 h1 {
   font-size: clamp(1.75rem, 1.4rem + 1.6vw, 2.25rem);
-  font-weight: 800;
+  font-weight: var(--poids-titre);
 }
 h2 {
   font-size: 1.25rem;
-  font-weight: 700;
+  font-weight: var(--poids-titre);
 }
 
 a {
@@ -344,58 +352,99 @@ code {
   clip: rect(0 0 0 0);
   white-space: nowrap;
 }
+/* ── En-tête et menu (R1 de la refonte, MemoryAI#9) : plus de barre d'onglets. Un bouton ouvre
+   le menu ; il tient dans un <dialog> modal, donc le navigateur fournit le piège du focus,
+   Échap et le retour du focus au bouton. Plein écran sur téléphone, tiroir à gauche dès 48rem. ── */
 .nav {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.75rem clamp(1rem, 4vw, 2rem);
-  border-bottom: 1px solid var(--bordure);
-  background-color: var(--surface);
+  gap: 0.5rem;
+  padding: 0.5rem clamp(0.75rem, 4vw, 1.5rem);
+  background-color: var(--fond);
   position: sticky;
   top: 0;
   z-index: 2;
 }
-.nav nav {
-  display: flex;
-  gap: 0.25rem;
-}
 .nav-marque {
-  font-weight: 800;
-  letter-spacing: -0.02em;
+  font-size: 1.375rem;
+  font-weight: var(--poids-titre);
+  letter-spacing: 0.08em;
   text-decoration: none;
   color: var(--texte);
 }
-.nav-lien {
-  display: inline-flex;
+.menu-bouton,
+.menu-fermer {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 22px;
+  background-color: transparent;
+  color: var(--texte);
+  cursor: pointer;
+}
+.menu {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background-color: var(--fond);
+  color: var(--texte);
+}
+.menu::backdrop {
+  background-color: rgb(0 0 0 / 0.55);
+}
+.menu[open] {
+  display: block;
+}
+.menu-corps {
+  height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem 1rem 1.5rem;
+}
+.menu-tete {
+  display: flex;
   align-items: center;
-  min-height: 44px;
-  padding: 0 0.9rem;
-  border-radius: 999px;
+  justify-content: space-between;
+  padding-bottom: 1rem;
+}
+.menu-liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-bottom: 1px solid var(--bordure);
+}
+.menu-lien {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 72px;
+  padding: 0 0.25rem;
+  border-top: 1px solid var(--bordure);
+  font-size: 1.3125rem;
   text-decoration: none;
-  color: var(--texte-doux);
-  font-weight: 600;
+  color: var(--texte);
 }
-/* ⚠️ [ADR 0009] SOUS 40rem, LA BARRE PASSE À LA LIGNE. Mesuré le 23/09 dans Chromium : à
-   390 px, la barre faisait 674 px de large — la page entière défilait de côté. Le défaut était là
-   dès quatre onglets (~530 px) ; le cinquième l'a rendu impossible à ignorer. Même seuil que les
-   tuiles (`40rem`) : deux seuils différents ouvriraient une fenêtre où l'un a basculé et pas
-   l'autre. La cible reste à 44 px de haut. */
-@media (max-width: 40rem) {
-  .nav {
-    flex-wrap: wrap;
-    row-gap: 0.25rem;
-  }
-  .nav nav {
-    flex-wrap: wrap;
-  }
-  .nav-lien {
-    padding: 0 0.7rem;
-  }
+.menu-lien[aria-current="page"]::after {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 5px;
+  background-color: var(--repere);
 }
-.nav-lien.actif {
-  background: var(--repere-doux);
-  color: var(--repere);
+@media (min-width: 48rem) {
+  .menu {
+    width: 22rem;
+    max-width: 90vw;
+    border-right: 1px solid var(--bordure);
+  }
 }
 .page {
   max-width: 64rem;
