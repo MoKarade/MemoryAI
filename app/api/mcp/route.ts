@@ -27,6 +27,7 @@ import { OAuthError } from "@/lib/mcp/oauth";
 import type { ContexteOutils } from "@/lib/mcp/outils";
 import { traiterMessage, type MessageJsonRpc } from "@/lib/mcp/protocole";
 import { assurerMigrations } from "@/lib/migrations";
+import { depotBancDrizzle } from "@/lib/banc/passe";
 import { depotPiecesLectureDrizzle } from "@/lib/pieces/depotLecture";
 
 export const dynamic = "force-dynamic";
@@ -85,6 +86,7 @@ export async function POST(request: Request): Promise<Response> {
     lecture: depotLectureDrizzle(db),
     ecriture: depotDrizzle(db),
     pieces: depotPiecesLectureDrizzle(db),
+    banc: depotBancDrizzle(db),
     questions: depotQuestionsDrizzle(db),
     conversations: depotConversationsDrizzle(db),
     cle,

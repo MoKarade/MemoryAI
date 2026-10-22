@@ -757,6 +757,45 @@ export const avisPile = pgTable(
   ],
 );
 
+/**
+ * Le BANC de questions de la refonte LIA (MemoryAI#69, migration 0023). Tiré UNE fois par banc
+ * (`banc` = son nom, `papiers-v1` d'abord), jamais réécrit : un banc qu'on retouche ne mesure
+ * plus rien.
+ *
+ * ⚠️ `contenu` est CHIFFRÉ (AAD `banc|<id>`, niveau 2) : la question nomme un émetteur ou un
+ * type de papier de Marc. `capacite` reste en clair : elle ne dit rien sur lui, et c'est elle
+ * que les comptes de `memoryai_etat` regroupent.
+ */
+export const bancQuestions = pgTable(
+  "banc_questions",
+  {
+    id: text("id").primaryKey(),
+    banc: text("banc").notNull(),
+    rang: integer("rang").notNull(),
+    capacite: text("capacite").notNull(),
+    contenu: text("contenu").notNull(),
+    creeLe: timestamp("cree_le", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("banc_questions_rang").on(t.banc, t.rang)],
+);
+
+/**
+ * Une MESURE du banc : des NOMBRES seulement (`lib/banc/banc.ts#Mesure` en JSON), jamais une
+ * question ni un identifiant de papier. En ajout seul : la suite des mesures EST l'historique.
+ */
+export const bancMesures = pgTable(
+  "banc_mesures",
+  {
+    id: serial("id").primaryKey(),
+    banc: text("banc").notNull(),
+    /** Ce qui a cherché : `recherche-plein-texte` au lot 0, LIA ensuite. */
+    chercheur: text("chercheur").notNull(),
+    resultat: text("resultat").notNull(),
+    mesureLe: timestamp("mesure_le", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("banc_mesures_banc").on(t.banc, t.mesureLe)],
+);
+
 export type Fait = typeof faits.$inferSelect;
 export type NouveauFait = typeof faits.$inferInsert;
 export type Provenance = typeof provenances.$inferSelect;

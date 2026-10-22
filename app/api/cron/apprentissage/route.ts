@@ -20,6 +20,7 @@
 
 import { timingSafeEqual, createHash } from "node:crypto";
 import Anthropic from "@anthropic-ai/sdk";
+import { depotBancDrizzle, passeBanc, sourcesPapiers, type FinPasseBanc } from "@/lib/banc/passe";
 import { passeApprentissage, passeVide, MOTIFS_FIN_PASSE, type ResultatPasse } from "@/lib/apprentissage";
 import { depotConversationsDrizzle } from "@/lib/conversations/depot";
 import { MODELE_DEFAUT } from "@/lib/coutChat";
@@ -30,6 +31,7 @@ import { depotQuestionsDrizzle } from "@/lib/depotQuestions";
 import { estGele } from "@/lib/gel";
 import { rendreLisible } from "@/lib/lecture";
 import { accesDonnees } from "@/lib/pageDonnees";
+import { depotPiecesLectureDrizzle } from "@/lib/pieces/depotLecture";
 
 export const dynamic = "force-dynamic";
 /** Une passe lit plusieurs conversations et appelle le modèle : la seconde par défaut ne suffit pas. */
@@ -43,8 +45,8 @@ function memeSecret(a: string, b: string): boolean {
   return timingSafeEqual(ha, hb);
 }
 
-function rendre(r: ResultatPasse, statut = 200): Response {
-  return Response.json({ ...r, motif: MOTIFS_FIN_PASSE[r.fin] }, { status: statut, headers: NO_STORE });
+function rendre(r: ResultatPasse, banc: FinPasseBanc | "echec" | null = null): Response {
+  return Response.json({ ...r, motif: MOTIFS_FIN_PASSE[r.fin], banc }, { status: 200, headers: NO_STORE });
 }
 
 export async function POST(req: Request): Promise<Response> {
@@ -65,8 +67,27 @@ export async function POST(req: Request): Promise<Response> {
   if (estGele()) return rendre(passeVide("gel"));
   const acces = await accesDonnees();
   if (!acces.ok) return rendre(passeVide(acces.manque === "base" ? "base-absente" : "cle-absente"));
+
+  // Le banc de la refonte LIA (MemoryAI#69) : Postgres seul, aucun modèle, donc AVANT la clé
+  // Anthropic. ⚠️ Son échec ne bloque pas l'apprentissage, mais il se VOIT : journal serveur,
+  // et `banc: "echec"` dans la réponse — jamais une fin muette.
+  let banc: FinPasseBanc | "echec";
+  try {
+    banc = (
+      await passeBanc({
+        depot: depotBancDrizzle(acces.db),
+        sources: sourcesPapiers(depotPiecesLectureDrizzle(acces.db), acces.cle),
+        cle: acces.cle,
+        maintenant: () => new Date(),
+      })
+    ).fin;
+  } catch (err) {
+    console.error("[banc] passe impossible", err);
+    banc = "echec";
+  }
+
   const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
-  if (!apiKey) return rendre(passeVide("cle-absente"));
+  if (!apiKey) return rendre(passeVide("cle-absente"), banc);
 
   const anthropic = new Anthropic({ apiKey });
   const r = await passeApprentissage({
@@ -111,7 +132,7 @@ export async function POST(req: Request): Promise<Response> {
     },
     comptesParPredicat: () => comptesParPredicatValides(acces.db),
   });
-  return rendre(r);
+  return rendre(r, banc);
 }
 
 /**

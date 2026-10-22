@@ -162,6 +162,13 @@
       "when": 1790899200022,
       "tag": "0022_voix_de_lia",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1790985600023,
+      "tag": "0023_banc",
+      "breakpoints": true
     }
   ]
 }
