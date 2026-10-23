@@ -64,7 +64,7 @@ describe("consigner et relire", () => {
 
     const [enBase] = await db.select().from(schema.messages).where(eq(schema.messages.conversationId, id));
     expect(enBase!.contenu, "le contenu est scellé, pas en clair").not.toContain("bail");
-    expect(enBase!.contenu.startsWith("v1:")).toBe(true);
+    expect(enBase!.contenu.startsWith("v2:")).toBe(true);
 
     const lus = await d.messages(id, cle);
     expect(lus.map((m) => [m.index, m.role, m.contenu])).toEqual([

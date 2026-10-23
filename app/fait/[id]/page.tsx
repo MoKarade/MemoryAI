@@ -55,6 +55,7 @@ const MESSAGES_CORRECTION: Record<string, string> = {
   type_valeur_incompatible:
     "Le vocabulaire n’accepte pas ce type de valeur pour ce prédicat (une date là où il attend du texte, ou l’inverse). Rien n’a été écrit.",
   n3_texte: "Ce prédicat est de niveau 3 : son contenu ne se saisit pas ici. Rien n’a été écrit.",
+  sauvetage_en_cours: "La mémoire est en cours de sauvetage : rien ne s’écrit tant qu’il n’est pas clos. L’ancienne valeur est intacte.",
 };
 
 /** Bornes de lecture : une fiche montre ce qui tient à l'écran, pas une base de données. */

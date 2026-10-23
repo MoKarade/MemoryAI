@@ -796,6 +796,46 @@ export const bancMesures = pgTable(
   (t) => [index("banc_mesures_banc").on(t.banc, t.mesureLe)],
 );
 
+/**
+ * Le sauvetage du 23/10/2026 (ADR 0019, migration 0024). `ancien` est le JSON de ce que la ligne
+ * portait avant d'être sauvée (scellés `v1`, empreintes) : écrit dans la même instruction que la
+ * ligne, jamais modifié ensuite.
+ */
+export const chiffreV1Archive = pgTable(
+  "chiffre_v1_archive",
+  {
+    tableNom: text("table_nom").notNull(),
+    ligneId: text("ligne_id").notNull(),
+    ancien: text("ancien").notNull(),
+    sauveLe: timestamp("sauve_le", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ name: "chiffre_v1_archive_pk", columns: [t.tableNom, t.ligneId] })],
+);
+
+/** Les lignes que le sauvetage n'a pas pu sauver. `raisons` : des codes fermés, jamais une valeur. */
+export const sauvetageEchecs = pgTable(
+  "sauvetage_echecs",
+  {
+    tableNom: text("table_nom").notNull(),
+    ligneId: text("ligne_id").notNull(),
+    raisons: text("raisons").notNull(),
+    essais: integer("essais").notNull().default(1),
+    majLe: timestamp("maj_le", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ name: "sauvetage_echecs_pk", columns: [t.tableNom, t.ligneId] })],
+);
+
+/** Une seule ligne, posée par la migration si la base avait déjà des données. `closLe` vide ⇒ écritures des apps fermées. */
+export const sauvetageEtat = pgTable(
+  "sauvetage_etat",
+  {
+    id: integer("id").primaryKey(),
+    ouvertLe: timestamp("ouvert_le", { withTimezone: true }).notNull().defaultNow(),
+    closLe: timestamp("clos_le", { withTimezone: true }),
+  },
+  (t) => [check("sauvetage_etat_une_ligne", sql`${t.id} = 1`)],
+);
+
 export type Fait = typeof faits.$inferSelect;
 export type NouveauFait = typeof faits.$inferInsert;
 export type Provenance = typeof provenances.$inferSelect;

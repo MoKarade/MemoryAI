@@ -25,6 +25,7 @@ import type { Ecrivain } from "./jetons";
 import { statutInitial } from "./autoValidation";
 import { validerFait, type CodeRefus, type FaitValide } from "./validerFait";
 import { definition } from "./vocabulaire";
+import { SauvetageEnCoursError } from "./sauvetage/porte";
 
 export const LOT_MAX = 50;
 
@@ -188,6 +189,9 @@ export async function ecrireLot(
   if (ecrivain.role !== "ecriture") throw new EcritureRetireeError(ecrivain.appId);
   const perimetre = await depot.perimetre(ecrivain.appId);
   if (perimetre && perimetre.role !== "ecriture") throw new EcritureRetireeError(ecrivain.appId);
+  // ADR 0019 : pendant le sauvetage, rien ne s'écrit — sinon un fait encore en `v1` entrerait
+  // en double sous la nouvelle clé, et sa ligne sauvée heurterait ce double.
+  if (await depot.sauvetageEnCours?.()) throw new SauvetageEnCoursError();
 
   const resultat: ResultatLot = {
     recus: entrees.length, acceptes: 0, dejaPresents: 0, refuses: [], idsCrees: [],

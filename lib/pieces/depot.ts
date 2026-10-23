@@ -8,10 +8,13 @@ import { inArray } from "drizzle-orm";
 import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
 import * as schema from "../db/schema";
 import type { NouvellePiece, Perimetre } from "../db/schema";
+import { sauvetageEnCours } from "../sauvetage/porte";
 
 export type NouvelExemplaire = typeof schema.pieceExemplaires.$inferInsert;
 
 export interface DepotPieces {
+  /** ADR 0019 : vrai tant que le sauvetage n'est pas clos. Absent (dépôts de test) = jamais. */
+  sauvetageEnCours?(): Promise<boolean>;
   /** Parmi ces empreintes, celles qui figurent dans `oublis`. */
   oubliesParmi(empreintes: readonly string[]): Promise<Set<string>>;
   /**
@@ -117,6 +120,8 @@ export function depotPiecesDrizzle(db: Base): DepotPieces {
         throw err;
       }
     },
+
+    sauvetageEnCours: () => sauvetageEnCours(db),
 
     async perimetre(appId) {
       const rows = await db

@@ -484,6 +484,12 @@ code {
 .zone-rouge {
   border-color: var(--erreur-texte);
 }
+/* ADR 0019 : le bouton du sauvetage, puis ce qu'il a fait. */
+.sauvetage-direct {
+  display: grid;
+  gap: 0.5rem;
+  justify-items: start;
+}
 .liste-faits {
   display: grid;
   gap: var(--gap);
