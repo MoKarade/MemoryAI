@@ -43,7 +43,10 @@ clé Anthropic : coût nul. `memoryai_etat` rend les comptes et la dernière mes
   des heures (`lib/accueil/decor.ts`), ce que montre chaque espace (`contenuEspaces`, `lib/accueil/espaces.ts` :
   Budget, Outils, Formes, Idées et Souvenirs ont une source, Santé, Sa journée et Monde le disent vides) et le
   panneau d'un espace ouvert (`components/PanneauEspace.tsx`). Verrous : `tests/accueil.test.ts`,
-  `tests/panneauEspace.test.ts`. La PR suivante monte la maison sur `/` et rend la conversation à `/chat`.
+  `tests/panneauEspace.test.ts`. Puis la maison montée sur `/` (`app/AccueilClient.tsx`) : LIA au centre
+  (`lia-ui` montée dans la maison, une seule par page : `LiaMaison` se retire de `/`), les espaces en orbite qui
+  s'arrêtent au survol, la pastille « à juger » dans l'en-tête. La conversation complète est revenue à `/chat`
+  (section « Parler »). Verrou : `tests/accueilRendu.test.ts`.
 
 **LIA répond au hub (MemoryAI#91, ADR 0016)**, avant la suite du lot 5 : Marc veut LIA publiée dans toutes les apps
 (22/10 21:22Z). `POST /api/ask` (`app/api/ask/route.ts`, logique pure dans `lib/lia/ask.ts`) : `x-hub-token` seul,

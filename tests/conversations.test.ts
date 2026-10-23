@@ -255,12 +255,13 @@ describe("la frontière — aucune app n'atteint les conversations", () => {
     f.startsWith("app/regler/") ||
     // **L'HISTORIQUE DU CHAT** (L2, ADR 0011, 24/09). Ajoutées parce que le test a ROUGI, et
     // la question posée par sa consigne a une réponse : ces deux fichiers SONT le chat de
-    // Marc — la page d'accueil (`/`, où vit le chat depuis L26a) et ses actions serveur —,
+    // Marc — la page de la conversation (`/chat` ; elle était l'accueil de L26a à MemoryAI#74)
+    // et ses actions serveur —,
     // derrière `requireSession()`, sans aucun jeton d'app ni périmètre. Ils LISENT, eux, et
     // c'est le but : un titre par conversation pour la liste, les messages d'UNE conversation
     // du chat (`source === "memoryai"`) quand Marc la rouvre. Rien n'en sort vers une app ;
     // la garantie contre une app reste le `Pick<…>` du cas suivant.
-    f === "app/page.tsx" ||
+    f === "app/chat/page.tsx" ||
     f === "app/chat/actions.ts";
 
   it("le scan trouve bien des fichiers, et la règle ne laisse pas tout passer — anti-vacuité", () => {

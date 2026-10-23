@@ -1173,14 +1173,224 @@ code {
   color: var(--teinte);
 }
 
-/* ── La maison de LIA (accueil, MemoryAI#74, maquette v5) : un espace ouvert, en panneau à droite
-   sur PC, en feuille sur téléphone (`components/PanneauEspace.tsx`). ── */
+/* ── La maison de LIA (accueil, MemoryAI#74, maquette v5) : elle au centre, ses espaces en
+   orbite. Plein écran, sans défilement ; un espace s'ouvre en panneau. ── */
+.maison {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: radial-gradient(120% 90% at 50% 105%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 60%), var(--fond);
+}
+.maison-sol {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+}
+.maison-orbite {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  border: 1px dashed color-mix(in srgb, var(--texte) 8%, transparent);
+  pointer-events: none;
+  transition: opacity 0.35s;
+}
+.maison-tete {
+  position: absolute;
+  z-index: 5;
+  left: max(12px, env(safe-area-inset-left, 0px));
+  top: max(10px, env(safe-area-inset-top, 0px));
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  max-width: calc(100% - 140px);
+}
+.maison-logo {
+  width: 40px;
+  height: 40px;
+  padding: 6px;
+  border-radius: var(--rayon-petit);
+  background: var(--fond);
+  border: 1px solid var(--bordure-champ);
+  overflow: visible;
+}
+.maison-logo-corps {
+  fill: none;
+  stroke: var(--repere);
+  stroke-width: 3.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.maison-logo-masse {
+  fill: var(--repere);
+  fill-opacity: 0.2;
+}
+.maison-logo-ia {
+  fill: var(--texte);
+  stroke: var(--fond);
+  stroke-width: 2.6;
+  paint-order: stroke;
+  stroke-linejoin: round;
+}
+.maison-nom {
+  font-size: 1.25rem;
+  font-weight: var(--poids-titre);
+  letter-spacing: -0.02em;
+  line-height: 1;
+  margin: 0;
+}
+.maison-pastille {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 26px;
+  padding: 0 0.65rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--info) 45%, transparent);
+  color: var(--info);
+  font-size: 0.78rem;
+}
+.maison-pastille i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.maison-droite {
+  position: absolute;
+  z-index: 5;
+  right: max(12px, env(safe-area-inset-right, 0px));
+  top: max(10px, env(safe-area-inset-top, 0px));
+  display: flex;
+  gap: 0.5rem;
+}
+.maison-bouton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--bordure-champ);
+  background: var(--surface);
+  color: var(--texte);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+.maison-bouton:hover {
+  border-color: var(--accent);
+}
+@media (max-width: 560px) {
+  .maison-bouton {
+    padding: 0;
+  }
+  .maison-bouton-texte {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
+.maison-espace {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 3;
+  display: grid;
+  justify-items: center;
+  gap: 0.35rem;
+  width: 84px;
+  margin-left: -42px;
+  margin-top: -30px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  color: var(--texte-doux);
+  font: inherit;
+  transition: opacity 0.35s, color 0.2s;
+  will-change: transform;
+}
+.maison-rond {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--surface);
+  border: 1px solid var(--bordure-champ);
+  color: var(--teinte);
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+.maison-espace:hover,
+.maison-espace:focus-visible {
+  color: var(--texte);
+  outline: none;
+}
+.maison-espace:hover .maison-rond,
+.maison-espace:focus-visible .maison-rond {
+  border-color: var(--accent);
+  background: var(--surface-douce);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 14%, transparent);
+}
+.maison-espace:focus-visible .maison-rond {
+  outline: 2px solid var(--texte);
+  outline-offset: 3px;
+}
+.maison-etiquette {
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+.maison-compte {
+  position: absolute;
+  right: -3px;
+  top: -3px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font: 600 0.72rem/1 var(--police);
+  font-style: normal;
+  color: var(--sur-accent);
+  background: var(--teinte);
+  border: 2px solid var(--fond);
+}
 .teinte-repere { --teinte: var(--repere); }
 .teinte-alerte { --teinte: var(--alerte-texte); }
 .teinte-accent { --teinte: var(--accent); }
 .teinte-succes { --teinte: var(--succes-texte); }
 .teinte-info { --teinte: var(--info); }
 .teinte-budget { --teinte: var(--budget); }
+.maison-aide {
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  right: 0;
+  bottom: max(14px, env(safe-area-inset-bottom, 0px));
+  margin: 0;
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--texte-doux);
+  pointer-events: none;
+}
+.maison--ouverte .maison-espace,
+.maison--ouverte .maison-orbite,
+.maison--ouverte .maison-aide {
+  opacity: 0;
+  pointer-events: none;
+}
 .maison-panneau {
   position: absolute;
   z-index: 10;
@@ -1333,7 +1543,9 @@ code {
   gap: 0.5rem;
 }
 @media (prefers-reduced-motion: reduce) {
-  .maison-panneau {
+  .maison-panneau,
+  .maison-espace,
+  .maison-orbite {
     transition: none;
   }
 }

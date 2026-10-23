@@ -1,60 +1,36 @@
-// app/page.tsx — [L26] PARLER : l'accueil, c'est Lia.
+// app/page.tsx — LA MAISON DE LIA : elle au centre, ses huit espaces en orbite (MemoryAI#74,
+// maquette v5 validée par Marc le 22/10/2026 ; « Memory ai est toujours pas en refonte », 23/10).
 //
-// ⚠️ La racine redirigeait vers `/moi` — un tableau de compteurs. Marc, le 17/09 : « 2 827 ne
-// fait décider personne » (ADR 0004 n° 43), et « je veux que ce soit très simple à utiliser ».
-// L'accueil devient donc la CONVERSATION, et les compteurs déménagent dans Régler → État.
+// La conversation complète a déménagé à `/chat` (section « Parler ») ; toucher LIA ouvre ici une
+// discussion légère (`lia-ui`, `POST /api/lia/ask`). Cette page LIT seulement : la pile (« N à
+// juger »), la dépense du jour et les plafonds. Ce que montre chaque espace est composé par
+// `contenuEspaces` (pur, `tests/accueil.test.ts`) : sans source réelle, un espace le dit.
 //
-// ⚠️⚠️ CETTE PAGE N'EST PLUS EXEMPTÉE de `tests/gardePages.test.ts`. Elle l'était parce qu'elle
-// « redirige vers /moi sans rien lire » ; elle lit et affiche désormais, donc elle appelle
-// `requireSession()` comme les autres. La garde a un contrôle ANTI-FANTÔME sur sa liste
-// d'exemptions : laisser l'ancienne entrée aurait fait rougir le test plutôt que de passer en
-// silence. C'est exactement ce qu'on attend d'une liste d'exceptions.
-//
-// Ce que cette page NE fait pas encore (ADR 0005 §4 B1) : le bandeau « Ce qui s'en vient »
-// (3 à 5 échéances). Aucune requête d'échéances n'existe dans ce dépôt — mesuré, zéro
-// fonction — et l'inventer ici mélangerait la NAVIGATION avec une requête neuve. Il arrive
-// avec L30, qui construit la frise et les échéances ensemble.
+// ⚠️ `requireSession()` comme partout (`tests/gardePages.test.ts`), et `force-dynamic` : sans
+// lui, Next prérend la page au build, où il n'y a pas de session, et le build échoue.
 
-import Link from "next/link";
-import { Nav } from "@/components/Nav";
-import { ChatClient } from "./chat/ChatClient";
-import { jourQuebec, MODELE_DEFAUT, MODELES, PLAFONDS_DEFAUT_USD_PAR_JOUR } from "@/lib/coutChat";
-import { depotConversationsDrizzle } from "@/lib/conversations/depot";
+import { AccueilClient } from "./AccueilClient";
+import { contenuEspaces, type EntreesEspaces } from "@/lib/accueil/espaces";
+import { jourQuebec } from "@/lib/coutChat";
 import { depotAdminDrizzle } from "@/lib/depotAdmin";
-import { n2Autorise, n3Autorise } from "@/lib/lecture";
+import { OUTILS_LIA_HUB } from "@/lib/lia/ask";
+import { TYPES_BLOCS } from "@/lib/lia/blocs";
 import { accesDonnees } from "@/lib/pageDonnees";
 import { bandeauAJuger, type BandeauAJuger } from "@/lib/pile/bandeau";
 import { chargerEntreesPile } from "@/lib/pile/charger";
 import { composerPile, restantParGenre } from "@/lib/pile/composer";
 import { requireSession } from "@/lib/session";
-import { vocabulaire } from "@/lib/vocabulaire";
 
 export const dynamic = "force-dynamic";
 
-/**
- * ⚠️ `a-propos` vient d'un lien de fiche (« Demander à Lia là-dessus », [L33a]) et porte le
- * LIBELLÉ d'un fait, jamais sa valeur — un paramètre d'URL voyage dans l'historique du
- * navigateur et dans les journaux. Il est BORNÉ ici quand même : ce paramètre est écrivable
- * par n'importe qui dans la barre d'adresse, donc on le traite comme une entrée externe
- * (une seule valeur, tronquée). Il ne fait que PRÉREMPLIR le champ : rien n'est envoyé sans
- * un clic, donc une URL forgée ne peut pas dépenser d'appel payant.
- */
-const MAX_SAISIE_INITIALE = 300;
-
-export default async function ParlerPage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
+export default async function MaisonDeLia() {
   await requireSession();
-  const configure = Boolean(process.env.ANTHROPIC_API_KEY?.trim());
   const acces = await accesDonnees();
-  // ⚠️ Un COMPTE, pas les cartes : l'accueil n'affiche pas la pile, il dit qu'elle a quelque
-  // chose à juger. Charger les cartes ici les afficherait deux fois, une par surface. Le compte
-  // vient de la PILE (MemoryAI#90) — avant, il ne comptait que les questions ouvertes, donc un
-  // papier lu ou une déduction à juger ne faisaient jamais apparaître le lien vers `/questions`.
-  // ⚠️ `avis` entre dans le compte : une carte déjà jugée n'est plus « à juger ».
+  const jour = jourQuebec(new Date());
+  // ⚠️ Un COMPTE, pas les cartes : la pastille dit qu'il y a quelque chose à juger, `/questions`
+  // le montre. `avis` entre dans le compte : une carte déjà jugée n'est plus « à juger ».
   let aJuger: BandeauAJuger | null = null;
+  let budget: EntreesEspaces["budget"] = null;
   if (acces.ok) {
     const { candidats, deductions, questions, avis } = await chargerEntreesPile(acces.db);
     const ordre = composerPile({
@@ -62,59 +38,12 @@ export default async function ParlerPage({
       faits: deductions.map((d) => ({ id: d.fait.id, creeLe: d.fait.creeLe })),
       questions: questions.map((q) => ({ id: q.id, creeLe: q.creeLe })),
       avis,
-      aujourdhui: jourQuebec(new Date()),
+      aujourdhui: jour,
     });
     aJuger = bandeauAJuger(restantParGenre(ordre, avis));
+    const admin = depotAdminDrizzle(acces.db);
+    budget = { depense: await admin.depenseDuJourParPoste(jour), plafonds: await admin.plafonds() };
   }
-  // ⚠️ Le plafond AFFICHÉ doit être celui qui s'appliquera, pas le défaut du code : Marc le
-  // règle dans l'app depuis [L34]. Sans base, on montre le défaut — c'est ce qui
-  // s'appliquerait aussi, donc la phrase reste vraie.
-  const plafondsEffectifs = acces.ok ? await depotAdminDrizzle(acces.db).plafonds() : PLAFONDS_DEFAUT_USD_PAR_JOUR;
-  // [L2, ADR 0011] L'historique à gauche : les conversations du CHAT, avec leur premier
-  // message pour titre. `null` quand la base manque — l'écran le dit, au lieu d'une liste vide
-  // qui laisserait croire qu'aucune conversation n'a jamais été gardée.
-  const historiqueInitial = acces.ok
-    ? (await depotConversationsDrizzle(acces.db).apercus("memoryai", 30, acces.cle)).map((c) => ({
-        id: c.id,
-        quand: c.finLe.toISOString(),
-        titre: c.titre,
-        nbMessages: c.nbMessages,
-      }))
-    : null;
-  const brut = (await searchParams)["a-propos"];
-  const saisieInitiale = (Array.isArray(brut) ? brut[0] : brut)?.slice(0, MAX_SAISIE_INITIALE);
-
-  return (
-    <>
-      {/* ⚠️ Une PASTILLE dans l'en-tête, plus un `<details>` sous lui : « des informations cachées en
-          cliquant » (Marc, 17/09) ne veut pas dire un bandeau de plus au-dessus de la conversation.
-          Elle ne s'affiche QUE s'il y a quelque chose à juger — un « 0 à juger » permanent est du
-          décor qu'on cesse de lire. Le détail (« 1 papier lu, 1 déduction ») est dans son nom
-          accessible. */}
-      <Nav
-        active="parler"
-        droite={
-          aJuger && (
-            <Link href="/questions" className="pastille-juger" aria-label={`${aJuger.titre} : ${aJuger.detail}`}>
-              <span className="pastille-point" aria-hidden="true" />
-              {aJuger.titre}
-            </Link>
-          )
-        }
-      />
-      <ChatClient
-        modeles={MODELES.map((m) => ({ id: m.id, nom: m.nom }))}
-        modeleDefaut={MODELE_DEFAUT}
-        n2Possible={n2Autorise()}
-        n3Possible={n3Autorise()}
-        plafondUsd={plafondsEffectifs.chat}
-        configure={configure}
-        saisieInitiale={saisieInitiale}
-        historiqueInitial={historiqueInitial}
-        predicats={vocabulaire()
-          .filter((p) => !p.deprecie)
-          .map((p) => ({ predicat: p.predicat, description: p.description, types: [...p.types] }))}
-      />
-    </>
-  );
+  const contenus = contenuEspaces({ aJuger, budget, outils: [...OUTILS_LIA_HUB], formes: TYPES_BLOCS });
+  return <AccueilClient contenus={contenus} aJuger={aJuger ? { titre: aJuger.titre, detail: aJuger.detail } : null} />;
 }

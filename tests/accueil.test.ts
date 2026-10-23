@@ -1,5 +1,5 @@
 // tests/accueil.test.ts — la maison de LIA (MemoryAI#74, maquette v5) : géométrie de l'orbite,
-// contenu des espaces (sans donnée inventée) et décor.
+// contenu des espaces (sans donnée inventée), décor et une seule LIA par page.
 
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
@@ -113,6 +113,22 @@ describe("les espaces", () => {
     const liens = Object.values(c).flatMap((x) => x.liens ?? []);
     expect(liens.length).toBeGreaterThanOrEqual(4);
     for (const l of liens) expect(() => readFileSync(`app${l.href}/page.tsx`), l.href).not.toThrow();
+  });
+});
+
+describe("une seule LIA par page", () => {
+  it("la LIA de toute l'app se retire de l'accueil, qui monte la sienne au centre", () => {
+    const maison = readFileSync("components/LiaMaison.tsx", "utf8");
+    expect(maison).toMatch(/chemin === "\/"/);
+    const accueil = readFileSync("app/AccueilClient.tsx", "utf8");
+    expect(accueil).toMatch(/<Lia\b[\s\S]*container=\{monde\}/);
+    // Une seule balise <Lia dans l'accueil : deux montages et `mountLia` refuse le second.
+    expect(accueil.match(/<Lia\b/g)).toHaveLength(1);
+  });
+
+  it("aucune couleur écrite dans le dessin : il emprunte les jetons", () => {
+    const accueil = readFileSync("app/AccueilClient.tsx", "utf8");
+    expect(accueil).toContain('getPropertyValue("--accent")');
   });
 });
 
