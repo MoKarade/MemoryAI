@@ -105,7 +105,7 @@ describe("l'onglet Apprentissage", () => {
     expect(html).toMatch(/Prendre le plus récent[\s\S]*?<b>—<\/b>/);
     expect(html).toContain("Validés par toi");
     expect(html).toContain("Répondues");
-    expect(html).toMatch(/aria-current="page"[^>]*>Apprentissage/);
+    expect(html).toMatch(/aria-label="Apprentissage" aria-current="page"/);
   });
 
   it("une base vide le dit, bloc par bloc", async () => {

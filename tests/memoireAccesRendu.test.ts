@@ -48,7 +48,7 @@ describe("l'onglet Accès", () => {
     expect(html).toContain('class="carte-heures"');
     expect(html).toContain('<p class="chiffre">2</p>');
     expect(html).toContain("Échec fermé");
-    expect(html).toMatch(/aria-current="page"[^>]*>Accès|>Accès<\/a>/);
+    expect(html).toMatch(/aria-label="Accès" aria-current="page"/);
   });
 
   it("le filtre de niveau ne garde que les lectures de ce niveau", async () => {

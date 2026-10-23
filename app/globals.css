@@ -28,10 +28,14 @@
   --bordure: #23262c;
   /* Contour de champ, de case et de bouton secondaire : ≥ 3:1 (WCAG 1.4.11). */
   --bordure-champ: #687387;
+  /* Le contour « fort » de la maquette v5 : onglets segmentés, bouton de retour. */
+  --bordure-forte: rgb(255 255 255 / 0.16);
 
   /* Textes. */
   --texte: #e2e8f0;
   --texte-doux: #a3afc2;
+  /* Le plus discret : petits titres des tuiles de la Mémoire (maquette v5, `--text-faint`). */
+  --texte-pale: #8896a8;
 
   /* L'accent (indigo du hub) ne sert QU'À LIA et à l'action principale. */
   --accent: #93a0ff;
@@ -1550,34 +1554,218 @@ code {
   }
 }
 
-/* ── Onglets de la page Mémoire (maquette v5) et onglet Accès (`app/memoire/acces`). ── */
-.onglets-memoire {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
-  padding: 0.25rem;
-  border: 1px solid var(--bordure);
-  border-radius: 999px;
-  justify-self: start;
+/* ── La page Mémoire (maquette v5, `.vue`) : coque plein écran, onglets segmentés à icônes,
+   tableau de 12 colonnes et tuiles repliables à filet (`components/CoqueMemoire.tsx`, `Tuile.tsx`). ── */
+.coque-memoire {
+  min-height: 100dvh;
+  background: var(--fond);
+  font-size: 13px;
 }
-.onglet-memoire {
+.coque-memoire-tete {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+  padding: max(0.7rem, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 0.7rem
+    max(16px, env(safe-area-inset-left, 0px));
+  background: color-mix(in srgb, var(--fond) 92%, transparent);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--bordure);
+}
+.coque-memoire-tete h1 {
+  margin: 0 auto 0 0;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 1.2rem;
+  font-weight: var(--poids-titre);
+  letter-spacing: -0.02em;
+}
+.coque-memoire-tete .maison-logo {
+  flex: none;
+  border-color: var(--bordure-forte);
+}
+.bouton-rond {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--bordure-forte);
+  color: var(--texte);
+  text-decoration: none;
+}
+.bouton-rond:hover {
+  background: var(--surface-douce);
+}
+.onglets-seg {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--bordure-forte);
+  border-radius: 999px;
+  background: var(--surface);
+}
+.onglets-seg a {
   min-height: 44px;
   display: inline-flex;
   align-items: center;
-  padding: 0 1rem;
+  gap: 0.4rem;
+  padding: 0 0.9rem;
   border-radius: 999px;
   color: var(--texte-doux);
+  font-size: 0.84rem;
   text-decoration: none;
 }
-.onglet-memoire:hover {
+.onglets-seg a:hover {
   color: var(--texte);
 }
-.onglet-memoire[aria-current="page"] {
+.onglets-seg a[aria-current="page"] {
   color: var(--texte);
   background: var(--surface-douce);
-  box-shadow: inset 0 0 0 1px var(--bordure-champ);
+  box-shadow: inset 0 0 0 1px var(--bordure-forte);
 }
-.onglet-memoire:focus-visible,
+@media (max-width: 620px) {
+  .onglets-seg a {
+    padding: 0 0.8rem;
+  }
+  .onglets-seg a span {
+    display: none;
+  }
+}
+.coque-memoire-corps {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem max(16px, env(safe-area-inset-right, 0px)) 3rem max(16px, env(safe-area-inset-left, 0px));
+  display: grid;
+  gap: 1rem;
+}
+.tableau {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+}
+.tuile-m--4 {
+  grid-column: span 4;
+}
+.tuile-m--5 {
+  grid-column: span 5;
+}
+.tuile-m--6 {
+  grid-column: span 6;
+}
+.tuile-m--7 {
+  grid-column: span 7;
+}
+.tuile-m--8 {
+  grid-column: span 8;
+}
+.tuile-m--12 {
+  grid-column: 1 / -1;
+}
+@media (max-width: 900px) {
+  .tableau > * {
+    grid-column: 1 / -1;
+  }
+}
+.tuile-m {
+  position: relative;
+  display: block;
+  min-width: 0;
+  padding: 0.7rem 0.8rem 0.8rem;
+  background: linear-gradient(180deg, color-mix(in oklch, var(--repere) 6%, var(--surface)), var(--surface) 45%);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+}
+.tuile-m::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 2px;
+  background: var(--repere);
+  border-radius: var(--rayon) var(--rayon) 0 0;
+}
+.tuile-m:not([open]) {
+  grid-column: 1 / -1;
+  padding-block: 0.35rem;
+}
+.tuile-m > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 44px;
+  margin-block: -0.4rem;
+  font-size: 0.75rem;
+  color: var(--texte-pale);
+}
+.tuile-m > summary::-webkit-details-marker {
+  display: none;
+}
+.tuile-m[open] > summary {
+  margin-bottom: 0.2rem;
+}
+.tuile-m:not([open]) > summary,
+.tuile-m > summary:hover {
+  color: var(--texte-doux);
+}
+.tuile-m > summary:focus-visible {
+  outline: 3px solid var(--texte);
+  outline-offset: 2px;
+  border-radius: var(--rayon-petit);
+}
+.tuile-m > summary h2 {
+  margin: 0;
+  font: inherit;
+  color: inherit;
+}
+.tuile-m-chevron {
+  margin-left: auto;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  transition: transform 0.2s;
+}
+.tuile-m[open] .tuile-m-chevron {
+  transform: rotate(180deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .tuile-m-chevron {
+    transition: none;
+  }
+}
+.tuile-m-corps {
+  display: grid;
+  gap: 0.6rem;
+  min-width: 0;
+}
+.tuile-m-corps > .bouton {
+  justify-self: start;
+}
+/* L'état vide honnête d'une tuile de la maquette sans donnée : même place, même taille. */
+.tuile-vide {
+  margin: 0;
+  padding: 0.9rem 1rem;
+  border: 1px dashed var(--bordure-forte);
+  border-radius: var(--rayon-petit);
+  color: var(--texte-doux);
+  font-size: 0.9rem;
+}
+.tuile-vide--haute {
+  min-height: 300px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+.onglets-seg a:focus-visible,
+.bouton-rond:focus-visible,
 .puces-filtre a:focus-visible {
   outline: 3px solid var(--texte);
   outline-offset: 2px;

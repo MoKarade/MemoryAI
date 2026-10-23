@@ -5,7 +5,7 @@
 import { describe, it, expect } from "vitest";
 import { existsSync, readFileSync } from "node:fs";
 import { carteHoraire, compterIds, GARDE_FOUS, heureQuebec, libelleLecteur, partsParNiveau } from "@/lib/memoire/acces";
-import { ONGLETS_MEMOIRE } from "@/components/OngletsMemoire";
+import { ONGLETS_MEMOIRE } from "@/components/CoqueMemoire";
 
 describe("les parts par niveau", () => {
   it("se calculent sur les faits comptés, arrondies", () => {

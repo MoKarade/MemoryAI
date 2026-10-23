@@ -13,6 +13,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Lia } from "@mokarade/lia-ui/react";
 import { LIBELLE_HUMEUR, type HumeurLia } from "@mokarade/lia-ui";
 import { IconeEspace } from "@/components/IconeEspace";
+import { LogoMemoire } from "@/components/LogoMemoire";
 import { MenuLia } from "@/components/MenuLia";
 import { OPTIONS_LIA_MAISON } from "@/components/LiaMaison";
 import { SECTIONS } from "@/components/Nav";
@@ -112,12 +113,7 @@ export function AccueilClient({ contenus, aJuger }: { contenus: Record<IdEspace,
 
       <header className="maison-tete">
         <MenuLia entrees={SECTIONS} allumee="parler" />
-        <svg className="maison-logo" viewBox="0 0 64 64" role="img" aria-label="MemoryAI">
-          <path className="maison-logo-corps" d="M7 42L32 55L57 42M7 32L32 45L57 32" />
-          <path className="maison-logo-masse" d="M32 9L57 22L32 35L7 22Z" />
-          <path className="maison-logo-corps" d="M32 9L57 22L32 35L7 22Z" />
-          <path className="maison-logo-ia" d="M32 14Q33.28 20.72 40 22Q33.28 23.28 32 30Q30.72 23.28 24 22Q30.72 20.72 32 14Z" />
-        </svg>
+        <LogoMemoire />
         <h1 className="maison-nom">LIA</h1>
         <span className="maison-pastille" aria-label={`Humeur : ${LIBELLE_HUMEUR[humeur]}`}>
           <i aria-hidden="true" />
