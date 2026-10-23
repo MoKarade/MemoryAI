@@ -1677,6 +1677,11 @@ code {
   min-width: 34rem;
   height: auto;
 }
+.grille-ecritures {
+  width: 100%;
+  min-width: 30rem;
+  height: auto;
+}
 .carte-heures text {
   font-size: 8px;
   fill: var(--texte-doux);
