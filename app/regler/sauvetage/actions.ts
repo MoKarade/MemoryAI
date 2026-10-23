@@ -24,8 +24,17 @@ export type IssuePasse =
   | { ok: true; resultat: ResultatPasse }
   | { ok: false; raison: "acces" | "pas-ouvert" | "clos"; manque?: string[] };
 
-export async function passeSauvetageAction(reprise: Reprise | null): Promise<IssuePasse> {
+/** La reprise vient du NAVIGATEUR : on n'en garde que ce qui a la forme attendue (revue du 23/10). */
+function repriseValide(r: unknown): Reprise | null {
+  if (!r || typeof r !== "object") return null;
+  const { table, apres } = r as { table?: unknown; apres?: unknown };
+  if ((table !== "faits" && table !== "pieces") || typeof apres !== "string" || !/^[0-9a-f-]{0,36}$/.test(apres)) return null;
+  return { table, apres };
+}
+
+export async function passeSauvetageAction(repriseBrute: unknown): Promise<IssuePasse> {
   await requireSession();
+  const reprise = repriseValide(repriseBrute);
   const acces = await accesDonnees();
   if (!acces.ok) return { ok: false, raison: "acces", manque: [acces.manque === "base" ? "DATABASE_URL" : "MEMORYAI_CHIFFREMENT"] };
   const config = configOracle();

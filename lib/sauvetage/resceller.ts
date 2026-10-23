@@ -15,10 +15,10 @@
 // après la bascule) est déchiffré sous la nouvelle clé pour en refaire l'empreinte ; s'il ne se
 // déchiffre pas, `DechiffrementError` remonte et la ligne reste en échec.
 
-import { chiffrer, dechiffrer, type Cle } from "../chiffrement";
+import { chiffrer, dechiffrer, estScelleAncien, longueurClaire, type Cle } from "../chiffrement";
 import { empreinteFait } from "../ecrireFaits";
 import { empreintePiece } from "../pieces/ecrire";
-import { cleFacette } from "../pieces/facettes";
+import { cleFacette, type FamilleFacette } from "../pieces/facettes";
 import type { ClairsFait, ClairsPiece, FaitAncien, PieceAncienne } from "./reconstruire";
 
 /** Le préfixe des empreintes qui ne sont PAS des HMAC (une pièce remplacée) : on n'y touche pas. */
@@ -58,8 +58,8 @@ export interface PatchFait {
   valeur: string | null;
   attributs: string | null;
   empreinte: string;
-  /** Les valeurs d'avant, pour l'archive. */
-  ancien: { valeur: string | null; attributs: string | null; empreinte: string };
+  /** Les valeurs d'avant qui changent, pour l'archive. */
+  ancien: Record<string, string | null>;
 }
 
 export function rescellerFait(cle: Cle, f: FaitARescueller, clairs: ClairsFait): PatchFait {
@@ -76,12 +76,12 @@ export function rescellerFait(cle: Cle, f: FaitARescueller, clairs: ClairsFait):
         valeur: valeur ?? "",
       })
     : f.empreinte;
-  return {
+  const apres = {
     valeur: enClair ? f.valeur : scelle(cle, clairs.valeur, f.valeur, f.id, f.niveau),
     attributs: enClair ? f.attributs : scelle(cle, clairs.attributs, f.attributs, `${f.id}#attributs`, f.niveau),
     empreinte,
-    ancien: { valeur: f.valeur, attributs: f.attributs, empreinte: f.empreinte },
   };
+  return { ...apres, ancien: seulementCeQuiChange({ valeur: f.valeur, attributs: f.attributs, empreinte: f.empreinte }, apres) };
 }
 
 // ── Papiers ────────────────────────────────────────────────────────────────────────────────
@@ -110,46 +110,68 @@ export interface PatchPiece {
   empreinte: string;
   /** fileId → nouveau chemin scellé, seulement pour les exemplaires dont le chemin a été retrouvé. */
   chemins: Record<string, string>;
-  ancien: Omit<PatchPiece, "ancien" | "chemins"> & { chemins: Record<string, string | null> };
+  /** Les valeurs d'avant, pour l'archive : SEULEMENT celles qui changent (voir `seulementCeQuiChange`). */
+  ancien: Record<string, unknown>;
+}
+
+/**
+ * Les valeurs d'avant qui CHANGENT, et elles seules. Revue du 23/10 : archiver la ligne entière
+ * copiait aussi du clair (le résumé d'un papier en régime clair, la valeur d'un fait N0) dans une
+ * table que ni « purger » ni la ré-écriture chiffrée ne connaissaient. Ce qui ne change pas reste
+ * dans sa ligne ; l'archive ne garde que des scellés `v1` et des HMAC de l'ancienne clé.
+ */
+function seulementCeQuiChange(avant: Record<string, string | null>, apres: Record<string, string | null>): Record<string, string | null> {
+  return Object.fromEntries(Object.entries(avant).filter(([k, v]) => apres[k] !== v));
 }
 
 export function rescellerPiece(cle: Cle, p: PieceARescueller, clairs: ClairsPiece): PatchPiece {
-  // Les facettes et les chemins d'un N0 sont en clair ; le résumé suit son régime ; les champs
-  // sont toujours scellés. Mêmes règles que `rendreLisiblePiece`, qui les a lus jusqu'ici.
-  const facettesEnClair = p.niveau === 0;
-  const facette = (retrouve: string | undefined, valeur: string | null) =>
-    clairDe(cle, retrouve, valeur, p.id, p.niveau, facettesEnClair);
   const reseller = (retrouve: string | undefined, valeur: string | null) => scelle(cle, retrouve, valeur, p.id, p.niveau);
+  // ⚠️ La clé de facette se refait sur le CLAIR, et l'écrivain scelle les facettes à TOUS les
+  // niveaux (`ecrireLotPieces`) — N0 compris, que le lecteur prend pourtant pour du clair (revue
+  // du 23/10). On suit donc la FORME de la valeur, pas le niveau : un scellé `v2` se déchiffre,
+  // un scellé `v1` jamais lisible garde sa clé (rien à refaire), un texte nu est le clair.
+  const cleDe = (famille: FamilleFacette, retrouve: string | undefined, valeur: string | null, ancienne: string | null) => {
+    if (retrouve !== undefined) return cleFacette(cle, famille, retrouve);
+    if (valeur === null) return null;
+    if (estScelleAncien(valeur)) return ancienne;
+    return cleFacette(cle, famille, longueurClaire(valeur) !== null ? dechiffrer(cle, valeur, p.id, p.niveau) : valeur);
+  };
 
   const principal = p.exemplaires.find((x) => x.principal) ?? p.exemplaires[0];
   const chemins: Record<string, string> = {};
   for (const [fileId, chemin] of Object.entries(clairs.chemins)) chemins[fileId] = chiffrer(cle, chemin, p.id, p.niveau);
 
-  return {
+  const avant = {
+    type: p.type,
+    emetteur: p.emetteur,
+    titulaire: p.titulaire,
+    typeCle: p.typeCle,
+    emetteurCle: p.emetteurCle,
+    titulaireCle: p.titulaireCle,
+    resume: p.resume,
+    champsStructures: p.champsStructures,
+    champsLibres: p.champsLibres,
+    empreinte: p.empreinte,
+  };
+  const apres = {
     type: reseller(clairs.type, p.type),
     emetteur: reseller(clairs.emetteur, p.emetteur),
     titulaire: reseller(clairs.titulaire, p.titulaire),
-    typeCle: cleFacette(cle, "type", facette(clairs.type, p.type)),
-    emetteurCle: cleFacette(cle, "emetteur", facette(clairs.emetteur, p.emetteur)),
-    titulaireCle: cleFacette(cle, "titulaire", facette(clairs.titulaire, p.titulaire)),
+    typeCle: cleDe("type", clairs.type, p.type, p.typeCle),
+    emetteurCle: cleDe("emetteur", clairs.emetteur, p.emetteur, p.emetteurCle),
+    titulaireCle: cleDe("titulaire", clairs.titulaire, p.titulaire, p.titulaireCle),
     resume: p.resumeEnClair ? p.resume : reseller(clairs.resume, p.resume),
     champsStructures: reseller(clairs.champsStructures, p.champsStructures),
     champsLibres: reseller(clairs.champsLibres, p.champsLibres),
     empreinte:
       p.empreinte.startsWith(EMPREINTE_NON_KEYEE) || !principal ? p.empreinte : empreintePiece(cle, p.sujet, principal.fileId),
+  };
+  const anciensChemins = Object.fromEntries(
+    Object.keys(chemins).map((f) => [f, p.exemplaires.find((x) => x.fileId === f)?.chemin ?? null]),
+  );
+  return {
+    ...apres,
     chemins,
-    ancien: {
-      type: p.type,
-      emetteur: p.emetteur,
-      titulaire: p.titulaire,
-      typeCle: p.typeCle,
-      emetteurCle: p.emetteurCle,
-      titulaireCle: p.titulaireCle,
-      resume: p.resume,
-      champsStructures: p.champsStructures,
-      champsLibres: p.champsLibres,
-      empreinte: p.empreinte,
-      chemins: Object.fromEntries(Object.keys(chemins).map((f) => [f, p.exemplaires.find((x) => x.fileId === f)?.chemin ?? null])),
-    },
+    ancien: { ...seulementCeQuiChange(avant, apres), ...(Object.keys(chemins).length > 0 ? { chemins: anciensChemins } : {}) },
   };
 }

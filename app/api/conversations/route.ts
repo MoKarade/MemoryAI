@@ -24,8 +24,6 @@ import { baseConfiguree, db } from "@/lib/db";
 import { estGele, reponseGelee } from "@/lib/gel";
 import { ecrivainAutorise, refusJeton } from "@/lib/jetons";
 import { assurerMigrations } from "@/lib/migrations";
-import { depotSauvetageDrizzle } from "@/lib/sauvetage/depot";
-import { reponseSauvetage } from "@/lib/sauvetage/porte";
 
 export const dynamic = "force-dynamic";
 
@@ -76,7 +74,6 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   await assurerMigrations();
-  if (await depotSauvetageDrizzle(db).ecrituresFermees()) return reponseSauvetage();
   const depot = depotConversationsDrizzle(db);
   const maintenant = new Date();
   const existante = v.conversationId !== null ? await depot.parId(v.conversationId) : null;

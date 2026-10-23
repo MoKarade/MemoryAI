@@ -19,6 +19,8 @@ interface Totaux {
 const MESSAGES_ARRET: Record<string, string> = {
   "acces-refuse":
     "L’ancien déploiement refuse l’accès : la session ou le secret de contournement n’est pas accepté. Rien n’a été écrit pour les lignes restantes.",
+  "oracle-en-panne":
+    "L’ancien déploiement ne répond plus (plusieurs pannes de suite). Ce qui est sauvé l’est ; relance plus tard.",
   "pas-ouvert": "Il n’y a rien à sauver dans cette base.",
   clos: "Le sauvetage est clos.",
 };

@@ -24,6 +24,7 @@ import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
 import * as schema from "../db/schema";
 import type { Cle } from "../chiffrement";
 import { empreinteOubliPiece } from "./ecrire";
+import { effacerTraceSauvetage } from "../sauvetage/porte";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Base = PgDatabase<PgQueryResultHKT, any>;
@@ -76,6 +77,9 @@ export function depotOubliPiecesDrizzle(db: Base): DepotOubliPieces {
         .update(schema.pieces)
         .set({ supprimeLe: maintenant })
         .where(eq(schema.pieces.id, pieceId));
+      // ADR 0019 : l'archive du sauvetage garde les anciens scellés de ce papier ; un papier
+      // oublié n'y reste pas (revue du 23/10).
+      await effacerTraceSauvetage(db, "pieces", pieceId);
       return "ok";
     },
   };

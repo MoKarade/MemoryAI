@@ -7,16 +7,16 @@
 import { describe, it, expect } from "vitest";
 import { decode } from "next-auth/jwt";
 import { COOKIE_SESSION, configOracle, oracleAncienDeploiement, sessionDeMarc, type ConfigOracle } from "@/lib/sauvetage/oracle";
-import { depotFerme, reponseSauvetage, SauvetageEnCoursError } from "@/lib/sauvetage/porte";
+import { reponseSauvetage } from "@/lib/sauvetage/porte";
 
 const ENV = {
-  MEMORYAI_SAUVETAGE_SOURCE: "https://memory-ancien-exemple.vercel.app/",
+  MEMORYAI_SAUVETAGE_SOURCE: "https://memory-0abc1234x-mokarades-projects.vercel.app/",
   VERCEL_AUTOMATION_BYPASS_SECRET: "contournement-fictif",
   AUTH_SECRET: "secret-de-session-fictif-assez-long-pour-hkdf",
   AUTHORIZED_EMAIL: "proprietaire@example.com",
 };
 const CONFIG: ConfigOracle = {
-  source: "https://memory-ancien-exemple.vercel.app",
+  source: "https://memory-0abc1234x-mokarades-projects.vercel.app",
   contournement: ENV.VERCEL_AUTOMATION_BYPASS_SECRET,
   authSecret: ENV.AUTH_SECRET,
   email: ENV.AUTHORIZED_EMAIL,
@@ -35,8 +35,16 @@ describe("les réglages de l'oracle", () => {
     });
   });
 
-  it("refuse toute adresse qui n'est pas un déploiement Vercel en HTTPS : la session n'y partirait pas", () => {
-    for (const source of ["http://memory.vercel.app", "https://memory.vercel.app.exemple.test", "https://exemple.test", "https://a.b.vercel.app"]) {
+  it("refuse toute adresse qui n'est pas un déploiement du projet en HTTPS : la session n'y partirait pas", () => {
+    for (const source of [
+      "http://memory-0abc1234x-mokarades-projects.vercel.app",
+      "https://memory-0abc1234x-mokarades-projects.vercel.app.exemple.test",
+      "https://exemple.test",
+      "https://autre-0abc1234x-mokarades-projects.vercel.app",
+      "https://memory-0abc1234x-autre-equipe.vercel.app",
+      // L'alias de production : il servirait le NOUVEAU déploiement, pas l'ancien.
+      "https://memory-ai-mokarades-projects.vercel.app",
+    ]) {
       const r = configOracle({ ...ENV, MEMORYAI_SAUVETAGE_SOURCE: source });
       expect(r.ok ? [] : r.manque).toEqual(["MEMORYAI_SAUVETAGE_SOURCE"]);
     }
@@ -103,12 +111,5 @@ describe("les écritures fermées", () => {
     expect(r.status).toBe(503);
     expect(r.headers.get("cache-control")).toBe("no-store");
     expect(await r.json()).toMatchObject({ error: "sauvetage_en_cours" });
-  });
-
-  it("un dépôt fermé lève à CHAQUE méthode, et garde ses autres propriétés", () => {
-    const depot = depotFerme({ nom: "conversations", lire: () => 1, ecrire: async () => 2 });
-    expect(depot.nom).toBe("conversations");
-    expect(() => depot.lire()).toThrow(SauvetageEnCoursError);
-    expect(() => depot.ecrire()).toThrow(SauvetageEnCoursError);
   });
 });

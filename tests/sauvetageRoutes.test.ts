@@ -1,20 +1,26 @@
 // tests/sauvetageRoutes.test.ts — pendant le sauvetage, les apps n'écrivent pas (ADR 0019 §2).
 //
-// Les trois routes d'écriture répondent 503 `sauvetage_en_cours` APRÈS l'identité (un inconnu
-// reçoit toujours son 401) et AVANT toute écriture. Sauvetage clos, elles retombent sur leur
-// chemin normal. La base et l'écriture sont simulées : c'est la PORTE qui est testée ici, le
-// sauvetage lui-même l'est sur une vraie Postgres (`tests/sauvetage.test.ts`).
+// La porte est au point d'écriture (`ecrireLot`, `ecrireLotPieces`, prouvé sur une vraie Postgres
+// dans `tests/sauvetage.test.ts`). Ici, la traduction HTTP : l'erreur devient un 503
+// `sauvetage_en_cours` (une panne, que l'écrivain retente), APRÈS l'identité — un inconnu reçoit
+// toujours son 401.
 
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { randomBytes } from "node:crypto";
 
 let fermees = true;
-const ecrireLot = vi.fn(async () => ({ recus: 0, acceptes: 0, dejaPresents: 0, refuses: [], idsCrees: [] }));
-const ecrireLotPieces = vi.fn(async () => ({ recues: 0, acceptees: 0, refusees: [], idsCrees: [] }));
+const { SauvetageEnCoursError } = await import("@/lib/sauvetage/porte");
+const ecrireLot = vi.fn(async () => {
+  if (fermees) throw new SauvetageEnCoursError();
+  return { recus: 0, acceptes: 0, dejaPresents: 0, refuses: [], idsCrees: [] };
+});
+const ecrireLotPieces = vi.fn(async () => {
+  if (fermees) throw new SauvetageEnCoursError();
+  return { recus: 0, acceptees: 0, remplacees: 0, dejaPresentes: 0, oubliees: 0, refusees: [], idsCrees: [] };
+});
 
 vi.mock("@/lib/migrations", () => ({ assurerMigrations: async () => {} }));
 vi.mock("@/lib/db", () => ({ db: {}, baseConfiguree: () => true }));
-vi.mock("@/lib/sauvetage/depot", () => ({ depotSauvetageDrizzle: () => ({ ecrituresFermees: async () => fermees }) }));
 vi.mock("@/lib/ecrireFaits", async (original) => ({ ...(await original<object>()), ecrireLot }));
 vi.mock("@/lib/pieces/ecrire", async (original) => ({ ...(await original<object>()), ecrireLotPieces }));
 vi.mock("@/lib/depotFaits", () => ({ depotDrizzle: () => ({}) }));
@@ -49,7 +55,7 @@ const requete = (chemin: string, corps: object, jeton: string | null = JETON) =>
   });
 
 describe("les écritures pendant le sauvetage", () => {
-  it("/api/faits et /api/pieces répondent 503 sauvetage_en_cours, sans rien écrire", async () => {
+  it("/api/faits et /api/pieces traduisent le refus du point d'écriture en 503 sauvetage_en_cours", async () => {
     fermees = true;
     for (const [post, chemin, corps] of [
       [postFaits, "/api/faits", { faits: [] }],
@@ -59,13 +65,12 @@ describe("les écritures pendant le sauvetage", () => {
       expect(r.status, chemin).toBe(503);
       expect((await r.json()).error).toBe("sauvetage_en_cours");
     }
-    expect(ecrireLot).not.toHaveBeenCalled();
-    expect(ecrireLotPieces).not.toHaveBeenCalled();
   });
 
   it("un jeton faux reçoit toujours son 401 : le sauvetage ne se révèle pas à un inconnu", async () => {
     fermees = true;
     expect((await postFaits(requete("/api/faits", { faits: [] }, "faux-jeton-0123456789abcdef"))).status).toBe(401);
+    expect(ecrireLot).not.toHaveBeenCalled();
   });
 
   it("sauvetage clos : la route écrit de nouveau", async () => {

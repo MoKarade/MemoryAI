@@ -13,9 +13,10 @@
 // une ligne N0 n'a aucun scellé, mais son empreinte est un HMAC de la clé perdue. Les papiers
 // remplacés ou retirés n'ont plus de page : ils restent tels quels, comptés à part.
 
-import { and, asc, count, eq, gt, isNull, notExists, sql } from "drizzle-orm";
+import { and, asc, count, eq, gt, inArray, isNull, notExists, sql } from "drizzle-orm";
 import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
 import * as schema from "../db/schema";
+import { sauvetageEnCours } from "./porte";
 import type { RaisonEchec } from "./reconstruire";
 import type { FaitARescueller, PatchFait, PatchPiece, PieceARescueller } from "./resceller";
 
@@ -69,10 +70,7 @@ export function depotSauvetageDrizzle(db: Base): DepotSauvetage {
   const pieceVivante = () => [isNull(schema.pieces.supprimeLe), eq(schema.pieces.statut, "active")];
 
   return {
-    async ecrituresFermees() {
-      const r = await db.select({ clos: schema.sauvetageEtat.closLe }).from(schema.sauvetageEtat).limit(1);
-      return r.length > 0 && r[0]!.clos === null;
-    },
+    ecrituresFermees: () => sauvetageEnCours(db),
 
     async faitsASauver(apres, limite) {
       const rows = await db
@@ -87,7 +85,7 @@ export function depotSauvetageDrizzle(db: Base): DepotSauvetage {
       const provs = await db
         .select({ faitId: schema.provenances.faitId, sourceRef: schema.provenances.sourceRef, extracteur: schema.provenances.extracteur })
         .from(schema.provenances)
-        .where(sql`${schema.provenances.faitId} in ${rows.map((r) => r.f.id)}`)
+        .where(inArray(schema.provenances.faitId, rows.map((r) => r.f.id)))
         .orderBy(asc(schema.provenances.id));
       const premiere = new Map<string, { sourceRef: string; extracteur: string }>();
       for (const p of provs) if (!premiere.has(p.faitId)) premiere.set(p.faitId, { sourceRef: p.sourceRef, extracteur: p.extracteur });
@@ -115,7 +113,7 @@ export function depotSauvetageDrizzle(db: Base): DepotSauvetage {
       const ex = await db
         .select()
         .from(schema.pieceExemplaires)
-        .where(sql`${schema.pieceExemplaires.pieceId} in ${rows.map((r) => r.id)}`)
+        .where(inArray(schema.pieceExemplaires.pieceId, rows.map((r) => r.id)))
         .orderBy(asc(schema.pieceExemplaires.fileId));
       return rows.map((p) => ({
         id: p.id,
@@ -200,17 +198,16 @@ export function depotSauvetageDrizzle(db: Base): DepotSauvetage {
     },
 
     async noterEchec(table, id, raisons) {
-      await db
-        .insert(schema.sauvetageEchecs)
-        .values({ tableNom: table, ligneId: id, raisons: [...new Set(raisons)].sort().join(",") })
-        .onConflictDoUpdate({
-          target: [schema.sauvetageEchecs.tableNom, schema.sauvetageEchecs.ligneId],
-          set: {
-            raisons: [...new Set(raisons)].sort().join(","),
-            essais: sql`${schema.sauvetageEchecs.essais} + 1`,
-            majLe: sql`now()`,
-          },
-        });
+      const liste = [...new Set(raisons)].sort().join(",");
+      // ⚠️ Pas d'échec sur une ligne DÉJÀ archivée : deux passes concurrentes (deux onglets, une
+      // relance pendant que l'ancienne tourne) feraient noter « concurrence » par la perdante,
+      // après le ménage de la gagnante, et l'échec ne s'effacerait jamais (revue du 23/10).
+      await db.execute(sql`
+        insert into sauvetage_echecs (table_nom, ligne_id, raisons)
+        select ${table}, ${id}, ${liste}
+        where not exists (select 1 from chiffre_v1_archive where table_nom = ${table} and ligne_id = ${id})
+        on conflict (table_nom, ligne_id) do update set raisons = excluded.raisons,
+          essais = sauvetage_echecs.essais + 1, maj_le = now()`);
     },
 
     async bilan() {
@@ -240,8 +237,18 @@ export function depotSauvetageDrizzle(db: Base): DepotSauvetage {
           .from(schema.pieces)
           .where(sql`not (${schema.pieces.supprimeLe} is null and ${schema.pieces.statut} = 'active')`),
       );
+      // Seulement les échecs de lignes ENCORE à sauver : une ligne retirée depuis, ou sauvée par
+      // une autre passe, ne compte plus.
       const echecs: Record<string, number> = {};
-      for (const e of await db.select({ raisons: schema.sauvetageEchecs.raisons }).from(schema.sauvetageEchecs)) {
+      const lignesEchec = lignes(
+        await db.execute(sql`
+          select e.raisons from sauvetage_echecs e
+          where not exists (select 1 from chiffre_v1_archive a where a.table_nom = e.table_nom and a.ligne_id = e.ligne_id)
+            and ((e.table_nom = 'faits' and exists (select 1 from faits f where f.id = e.ligne_id and f.supprime_le is null))
+              or (e.table_nom = 'pieces' and exists (select 1 from pieces p where p.id = e.ligne_id
+                    and p.supprime_le is null and p.statut = 'active')))`),
+      ) as { raisons: string }[];
+      for (const e of lignesEchec) {
         for (const r of e.raisons.split(",")) echecs[r] = (echecs[r] ?? 0) + 1;
       }
       return {

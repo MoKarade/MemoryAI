@@ -44,7 +44,7 @@ export interface ResultatPasse {
   /** Où reprendre à la passe suivante du MÊME balayage (`null` quand il est fini). */
   reprise: Reprise | null;
   /** La passe s'est arrêtée d'elle-même : l'oracle refuse l'accès. */
-  arret: "acces-refuse" | null;
+  arret: "acces-refuse" | "oracle-en-panne" | null;
 }
 
 /**
@@ -69,6 +69,9 @@ export interface OptionsPasse {
   maintenant?: () => number;
 }
 
+/** Pannes de l'oracle à la suite avant d'arrêter la passe. */
+const PANNES_AVANT_ARRET = 8;
+
 interface Ligne {
   id: string;
 }
@@ -91,12 +94,26 @@ export async function passeDeSauvetage(
     arret: null,
   };
 
-  /** `null` = la ligne n'a pas besoin de page ; une `Lecture` sinon. Un refus arrête tout. */
+  /**
+   * `null` = la ligne n'a pas besoin de page ; le HTML sinon. Un refus arrête tout ; une suite de
+   * pannes aussi (l'ancien déploiement est tombé : continuer noterait un échec par ligne).
+   */
+  let pannesDeSuite = 0;
   const demander = async (besoin: boolean, lireParOracle: () => Promise<Lecture>): Promise<string | null | "panne"> => {
     if (!besoin) return null;
-    const l = await lireParOracle();
-    if (l.ok) return l.html;
+    let l: Lecture;
+    try {
+      l = await lireParOracle();
+    } catch {
+      // Une exception de l'oracle (corps illisible…) est une panne de LECTURE, pas d'écriture.
+      l = { ok: false, raison: "panne" };
+    }
+    if (l.ok) {
+      pannesDeSuite = 0;
+      return l.html;
+    }
     if (l.raison === "refus") resultat.arret = "acces-refuse";
+    if (l.raison === "panne" && ++pannesDeSuite >= PANNES_AVANT_ARRET) resultat.arret = "oracle-en-panne";
     return l.raison === "panne" ? "panne" : null;
   };
 
@@ -140,7 +157,7 @@ export async function passeDeSauvetage(
   const faitsFinis =
     depart.table === "pieces" ||
     (await parcourir("faits", depot.faitsASauver, async (f) => {
-    const page = await demander(estScelleAncien(f.valeur) || estScelleAncien(f.attributs), () => oracle.fait(f.id));
+    const page = await demander(f.niveau >= 1 && (estScelleAncien(f.valeur) || estScelleAncien(f.attributs)), () => oracle.fait(f.id));
     if (resultat.arret) return;
     if (page === "panne") return echouer("faits", f.id, ["oracle-en-panne"]);
     const r = reconstruireFait(f, page === null ? null : extraireFait(page, f.id));
@@ -151,7 +168,7 @@ export async function passeDeSauvetage(
   if (!faitsFinis) return resultat;
 
   const piecesFinies = await parcourir("pieces", depot.piecesASauver, async (p) => {
-    const besoin = [p.type, p.emetteur, p.titulaire, p.resume, p.champsStructures, p.champsLibres, ...p.exemplaires.map((x) => x.chemin)].some(
+    const besoin = [p.type, p.emetteur, p.titulaire, p.resumeEnClair ? null : p.resume, p.champsStructures, p.champsLibres, ...p.exemplaires.map((x) => x.chemin)].some(
       estScelleAncien,
     );
     const page = await demander(besoin, () => oracle.piece(p.id));

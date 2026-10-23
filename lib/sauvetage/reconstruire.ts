@@ -48,9 +48,18 @@ class Tri {
   readonly clairs: Record<string, string> = {};
   readonly echecs: { colonne: string; raison: RaisonEchec }[] = [];
 
-  /** Ne fait rien si `scelle` n'est pas `v1` : seule la clé perdue a besoin de l'ancien déploiement. */
+  /**
+   * Ne fait rien si `scelle` n'est pas `v1` : seule la clé perdue a besoin de l'ancien déploiement.
+   *
+   * ⚠️ Une page qui affiche le scellé LUI-MÊME n'a jamais su le lire (revue du 23/10) : l'écrivain
+   * des papiers scelle les facettes et les chemins à TOUS les niveaux, et le lecteur prend ceux
+   * d'un papier N0 pour du clair. Ces colonnes étaient déjà illisibles avant l'incident ; le
+   * sauvetage ne peut pas les rendre, et ne fait pas échouer la ligne pour elles : elles restent
+   * telles quelles, et le reste de la ligne est sauvé.
+   */
   essayer(colonne: string, scelle: string | null, candidat: string | null | undefined): void {
     if (!estScelleAncien(scelle)) return;
+    if (candidat === scelle) return;
     if (candidat === null || candidat === undefined) this.echecs.push({ colonne, raison: "absent-de-la-page" });
     else if (!tailleJuste(scelle as string, candidat)) this.echecs.push({ colonne, raison: "taille-differente" });
     else this.clairs[colonne] = candidat;
@@ -66,6 +75,8 @@ function toutEchoue(colonnes: [string, string | null][], raison: RaisonEchec) {
 
 export interface FaitAncien {
   id: string;
+  /** Un fait N0 est écrit en clair : un « v1: » y est du texte, pas un scellé. */
+  niveau: number;
   valeurType: string;
   valeur: string | null;
   attributs: string | null;
@@ -85,6 +96,8 @@ export interface ClairsFait {
 const RANGEMENT_FAIT = new Set(["protection", "valable", "extrait par"]);
 
 export function reconstruireFait(ligne: FaitAncien, page: ClairFait | null): Reconstruction<ClairsFait> {
+  // N0 : l'écrivain n'a rien scellé (`ecrireLot`), un « v1: » en tête est du texte.
+  if (ligne.niveau < 1) return { ok: true, clairs: {} };
   const colonnes: [string, string | null][] = [
     ["valeur", ligne.valeur],
     ["attributs", ligne.attributs],
@@ -105,6 +118,8 @@ export function reconstruireFait(ligne: FaitAncien, page: ClairFait | null): Rec
 
 export interface PieceAncienne {
   id: string;
+  /** Régime clair : le résumé est du texte, pas un scellé. */
+  resumeEnClair: boolean;
   titulaireConfiance: number | null;
   type: string | null;
   emetteur: string | null;
@@ -128,18 +143,27 @@ export interface ClairsPiece {
 
 /**
  * Défait « libelle : A · valeur : B · libelle : C · valeur : D » (le `valeurLisible` de la page)
- * en entrées. `null` si le texte n'a pas cette forme. Une valeur qui contiendrait elle-même
- * « · libelle : » serait mal coupée : la taille le verra.
+ * en entrées. `null` si le texte n'a pas cette forme, ou si une entrée est ambiguë.
+ *
+ * ⚠️ RISQUE RÉSIDUEL, DIT (revue du 23/10) : une valeur qui contiendrait « · libelle : X · valeur :
+ * Y » se lirait comme DEUX entrées de même taille totale, et la taille ne le verrait pas. Aucun
+ * extracteur n'écrit ce motif ; le cas est accepté et écrit dans l'ADR 0019.
  */
 export function entreesStructurees(texte: string): { libelle: string; valeur: string }[] | null {
   if (texte === "") return [];
   const TETE = "libelle : ";
   if (!texte.startsWith(TETE)) return null;
   const out: { libelle: string; valeur: string }[] = [];
+  const SEP = " · valeur : ";
   for (const morceau of texte.slice(TETE.length).split(` · ${TETE}`)) {
-    const coupe = morceau.indexOf(" · valeur : ");
+    const coupe = morceau.indexOf(SEP);
     if (coupe < 0) return null;
-    out.push({ libelle: morceau.slice(0, coupe), valeur: morceau.slice(coupe + " · valeur : ".length) });
+    const entree = { libelle: morceau.slice(0, coupe), valeur: morceau.slice(coupe + SEP.length) };
+    // ⚠️ Un second « · valeur : » dans la même entrée rend la coupe AMBIGUË (le libellé ou la
+    // valeur le contenait), et deux coupes donnent la même taille : la preuve ne verrait rien.
+    // On refuse plutôt que de choisir (revue du 23/10).
+    if (entree.valeur.includes(SEP)) return null;
+    out.push(entree);
   }
   return out;
 }
@@ -159,7 +183,7 @@ export function reconstruirePiece(ligne: PieceAncienne, page: ClairPiece | null)
     ["type", ligne.type],
     ["emetteur", ligne.emetteur],
     ["titulaire", ligne.titulaire],
-    ["resume", ligne.resume],
+    ["resume", ligne.resumeEnClair ? null : ligne.resume],
     ["champsStructures", ligne.champsStructures],
     ["champsLibres", ligne.champsLibres],
     ...ligne.exemplaires.map((x): [string, string | null] => [`chemin:${x.fileId}`, x.chemin]),
@@ -179,7 +203,7 @@ export function reconstruirePiece(ligne: PieceAncienne, page: ClairPiece | null)
       ? page.titulaireAffiche.slice(0, page.titulaireAffiche.length - suffixe.length)
       : null;
   tri.essayer("titulaire", ligne.titulaire, titulaire);
-  tri.essayer("resume", ligne.resume, page.resume);
+  tri.essayer("resume", ligne.resumeEnClair ? null : ligne.resume, page.resume);
   tri.essayer("champsStructures", ligne.champsStructures, champsStructuresJson(page.champsStructures));
   tri.essayer("champsLibres", ligne.champsLibres, JSON.stringify(Object.fromEntries(page.champsLibres)));
 

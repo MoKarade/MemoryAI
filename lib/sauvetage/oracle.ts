@@ -10,11 +10,11 @@
 //      que Vercel pose dans les déploiements créés après sa génération) l'ouvre.
 //   2. une SESSION de Marc, fabriquée ici : un JWT Auth.js chiffré sous `AUTH_SECRET` (la même
 //      valeur que le hub et que l'ancien déploiement) pour `AUTHORIZED_EMAIL`. L'ancien
-//      déploiement la lit comme celle que le hub pose. Elle vit dix minutes.
+//      déploiement la lit comme celle que le hub pose. Elle vit deux minutes, refaite au besoin.
 //
 // ⚠️ RIEN DE CE QUI PASSE ICI NE SE JOURNALISE : ni la page (elle porte des clairs), ni le
 // cookie, ni le secret. Une erreur dit son GENRE (refus, introuvable, panne), jamais un contenu.
-// ⚠️ L'adresse de l'oracle est contrainte à `https://<nom>.vercel.app` : c'est vers elle que
+// ⚠️ L'adresse de l'oracle est épinglée sur les déploiements du projet (`SOURCE_PERMISE`) : c'est vers elle que
 // partent une session de Marc et le secret de contournement. Une variable mal saisie ne doit
 // pas pouvoir les envoyer ailleurs. Les redirections ne sont pas suivies, pour la même raison.
 
@@ -22,9 +22,17 @@ import { encode } from "next-auth/jwt";
 
 /** Le nom FIXE du cookie de session (`lib/sessionPartagee.ts`) : c'est aussi le sel du JWT. */
 export const COOKIE_SESSION = "__Secure-authjs.session-token";
-const DUREE_SESSION_S = 600;
+/** Courte : cette session vaut pour TOUT l'écosystème (même `AUTH_SECRET` que le hub). */
+const DUREE_SESSION_S = 120;
 const DELAI_MS = 20_000;
-const SOURCE_PERMISE = /^https:\/\/[a-z0-9-]+\.vercel\.app$/;
+/**
+ * L'adresse propre d'un déploiement du projet `memory-ai` de l'équipe : `memory-<hash>-mokarades-
+ * projects.vercel.app` (celle de 12:37Z : `memory-85luh46gm-…`, lue sur Vercel le 23/10). Épinglée
+ * (revue du 23/10) : un `*.vercel.app` quelconque recevrait une session valable sur tout
+ * l'écosystème. Le hash fait au moins 8 caractères, ce qui écarte l'alias de production
+ * `memory-ai-mokarades-projects`, qui ne sert que le NOUVEAU déploiement.
+ */
+const SOURCE_PERMISE = /^https:\/\/memory-[a-z0-9]{8,}-mokarades-projects\.vercel\.app$/;
 
 export interface ConfigOracle {
   source: string;
@@ -74,7 +82,7 @@ export function oracleAncienDeploiement(config: ConfigOracle, fetchImpl: typeof 
   async function lire(chemin: string): Promise<Lecture> {
     const maintenant = Date.now();
     // Refaite avant qu'elle n'expire : une passe peut durer plusieurs minutes.
-    if (!session || session.expire - maintenant < 60_000) {
+    if (!session || session.expire - maintenant < 30_000) {
       session = { jeton: await sessionDeMarc(config), expire: maintenant + DUREE_SESSION_S * 1000 };
     }
     let reponse: Response;

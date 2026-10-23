@@ -27,8 +27,6 @@ import { OAuthError } from "@/lib/mcp/oauth";
 import type { ContexteOutils } from "@/lib/mcp/outils";
 import { traiterMessage, type MessageJsonRpc } from "@/lib/mcp/protocole";
 import { assurerMigrations } from "@/lib/migrations";
-import { depotSauvetageDrizzle } from "@/lib/sauvetage/depot";
-import { depotFerme } from "@/lib/sauvetage/porte";
 import { depotBancDrizzle } from "@/lib/banc/passe";
 import { depotPiecesLectureDrizzle } from "@/lib/pieces/depotLecture";
 
@@ -84,16 +82,13 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   await assurerMigrations();
-  // ADR 0019 : pendant le sauvetage, les deux outils qui écrivent échouent en le DISANT.
-  const fermees = await depotSauvetageDrizzle(db).ecrituresFermees();
-  const ouvert = <T extends object>(depot: T): T => (fermees ? depotFerme(depot) : depot);
   const outils: ContexteOutils = {
     lecture: depotLectureDrizzle(db),
-    ecriture: ouvert(depotDrizzle(db)),
+    ecriture: depotDrizzle(db),
     pieces: depotPiecesLectureDrizzle(db),
     banc: depotBancDrizzle(db),
     questions: depotQuestionsDrizzle(db),
-    conversations: ouvert(depotConversationsDrizzle(db)),
+    conversations: depotConversationsDrizzle(db),
     cle,
     env: process.env,
     lecteur: "claude-ai",

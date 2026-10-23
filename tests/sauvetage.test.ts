@@ -14,7 +14,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { PGlite } from "@electric-sql/pglite";
 import { drizzle } from "drizzle-orm/pglite";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { renderToString } from "react-dom/server";
 import * as schema from "@/lib/db/schema";
 import { dechiffrer, deriverCle, estScelleAncien } from "@/lib/chiffrement";
@@ -30,6 +30,9 @@ import { empreintePiece } from "@/lib/pieces/ecrire";
 import { depotSauvetageDrizzle } from "@/lib/sauvetage/depot";
 import type { Oracle } from "@/lib/sauvetage/oracle";
 import { passeDeSauvetage } from "@/lib/sauvetage/sauvetage";
+import { SauvetageEnCoursError } from "@/lib/sauvetage/porte";
+import { depotAdminDrizzle, MOT_DE_PURGE } from "@/lib/depotAdmin";
+import { depotOubliPiecesDrizzle } from "@/lib/pieces/depotOubli";
 
 const ANCIENNE = deriverCle(Buffer.alloc(32, 7).toString("base64"));
 const DRIVEAI: Ecrivain = { appId: "driveai", role: "ecriture", fiabilites: ["document-officiel"] };
@@ -286,10 +289,10 @@ describe("la taille refuse ce qui n'est pas le bon clair", () => {
   });
 
   it("une ligne sans scellé v1 n'a besoin d'aucune page", () => {
-    expect(reconstruireFait({ id: "x", valeurType: "texte", valeur: "clair", attributs: null }, null)).toEqual({ ok: true, clairs: {} });
+    expect(reconstruireFait({ id: "x", niveau: 1, valeurType: "texte", valeur: "clair", attributs: null }, null)).toEqual({ ok: true, clairs: {} });
     expect(
       reconstruirePiece(
-        { id: "x", titulaireConfiance: null, type: "v2:a:b:c", emetteur: null, titulaire: null, resume: null, champsStructures: null, champsLibres: null, exemplaires: [] },
+        { id: "x", resumeEnClair: true, titulaireConfiance: null, type: "v2:a:b:c", emetteur: null, titulaire: null, resume: null, champsStructures: null, champsLibres: null, exemplaires: [] },
         null,
       ),
     ).toEqual({ ok: true, clairs: { chemins: {} } });
@@ -378,15 +381,15 @@ describe("une passe de sauvetage, de bout en bout", () => {
     const archive = (await db.select().from(schema.chiffreV1Archive).where(eq(schema.chiffreV1Archive.ligneId, avant.id)))[0]!;
     expect(JSON.parse(archive.ancien)).toEqual({ valeur: avant.valeur, attributs: avant.attributs, empreinte: avant.empreinte });
 
-    // L'EMPREINTE est refaite : le même fait repoussé par son écrivain est reconnu, pas doublé.
-    const repousse = await ecrireLot(
-      [{ sujet: "marc", predicat: "emploi.employeur", valeur: ORIGINAUX.employeur, valeur_type: "texte",
-         attributs: { type: "contrat", annee: "2024" },
-         provenance: { source_type: "document", source_ref: "ref-1", extracteur: "moteur-document-v1" } }],
-      DRIVEAI,
-      NOUVELLE,
-      depotDrizzle(db),
-    );
+    // Tant que le sauvetage n'est pas clos, la porte refuse l'écriture au point d'écriture.
+    const lot = [{ sujet: "marc", predicat: "emploi.employeur", valeur: ORIGINAUX.employeur, valeur_type: "texte" as const,
+      attributs: { type: "contrat", annee: "2024" },
+      provenance: { source_type: "document" as const, source_ref: "ref-1", extracteur: "moteur-document-v1" } }];
+    await expect(ecrireLot(lot, DRIVEAI, NOUVELLE, depotDrizzle(db))).rejects.toBeInstanceOf(SauvetageEnCoursError);
+
+    // L'EMPREINTE est refaite : une fois la porte rouverte, le même fait repoussé par son
+    // écrivain est reconnu, pas doublé.
+    const repousse = await ecrireLot(lot, DRIVEAI, NOUVELLE, { ...depotDrizzle(db), sauvetageEnCours: async () => false });
     expect(repousse).toMatchObject({ acceptes: 0, dejaPresents: 1 });
 
     // Le papier : facettes, clés de facette, chemins de chaque exemplaire, empreinte.
@@ -436,5 +439,22 @@ describe("une passe de sauvetage, de bout en bout", () => {
     expect(await depot.clore()).toBe(true);
     expect(await depot.ecrituresFermees()).toBe(false);
     expect(await depot.clore()).toBe(false);
+  });
+
+  it("oublier ou purger efface aussi ce que l'archive garde de la ligne", async () => {
+    const trace = async (table: string, id: string) =>
+      (await db.select().from(schema.chiffreV1Archive).where(and(eq(schema.chiffreV1Archive.tableNom, table), eq(schema.chiffreV1Archive.ligneId, id)))).length;
+    expect(await trace("faits", ids.employeur!)).toBe(1);
+    expect(await trace("pieces", ids.bail!)).toBe(1);
+
+    expect(await depotAdminDrizzle(db).oublier(ids.employeur!, NOUVELLE, null, new Date())).toBe("ok");
+    expect(await trace("faits", ids.employeur!)).toBe(0);
+    expect(await trace("faits", ids.document!)).toBe(1);
+    expect(await depotOubliPiecesDrizzle(db).oublier(ids.bail!, NOUVELLE, "test", new Date())).toBe("ok");
+    expect(await trace("pieces", ids.bail!)).toBe(0);
+
+    expect(await depotAdminDrizzle(db).purger(MOT_DE_PURGE)).not.toBe("refuse");
+    const restes = await db.select({ t: schema.chiffreV1Archive.tableNom }).from(schema.chiffreV1Archive);
+    expect(restes.every((r) => r.t === "pieces")).toBe(true);
   });
 });

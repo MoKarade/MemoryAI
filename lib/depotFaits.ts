@@ -9,6 +9,7 @@ import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
 import * as schema from "./db/schema";
 import type { NouveauFait, Perimetre } from "./db/schema";
 import { apresProposition, type Proposant, type StatutPredicat, STATUTS_PREDICAT } from "./vocabulaire/quarantaine";
+import { sauvetageEnCours } from "./sauvetage/porte";
 
 export interface NouvelleProvenance {
   sourceType: (typeof schema.SOURCES)[number];
@@ -18,6 +19,8 @@ export interface NouvelleProvenance {
 }
 
 export interface DepotFaits {
+  /** ADR 0019 : vrai tant que le sauvetage n'est pas clos. Absent (dépôts de test) = jamais. */
+  sauvetageEnCours?(): Promise<boolean>;
   /** Parmi ces empreintes, celles qui figurent dans `oublis`. */
   oubliesParmi(empreintes: readonly string[]): Promise<Set<string>>;
   /** Parmi ces empreintes, celles qu'un fait porte déjà. */
@@ -156,6 +159,8 @@ export function depotDrizzle(db: Base): DepotFaits {
           },
         });
     },
+    sauvetageEnCours: () => sauvetageEnCours(db),
+
     async perimetre(appId) {
       const rows = await db.select().from(schema.perimetres).where(eq(schema.perimetres.appId, appId)).limit(1);
       return rows[0] ?? null;

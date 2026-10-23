@@ -49,10 +49,13 @@ Si Marc retrouve un jour l'ancienne clé, tout redevient lisible depuis l'archiv
 `v2` n'est plus touchée ; une ligne en échec se retente à la relance suivante.
 
 **Pendant le sauvetage**, les lignes encore en `v1` sont illisibles en production : elles se disent
-« illisibles », comme aujourd'hui pour un chiffré altéré. Les écritures des apps (`/api/faits`,
-`/api/pieces`, `/api/conversations`, et les outils MCP `memoryai_proposer` et `memoryai_consigner`)
-répondent 503 tant que le sauvetage n'est pas clos : sinon un écrivain recréerait en `v2` un fait
-encore en `v1`, et la ligne sauvée heurterait son double sur l'index unique des empreintes.
+« illisibles », comme aujourd'hui pour un chiffré altéré. Les écritures de faits et de papiers sont
+fermées tant que le sauvetage n'est pas clos : sinon un écrivain recréerait en `v2` un fait encore en
+`v1`, et la ligne sauvée heurterait son double sur l'index unique des empreintes. La porte est au
+POINT D'ÉCRITURE (`ecrireLot`, `ecrireLotPieces`, qui lèvent `SauvetageEnCoursError`), donc elle
+couvre tous les chemins : `/api/faits` et `/api/pieces` (503, une panne que l'écrivain retente),
+l'outil MCP `memoryai_proposer`, le chat, l'apprentissage, une correction de Marc. Les conversations
+ne sont pas fermées : le sauvetage ne les touche pas (§ 3).
 
 **Les empreintes aussi.** Ce sont des HMAC sous une clé dérivée de la clé perdue : une ligne N0, qui
 n'a aucun scellé, a quand même une empreinte à refaire, sans quoi l'idempotence ne reconnaîtrait
@@ -72,7 +75,24 @@ archive et ménage des échecs dans des CTE), `oracle.ts` (l'appel à l'ancien d
 La migration 0024 ajoute `chiffre_v1_archive`, `sauvetage_echecs` et `sauvetage_etat` ; elle n'ouvre
 le sauvetage que si la base porte déjà des faits ou des papiers (une base neuve n'a rien à sauver).
 L'écran : Régler → Sauvetage (`/regler/sauvetage`). L'adresse de l'ancien déploiement est la variable
-`MEMORYAI_SAUVETAGE_SOURCE`, contrainte à `https://<nom>.vercel.app`.
+`MEMORYAI_SAUVETAGE_SOURCE`, épinglée sur l'adresse propre d'un déploiement du projet
+(`https://memory-<hash>-mokarades-projects.vercel.app`) : c'est vers elle que partent une session de
+Marc et le secret de contournement, une faute de frappe ne doit pas les envoyer ailleurs.
+
+**Revue adversariale du 23/10**, ce qu'elle a changé :
+- Les facettes et chemins d'un papier N0 sont scellés à l'écriture mais lus comme du clair : ils
+  n'étaient déjà plus lisibles avant l'incident. Le sauvetage ne peut pas les rendre ; il les laisse
+  tels quels sans faire échouer le reste de la ligne. Un fait N0 n'a rien de scellé : seule son
+  empreinte est refaite.
+- Les champs structurés d'un papier sont aplatis par la page en « libelle : A · valeur : B ». Une
+  entrée ambiguë (un second « · valeur : ») est refusée. Risque résiduel accepté : une valeur qui
+  contiendrait « · libelle : X · valeur : Y » se lirait comme deux entrées de même taille ; aucun
+  extracteur n'écrit ce motif.
+- L'archive ne garde que les valeurs qui CHANGENT (scellés `v1`, HMAC de l'ancienne clé), jamais un
+  clair. Oublier un fait ou un papier efface aussi sa ligne d'archive, et « purger » efface l'archive
+  des faits : un retrait ne survit pas dans l'archive.
+- Un échec n'est compté que pour une ligne encore à sauver ; huit pannes de suite de l'ancien
+  déploiement arrêtent la passe ; la reprise envoyée par l'écran est validée.
 
 ## 3. Ce que chaque donnée devient
 

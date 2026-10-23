@@ -22,8 +22,7 @@ import { ecrireLot, EcritureRetireeError, LotTropGrandError } from "@/lib/ecrire
 import { estGele, reponseGelee } from "@/lib/gel";
 import { ecrivainAutorise, refusJeton } from "@/lib/jetons";
 import { assurerMigrations } from "@/lib/migrations";
-import { depotSauvetageDrizzle } from "@/lib/sauvetage/depot";
-import { reponseSauvetage } from "@/lib/sauvetage/porte";
+import { reponseSauvetage, SauvetageEnCoursError } from "@/lib/sauvetage/porte";
 
 export const dynamic = "force-dynamic";
 
@@ -61,7 +60,6 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   await assurerMigrations();
-  if (await depotSauvetageDrizzle(db).ecrituresFermees()) return reponseSauvetage();
   try {
     const resultat = await ecrireLot(faits, ecrivain, cle, depotDrizzle(db));
     // ⚠️ LE CONTRAT, PAS L'OBJET INTERNE. `ResultatLot` porte aussi `idsCrees` — utile à un
@@ -71,6 +69,8 @@ export async function POST(request: Request): Promise<Response> {
     const { recus, acceptes, dejaPresents, refuses } = resultat;
     return Response.json({ recus, acceptes, dejaPresents, refuses }, { status: 200, headers: NO_STORE });
   } catch (err) {
+    // ADR 0019 : une PANNE pour l'écrivain (503), qui retente plus tard — jamais un refus.
+    if (err instanceof SauvetageEnCoursError) return reponseSauvetage();
     if (err instanceof LotTropGrandError) return erreur(422, "lot_trop_grand", err.message);
     if (err instanceof EcritureRetireeError) return refusJeton();
     throw err;
