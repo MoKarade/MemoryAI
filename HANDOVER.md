@@ -75,6 +75,9 @@ LIA vit aussi CHEZ ELLE (ADR 0016 § 7) : `components/LiaMaison.tsx` monte `@mok
 pages connectées (pas `/login`, pas `/widget`), ses blocs dessinés par `rendreBlocs` ; elle demande à
 `POST /api/lia/ask` (session, `source` et `proprietaire` imposés, lecteur `lia-maison`). Les deux portes partagent
 `lib/lia/repondre.ts`. Re-pinner le tag pour chaque nouvelle version de lia-ui (suivi au scroll, vie de la maquette).
+Le hub peut joindre un `contexte` (bilan daté, ≤ 1 500 caractères, ADR 0016 § 8, oui de Marc du 23/10) : balisé
+`<contexte_hub>` comme DONNÉE avant la question, refusé en 400 s'il contient un `<` ou dépasse la limite, ignoré par
+la porte de la maison, jamais journalisé.
 ⚠️ Au 22/10 22:09Z, la clé `ANTHROPIC_API_KEY` de production est refusée (401 `invalid x-api-key`) : la route rend
 503 « indisponible » tant que Marc ne l'a pas remplacée dans Vercel.
 
