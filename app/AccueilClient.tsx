@@ -11,7 +11,6 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Lia } from "@mokarade/lia-ui/react";
-import { LIBELLE_HUMEUR, type HumeurLia } from "@mokarade/lia-ui";
 import { IconeEspace } from "@/components/IconeEspace";
 import { LogoMemoire } from "@/components/LogoMemoire";
 import { MenuLia } from "@/components/MenuLia";
@@ -28,7 +27,6 @@ export function AccueilClient({ contenus, aJuger }: { contenus: Record<IdEspace,
   const satellites = useRef<(HTMLButtonElement | null)[]>([]);
   const anneau = useRef<HTMLDivElement>(null);
   const [ouvert, setOuvert] = useState<IdEspace | null>(null);
-  const [humeur, setHumeur] = useState<HumeurLia>("curieux");
   const retour = useRef<HTMLElement | null>(null);
   const fige = useRef(false);
   // La boucle et la zone de LIA lisent l'espace ouvert sans redémarrer à chaque ouverture.
@@ -115,10 +113,6 @@ export function AccueilClient({ contenus, aJuger }: { contenus: Record<IdEspace,
         <MenuLia entrees={SECTIONS} allumee="parler" />
         <LogoMemoire />
         <h1 className="maison-nom">LIA</h1>
-        <span className="maison-pastille" aria-label={`Humeur : ${LIBELLE_HUMEUR[humeur]}`}>
-          <i aria-hidden="true" />
-          {LIBELLE_HUMEUR[humeur]}
-        </span>
         {aJuger && (
           <Link href="/questions" className="pastille-juger" aria-label={`${aJuger.titre} : ${aJuger.detail}`}>
             <span className="pastille-point" aria-hidden="true" />
@@ -175,7 +169,6 @@ export function AccueilClient({ contenus, aJuger }: { contenus: Record<IdEspace,
             const r = monde.getBoundingClientRect();
             return zoneDeVie(orbite(r.width, r.height), ouvertRef.current !== null);
           }}
-          onHumeur={setHumeur}
         />
       ) : null}
     </div>
