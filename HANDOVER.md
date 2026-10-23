@@ -47,6 +47,11 @@ clé Anthropic : coût nul. `memoryai_etat` rend les comptes et la dernière mes
   (`lia-ui` montée dans la maison, une seule par page : `LiaMaison` se retire de `/`), les espaces en orbite qui
   s'arrêtent au survol, la pastille « à juger » dans l'en-tête. La conversation complète est revenue à `/chat`
   (section « Parler »). Verrou : `tests/accueilRendu.test.ts`.
+- Cinquième pas : **l'onglet Accès de la page Mémoire** (`/memoire/acces`, onglets `components/OngletsMemoire.tsx`,
+  qui ne listent que les pages existantes). Part des faits validés par niveau, journal d'accès filtrable par niveau
+  servi (métadonnées signées seulement), carte horaire des lectures sur 30 jours à l'heure de Québec, oublis
+  (compte et dates) et garde-fous, chacun pointant vers le code qui le tient. Lectures : `lib/memoire/depotAcces.ts`
+  (rien de déchiffré) ; calculs purs : `lib/memoire/acces.ts`. Verrous : `tests/memoireAcces*.test.ts`.
 
 **LIA répond au hub (MemoryAI#91, ADR 0016)**, avant la suite du lot 5 : Marc veut LIA publiée dans toutes les apps
 (22/10 21:22Z). `POST /api/ask` (`app/api/ask/route.ts`, logique pure dans `lib/lia/ask.ts`) : `x-hub-token` seul,
