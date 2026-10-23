@@ -1686,6 +1686,75 @@ code {
   font-size: 8px;
   fill: var(--texte-doux);
 }
+/* Pas de défilement ici : le dernier point, le plus utile, serait hors de l'écran du téléphone. */
+.courbe-banc {
+  width: 100%;
+  height: auto;
+}
+.courbe-banc text {
+  font-size: 12px;
+  fill: var(--texte-doux);
+}
+.legende-courbe {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.2rem;
+  color: var(--texte-doux);
+}
+.legende-courbe li::before {
+  content: "";
+  display: inline-block;
+  width: 0.9rem;
+  height: 3px;
+  margin-right: 0.45rem;
+  vertical-align: middle;
+  border-radius: 2px;
+  background: var(--teinte);
+}
+.capacites {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.7rem;
+}
+.capacites li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.3rem 0.75rem;
+  align-items: baseline;
+  font-variant-numeric: tabular-nums;
+}
+.capacites small {
+  display: block;
+}
+.capacites li > svg {
+  grid-column: 1 / -1;
+}
+.etapes-apprentissage {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: etape;
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+}
+.etapes-apprentissage li {
+  counter-increment: etape;
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--rayon-petit);
+  background: var(--surface-douce);
+}
+.etapes-apprentissage li::before {
+  content: counter(etape);
+  display: block;
+  font-weight: 600;
+  color: var(--repere);
+}
 .garde-fous {
   list-style: none;
   margin: 0;
