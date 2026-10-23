@@ -16,6 +16,11 @@
 // HMAC sans la clé, non. La clé d'empreinte est DÉRIVÉE de la clé de chiffrement (HKDF),
 // jamais la même : deux usages, deux clés.
 //
+// ── LES VERSIONS DE SCELLÉ (ADR 0019) ────────────────────────────────────────────────────
+// `v1` : scellé sous la clé perdue le 23/10/2026. Plus rien ne le déchiffre : il ne reste que
+// dans l'archive du sauvetage, et sa LONGUEUR sert à vérifier un clair relu (AES-GCM ne change
+// pas la longueur). `v2` : la clé courante. On n'écrit que `v2`, on ne lit que `v2`.
+//
 // Module PUR : la clé est un paramètre, `process.env` n'est lu que par `cleDepuisEnv`.
 
 import { createCipheriv, createDecipheriv, createHmac, hkdfSync, randomBytes } from "node:crypto";
@@ -39,7 +44,9 @@ export interface Cle {
   empreinte: Buffer;
 }
 
-const VERSION = "v1";
+const VERSION = "v2";
+/** Le préfixe des scellés de la clé perdue le 23/10/2026 (ADR 0019). */
+const VERSION_PERDUE = "v1";
 /**
  * Longueur du tag GCM, en octets — celle que produit `getAuthTag()`. Elle est IMPOSÉE au
  * déchiffrement : sans `authTagLength`, Node accepte un tag TRONQUÉ (mesuré le 23/09/2026 sur
@@ -94,6 +101,24 @@ export function dechiffrer(cle: Cle, scelle: string, id: string, niveau: number)
   } catch {
     throw new DechiffrementError(id);
   }
+}
+
+/** Vrai pour un scellé de la clé perdue : illisible, à sauver ou à archiver (ADR 0019). */
+export function estScelleAncien(scelle: string | null | undefined): boolean {
+  return typeof scelle === "string" && scelle.startsWith(`${VERSION_PERDUE}:`);
+}
+
+/**
+ * La longueur en octets du clair qu'un scellé porte, SANS le déchiffrer : AES-GCM chiffre octet
+ * pour octet. Sert à vérifier qu'un clair relu ailleurs est bien celui-là (ADR 0019 § 2). `null`
+ * pour un scellé mal formé.
+ */
+export function longueurClaire(scelle: string): number | null {
+  const parties = scelle.split(":");
+  if (parties.length !== 4 || (parties[0] !== VERSION && parties[0] !== VERSION_PERDUE)) return null;
+  const chiffre = parties[3] ?? "";
+  if (!/^[A-Za-z0-9+/]*={0,2}$/.test(chiffre)) return null;
+  return Buffer.from(chiffre, "base64").length;
 }
 
 /**

@@ -7,6 +7,8 @@
 import { describe, it, expect } from "vitest";
 import { randomBytes } from "node:crypto";
 import {
+  estScelleAncien,
+  longueurClaire,
   ClefAbsenteError,
   DechiffrementError,
   chiffrer,
@@ -40,9 +42,22 @@ describe("deriverCle", () => {
 describe("chiffrer / dechiffrer", () => {
   it("rend la valeur d'origine avec le même id et le même niveau", () => {
     const scelle = chiffrer(cle, "Employeur inc.", "f1", 1);
-    expect(scelle.startsWith("v1:")).toBe(true);
+    expect(scelle.startsWith("v2:")).toBe(true);
     expect(scelle).not.toContain("Employeur");
     expect(dechiffrer(cle, scelle, "f1", 1)).toBe("Employeur inc.");
+  });
+
+  it("un scellé de la clé perdue (v1) n'est jamais déchiffré, mais sa longueur se lit (ADR 0019)", () => {
+    const v2 = chiffrer(cle, "Employé né à Montréal", "f1", 1);
+    const v1 = `v1:${v2.slice(3)}`;
+    expect(estScelleAncien(v1)).toBe(true);
+    expect(estScelleAncien(v2)).toBe(false);
+    expect(estScelleAncien(null)).toBe(false);
+    expect(() => dechiffrer(cle, v1, "f1", 1)).toThrow(DechiffrementError);
+    // AES-GCM chiffre octet pour octet : la longueur du clair en OCTETS, accents compris.
+    expect(longueurClaire(v1)).toBe(Buffer.byteLength("Employé né à Montréal", "utf8"));
+    expect(longueurClaire(v2)).toBe(Buffer.byteLength("Employé né à Montréal", "utf8"));
+    for (const faux of ["", "v3:a:b:c", "v1:a:b", "v1:a:b:@@"]) expect(longueurClaire(faux), faux).toBeNull();
   });
 
   it("deux chiffrements de la même valeur diffèrent (nonce frais)", () => {

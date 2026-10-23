@@ -49,7 +49,7 @@ describe("ecrireLot", () => {
     const [f] = await db.select().from(schema.faits);
     expect(f).toBeDefined();
     expect(f!.valeur).not.toContain("Québec");
-    expect(f!.valeur!.startsWith("v1:")).toBe(true);
+    expect(f!.valeur!.startsWith("v2:")).toBe(true);
     expect(dechiffrer(cle, f!.valeur!, f!.id, f!.niveau)).toBe("Entreprise Exemple");
     expect(f).toMatchObject({
       statut: "propose",
