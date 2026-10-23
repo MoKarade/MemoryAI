@@ -56,6 +56,12 @@ clé Anthropic : coût nul. `memoryai_etat` rend les comptes et la dernière mes
   lundi en haut), lectures et dépense des 14 derniers jours, conversations par source. Des comptes seulement, au
   jour de Québec (`lib/memoire/depotHistorique.ts`) ; humeur, relances et corrections de la maquette ne sont pas
   dessinées tant qu'elles ne sont pas mesurées. Verrou : `tests/memoireHistorique.test.ts`.
+- Septième pas : **l'onglet Apprentissage** (`/memoire/apprentissage`) : courbe du banc mesure après mesure (papiers
+  attendus retrouvés, « je n'ai rien » justes), score par capacité de la dernière mesure, faits tirés des conversations
+  par statut (`extracteur` `conversation-*`), questions par statut, et les étapes de la passe. Des nombres seulement
+  (`lib/memoire/depotApprentissage.ts`) ; une mesure illisible est écartée et comptée, jamais lue comme 0. La courbe
+  d'entraînement, les versions et les habitudes de la maquette n'existent pas : aucun réseau n'est entraîné. Verrou :
+  `tests/memoireApprentissage.test.ts`.
 
 **LIA répond au hub (MemoryAI#91, ADR 0016)**, avant la suite du lot 5 : Marc veut LIA publiée dans toutes les apps
 (22/10 21:22Z). `POST /api/ask` (`app/api/ask/route.ts`, logique pure dans `lib/lia/ask.ts`) : `x-hub-token` seul,
