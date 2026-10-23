@@ -129,7 +129,7 @@ export default async function FaitPage({
         <CarteFait f={f} canari={r.fait.canari} detail actions={{ valider: validerAction, rejeter: rejeterAction, oublier: oublierAction }} />
 
         <div className="actions-fait">
-          <Link href={`/?a-propos=${encodeURIComponent(questionPourLia)}`} className="bouton bouton-second">
+          <Link href={`/chat?a-propos=${encodeURIComponent(questionPourLia)}`} className="bouton bouton-second">
             Demander à Lia là-dessus
           </Link>
           {source?.lien && (
