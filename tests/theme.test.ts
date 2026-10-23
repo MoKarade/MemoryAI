@@ -248,6 +248,9 @@ describe("socle visuel — sombre seul", () => {
       ["--bordure-champ", "--surface", 3],
       ["--bordure-champ", "--fond", 3],
       ["--accent", "--fond", 3],
+      // Les icônes des espaces de la maison de LIA, sur leur rond.
+      ["--info", "--surface", 4.5],
+      ["--budget", "--surface", 4.5],
     ];
     const tropBas: string[] = [];
     const v = Object.fromEntries(couleurs(sombre)) as Record<string, string>;
