@@ -1254,23 +1254,6 @@ code {
   line-height: 1;
   margin: 0;
 }
-.maison-pastille {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  min-height: 26px;
-  padding: 0 0.65rem;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--info) 45%, transparent);
-  color: var(--info);
-  font-size: 0.78rem;
-}
-.maison-pastille i {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: currentColor;
-}
 .maison-droite {
   position: absolute;
   z-index: 5;
