@@ -100,20 +100,21 @@ describe("navSections", () => {
     }
   });
 
-  it("l'ancienne adresse /chat renvoie à l'accueil au lieu de tomber en panne", () => {
+  it("/chat est la conversation complète, et non plus un renvoi", () => {
     const s = readFileSync("app/chat/page.tsx", "utf8");
-    // Une 404 sur un chemin qui marchait hier se lit comme une panne. ⚠️ Le fait est la
-    // REDIRECTION vers la racine, pas la présence du mot « redirect » : un
-    // `redirect("/moi")` passerait un simple `toContain("redirect")`.
-    expect(s).toMatch(/redirect\("\/"\)/);
+    // MemoryAI#74 : l'accueil devient la maison de LIA, la conversation revient à `/chat`.
+    // ⚠️ Le fait défendu : la conversation est MONTÉE ici, et rien ne renvoie ailleurs — un
+    // `redirect("/")` laissé là ferait tourner Marc en rond entre l'accueil et Parler.
+    expect(s, "/chat ne monte pas ChatClient").toMatch(/<ChatClient\b/);
+    expect(s).not.toMatch(/\bredirect\(/);
     expect(s).toMatch(/\brequireSession\(\)/);
   });
 
-  it("l'accueil est la conversation, pas un tableau de compteurs", () => {
+  it("l'accueil est la maison de LIA, pas un tableau de compteurs", () => {
     const s = readFileSync("app/page.tsx", "utf8");
-    expect(s, "l'accueil ne monte pas ChatClient").toMatch(/<ChatClient\b/);
+    expect(s, "l'accueil ne monte pas la maison de LIA").toMatch(/<AccueilClient\b/);
     // Il REDIRIGEAIT vers /moi. Le fait défendu est qu'il ne le fait plus — sinon la barre
-    // annonce « Parler » et sert des compteurs.
-    expect(s, "l'accueil redirige encore au lieu de parler").not.toMatch(/\bredirect\(/);
+    // annonce « Lia » et sert des compteurs.
+    expect(s, "l'accueil redirige encore au lieu de montrer LIA").not.toMatch(/\bredirect\(/);
   });
 });

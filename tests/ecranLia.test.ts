@@ -9,7 +9,8 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 
 const client = readFileSync("app/chat/ChatClient.tsx", "utf8");
-const page = readFileSync("app/page.tsx", "utf8");
+// La pastille vit dans la maison de LIA (l'accueil, MemoryAI#74) : la page lit, le client dessine.
+const page = readFileSync("app/AccueilClient.tsx", "utf8");
 const css = readFileSync("app/globals.css", "utf8");
 
 /** Le corps d'une fonction déclarée `function nom(…) { … }` du client, jusqu'à l'accolade fermante. */
