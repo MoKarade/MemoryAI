@@ -5,10 +5,12 @@
 // page montre la forme de la mémoire. Une valeur s'ouvre fait par fait, sur sa fiche, qui
 // applique la politique des niveaux. Aucune donnée n'est donc déchiffrée pour dessiner.
 //
-// Les autres onglets de la maquette (réseau de LIA, apprentissage, historique, accès) arrivent
-// avec les lots qui produisent leurs données ; d'ici là la page ne les simule pas.
+// L'onglet Accès vit à `/memoire/acces` ; les autres onglets de la maquette (réseau de LIA,
+// apprentissage, historique) arrivent avec les lots qui produisent leurs données ; d'ici là la
+// page ne les simule pas (`components/OngletsMemoire.tsx` ne liste que ce qui existe).
 
 import { Nav } from "@/components/Nav";
+import { OngletsMemoire } from "@/components/OngletsMemoire";
 import { depotLectureDrizzle } from "@/lib/depotLecture";
 import { depotLiensDrizzle } from "@/lib/depotLiens";
 import { construireReseau } from "@/lib/memoire/reseau";
@@ -29,6 +31,7 @@ export default async function MemoirePage() {
         <Nav active="memoire" />
         <main className="page">
           <h1>Mémoire</h1>
+          <OngletsMemoire actif="memoire" />
           <p className="lead">{MESSAGES_MANQUE[acces.manque]}</p>
         </main>
       </>
@@ -51,6 +54,7 @@ export default async function MemoirePage() {
       <Nav active="memoire" />
       <main className="page">
         <h1>Mémoire</h1>
+        <OngletsMemoire actif="memoire" />
         {faits.length === 0 ? (
           <p className="lead">
             En construction : aucun fait validé pour l&apos;instant. Le réseau se remplit à mesure que LIA apprend et
