@@ -8,6 +8,7 @@ import Link from "next/link";
 
 export const ONGLETS_MEMOIRE = [
   { cle: "memoire", href: "/memoire", libelle: "Mémoire" },
+  { cle: "apprentissage", href: "/memoire/apprentissage", libelle: "Apprentissage" },
   { cle: "historique", href: "/memoire/historique", libelle: "Historique" },
   { cle: "acces", href: "/memoire/acces", libelle: "Accès" },
 ] as const;
