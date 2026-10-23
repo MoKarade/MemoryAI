@@ -1549,3 +1549,160 @@ code {
     transition: none;
   }
 }
+
+/* ── Onglets de la page Mémoire (maquette v5) et onglet Accès (`app/memoire/acces`). ── */
+.onglets-memoire {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border: 1px solid var(--bordure);
+  border-radius: 999px;
+  justify-self: start;
+}
+.onglet-memoire {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 1rem;
+  border-radius: 999px;
+  color: var(--texte-doux);
+  text-decoration: none;
+}
+.onglet-memoire:hover {
+  color: var(--texte);
+}
+.onglet-memoire[aria-current="page"] {
+  color: var(--texte);
+  background: var(--surface-douce);
+  box-shadow: inset 0 0 0 1px var(--bordure-champ);
+}
+.onglet-memoire:focus-visible,
+.puces-filtre a:focus-visible {
+  outline: 3px solid var(--texte);
+  outline-offset: 2px;
+}
+.tuile h2 {
+  margin: 0 0 0.4rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+.empile {
+  display: flex;
+  height: 14px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--surface-douce);
+}
+.empile i {
+  background: var(--teinte);
+}
+.regles {
+  list-style: none;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+}
+.regles li {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--rayon-petit);
+  border: 1px solid var(--bordure);
+  border-left: 3px solid var(--teinte);
+}
+.regles b {
+  color: var(--teinte);
+}
+.puces-filtre {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.puces-filtre a {
+  --teinte: var(--texte-doux);
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--bordure-champ);
+  color: var(--teinte);
+  text-decoration: none;
+}
+.puces-filtre a[aria-current="true"] {
+  background: var(--surface-douce);
+  border-color: var(--teinte);
+}
+.journal-acces {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+}
+.journal-acces li {
+  display: grid;
+  grid-template-columns: 7.5rem minmax(0, 1fr) auto auto;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--bordure);
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 40rem) {
+  .journal-acces li {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .journal-acces time,
+  .journal-acces li > :nth-child(3) {
+    grid-column: 1 / -1;
+    color: var(--texte-doux);
+  }
+  .journal-acces li > :nth-child(3) {
+    order: 3;
+  }
+}
+.journal-acces .memoire-niveau-pastille {
+  justify-self: end;
+}
+/* Sur téléphone la carte défile plutôt que de rapetisser ses étiquettes sous la taille lisible. */
+.defile-heures {
+  overflow-x: auto;
+}
+.carte-heures {
+  width: 100%;
+  min-width: 34rem;
+  height: auto;
+}
+.carte-heures text {
+  font-size: 8px;
+  fill: var(--texte-doux);
+}
+.garde-fous {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+}
+.garde-fous li {
+  padding: 0.6rem 0.75rem 0.6rem 2rem;
+  border-radius: var(--rayon-petit);
+  background: var(--surface-douce);
+  position: relative;
+}
+.garde-fous li::before {
+  content: "";
+  position: absolute;
+  left: 0.8rem;
+  top: 50%;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--succes-texte);
+  transform: translateY(-50%);
+}
