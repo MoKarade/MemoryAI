@@ -8,8 +8,8 @@
 
 import Link from "next/link";
 import { Jauge } from "@/components/Jauge";
-import { Nav } from "@/components/Nav";
-import { OngletsMemoire } from "@/components/OngletsMemoire";
+import { CoqueMemoire } from "@/components/CoqueMemoire";
+import { Tuile, Vide } from "@/components/Tuile";
 import { BANC_COURANT } from "@/lib/banc/passe";
 import { CAPACITES } from "@/lib/banc/banc";
 import { FUSEAU } from "@/lib/fuseau";
@@ -96,14 +96,9 @@ export default async function ApprentissagePage() {
   const acces = await accesDonnees();
   if (!acces.ok) {
     return (
-      <>
-        <Nav active="memoire" />
-        <main className="page">
-          <h1>Mémoire</h1>
-          <OngletsMemoire actif="apprentissage" />
-          <p className="lead">{MESSAGES_MANQUE[acces.manque]}</p>
-        </main>
-      </>
+      <CoqueMemoire actif="apprentissage">
+        <Vide>{MESSAGES_MANQUE[acces.manque]}</Vide>
+      </CoqueMemoire>
     );
   }
 
@@ -117,103 +112,90 @@ export default async function ApprentissagePage() {
   const derniereLe = lignes[0]?.mesureLe ?? null;
 
   return (
-    <>
-      <Nav active="memoire" />
-      <main className="page">
-        <h1>Mémoire</h1>
-        <OngletsMemoire actif="apprentissage" />
-        <div className="bento">
-          <section className="carte tuile grande" aria-labelledby="t-banc">
-            <h2 id="t-banc">Ce qu&apos;elle retrouve, mesure après mesure</h2>
-            {banc.points.length === 0 ? (
-              <p className="doux">Aucune mesure du banc pour l&apos;instant. La première se prend au prochain réveil de l&apos;apprentissage.</p>
-            ) : (
-              <>
-                <p className="doux">Les mêmes {banc.derniere?.questions ?? 0} questions à chaque fois, sur ses papiers.</p>
-                <CourbeBanc points={banc.points} />
-                <ul className="legende-courbe">
-                  <li style={{ "--teinte": "var(--repere)" } as React.CSSProperties}>Papiers attendus retrouvés</li>
-                  <li style={{ "--teinte": "var(--info)" } as React.CSSProperties}>« Je n&apos;ai rien » justes</li>
-                </ul>
-              </>
-            )}
-            {banc.illisibles > 0 ? <p className="doux">{banc.illisibles} mesure{banc.illisibles > 1 ? "s" : ""} illisible{banc.illisibles > 1 ? "s" : ""}, écartée{banc.illisibles > 1 ? "s" : ""} de la courbe.</p> : null}
-          </section>
-
-          <section className="carte tuile" aria-labelledby="t-capacites">
-            <h2 id="t-capacites">Par capacité</h2>
-            {banc.derniere === null ? (
-              <p className="doux">Rien à montrer tant que le banc n&apos;a pas été mesuré.</p>
-            ) : (
-              <>
-                {derniereLe ? <p className="doux">Mesure du {jour.format(derniereLe)}, dans les {banc.derniere.k} premiers résultats.</p> : null}
-                <ul className="capacites">
-                  {CAPACITES.map((c) => {
-                    const s = banc.derniere!.parCapacite[c];
-                    return (
-                      <li key={c}>
-                        <span>
-                          {LIBELLE_CAPACITE[c]}
-                          <small className="doux">{s.questions} questions</small>
-                        </span>
-                        <b>{pourcent(s.rappel)}</b>
-                        <Jauge part={s.rappel === null ? null : s.rappel * 100} resume={`${LIBELLE_CAPACITE[c]} : ${pourcent(s.rappel)}`} />
-                      </li>
-                    );
-                  })}
-                </ul>
-              </>
-            )}
-          </section>
-
-          <section className="carte tuile" aria-labelledby="t-appris">
-            <h2 id="t-appris">Ce qu&apos;elle a tiré de vos conversations</h2>
-            {totalAppris === 0 ? (
-              <p className="doux">Aucun fait tiré d&apos;une conversation pour l&apos;instant.</p>
-            ) : (
-              <ul className="liste-simple">
-                {appris.map((c) => (
-                  <li key={c.statut}>
-                    <span>{LIBELLE_STATUT_FAIT[c.statut]}</span>
-                    <span>{c.n.toLocaleString("fr-CA")}</span>
-                  </li>
-                ))}
+    <CoqueMemoire actif="apprentissage">
+      <div className="tableau">
+        <Tuile largeur={7} icone="chart" titre="Ce qu’elle retrouve, mesure après mesure">
+          {banc.points.length === 0 ? (
+            <p className="doux">Aucune mesure du banc pour l&apos;instant. La première se prend au prochain réveil de l&apos;apprentissage.</p>
+          ) : (
+            <>
+              <p className="doux">Les mêmes {banc.derniere?.questions ?? 0} questions à chaque fois, sur ses papiers.</p>
+              <CourbeBanc points={banc.points} />
+              <ul className="legende-courbe">
+                <li style={{ "--teinte": "var(--repere)" } as React.CSSProperties}>Papiers attendus retrouvés</li>
+                <li style={{ "--teinte": "var(--info)" } as React.CSSProperties}>« Je n&apos;ai rien » justes</li>
               </ul>
-            )}
-            <Link href="/a-valider" className="bouton bouton-second">
-              À valider
-            </Link>
-          </section>
-
-          <section className="carte tuile" aria-labelledby="t-questions">
-            <h2 id="t-questions">Ce qu&apos;elle te demande</h2>
-            {totalDemandes === 0 ? (
-              <p className="doux">Aucune question posée pour l&apos;instant.</p>
-            ) : (
-              <ul className="liste-simple">
-                {demandes.map((c) => (
-                  <li key={c.statut}>
-                    <span>{LIBELLE_STATUT_QUESTION[c.statut]}</span>
-                    <span>{c.n.toLocaleString("fr-CA")}</span>
-                  </li>
-                ))}
+            </>
+          )}
+          {banc.illisibles > 0 ? <p className="doux">{banc.illisibles} mesure{banc.illisibles > 1 ? "s" : ""} illisible{banc.illisibles > 1 ? "s" : ""}, écartée{banc.illisibles > 1 ? "s" : ""} de la courbe.</p> : null}
+        </Tuile>
+        <Tuile largeur={5} icone="target" titre="Par capacité">
+          {banc.derniere === null ? (
+            <p className="doux">Rien à montrer tant que le banc n&apos;a pas été mesuré.</p>
+          ) : (
+            <>
+              {derniereLe ? <p className="doux">Mesure du {jour.format(derniereLe)}, dans les {banc.derniere.k} premiers résultats.</p> : null}
+              <ul className="capacites">
+                {CAPACITES.map((c) => {
+                  const s = banc.derniere!.parCapacite[c];
+                  return (
+                    <li key={c}>
+                      <span>
+                        {LIBELLE_CAPACITE[c]}
+                        <small className="doux">{s.questions} questions</small>
+                      </span>
+                      <b>{pourcent(s.rappel)}</b>
+                      <Jauge part={s.rappel === null ? null : s.rappel * 100} resume={`${LIBELLE_CAPACITE[c]} : ${pourcent(s.rappel)}`} />
+                    </li>
+                  );
+                })}
               </ul>
-            )}
-            <Link href="/questions" className="bouton bouton-second">
-              Ses questions
-            </Link>
-          </section>
-
-          <section className="carte tuile grande" aria-labelledby="t-etapes">
-            <h2 id="t-etapes">Comment elle apprend</h2>
-            <ol className="etapes-apprentissage">
-              {ETAPES.map((e) => (
-                <li key={e.ou}>{e.texte}</li>
+            </>
+          )}
+        </Tuile>
+        <Tuile largeur={6} icone="star" titre="Ce qu’elle a tiré de vos conversations">
+          {totalAppris === 0 ? (
+            <p className="doux">Aucun fait tiré d&apos;une conversation pour l&apos;instant.</p>
+          ) : (
+            <ul className="liste-simple">
+              {appris.map((c) => (
+                <li key={c.statut}>
+                  <span>{LIBELLE_STATUT_FAIT[c.statut]}</span>
+                  <span>{c.n.toLocaleString("fr-CA")}</span>
+                </li>
               ))}
-            </ol>
-          </section>
-        </div>
-      </main>
-    </>
+            </ul>
+          )}
+          <Link href="/a-valider" className="bouton bouton-second">
+            À valider
+          </Link>
+        </Tuile>
+        <Tuile largeur={6} icone="cardok" titre="Ce qu’elle te demande">
+          {totalDemandes === 0 ? (
+            <p className="doux">Aucune question posée pour l&apos;instant.</p>
+          ) : (
+            <ul className="liste-simple">
+              {demandes.map((c) => (
+                <li key={c.statut}>
+                  <span>{LIBELLE_STATUT_QUESTION[c.statut]}</span>
+                  <span>{c.n.toLocaleString("fr-CA")}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+          <Link href="/questions" className="bouton bouton-second">
+            Ses questions
+          </Link>
+        </Tuile>
+
+        <Tuile largeur={12} icone="layers" titre="Comment elle apprend">
+          <ol className="etapes-apprentissage">
+            {ETAPES.map((e) => (
+              <li key={e.ou}>{e.texte}</li>
+            ))}
+          </ol>
+        </Tuile>
+      </div>
+    </CoqueMemoire>
   );
 }

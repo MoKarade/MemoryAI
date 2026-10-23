@@ -8,8 +8,8 @@
 
 import Link from "next/link";
 import { Histogramme } from "@/components/Histogramme";
-import { Nav } from "@/components/Nav";
-import { OngletsMemoire } from "@/components/OngletsMemoire";
+import { CoqueMemoire } from "@/components/CoqueMemoire";
+import { Tuile, Vide } from "@/components/Tuile";
 import { jourQuebec } from "@/lib/coutChat";
 import { depotAdminDrizzle } from "@/lib/depotAdmin";
 import { FUSEAU } from "@/lib/fuseau";
@@ -33,14 +33,9 @@ export default async function HistoriquePage() {
   const acces = await accesDonnees();
   if (!acces.ok) {
     return (
-      <>
-        <Nav active="memoire" />
-        <main className="page">
-          <h1>Mémoire</h1>
-          <OngletsMemoire actif="historique" />
-          <p className="lead">{MESSAGES_MANQUE[acces.manque]}</p>
-        </main>
-      </>
+      <CoqueMemoire actif="historique">
+        <Vide>{MESSAGES_MANQUE[acces.manque]}</Vide>
+      </CoqueMemoire>
     );
   }
 
@@ -65,84 +60,75 @@ export default async function HistoriquePage() {
   const totalDepense = barresDepense.reduce((s, b) => s + b.valeur, 0);
 
   return (
-    <>
-      <Nav active="memoire" />
-      <main className="page">
-        <h1>Mémoire</h1>
-        <OngletsMemoire actif="historique" />
-        <div className="bento">
-          <section className="carte tuile grande" aria-labelledby="t-ecrit">
-            <h2 id="t-ecrit">Ce qu&apos;elle a écrit</h2>
-            <p className="doux">
-              {grille.total.toLocaleString("fr-CA")} fait{grille.total > 1 ? "s" : ""} écrit{grille.total > 1 ? "s" : ""} en mémoire sur {SEMAINES} semaines
-            </p>
-            <div className="defile-heures">
-              <svg
-                className="grille-ecritures"
-                viewBox={`0 0 ${SEMAINES * CASE} ${7 * CASE}`}
-                role="img"
-                aria-label={`Faits écrits par jour sur ${SEMAINES} semaines : ${grille.total} en tout, au plus ${grille.max} en une journée.`}
-              >
-                {grille.semaines.map((semaine, s) =>
-                  semaine.map((n, j) =>
-                    n === null ? null : (
-                      <rect key={`${s}-${j}`} x={s * CASE} y={j * CASE} width={CASE - 3} height={CASE - 3} rx={2.5} fill="var(--repere)" fillOpacity={(0.08 + (grille.max ? (n / grille.max) * 0.85 : 0)).toFixed(2)} />
-                    ),
+    <CoqueMemoire actif="historique">
+      <div className="tableau">
+        <Tuile largeur={6} icone="chat" titre="Ses conversations">
+          {sources.length === 0 ? (
+            <p className="doux">Aucune conversation enregistrée.</p>
+          ) : (
+            <ul className="liste-simple">
+              {sources.map((s) => (
+                <li key={s.source}>
+                  <span>
+                    {LIBELLE_SOURCE[s.source] ?? s.source}
+                    {s.derniere ? <small className="doux"> · {jourCourt.format(s.derniere)}</small> : null}
+                  </span>
+                  <span>
+                    {s.conversations.toLocaleString("fr-CA")} <small className="doux">({s.messages.toLocaleString("fr-CA")} messages)</small>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+          <Link href="/conversations" className="bouton bouton-second">
+            Toutes les conversations
+          </Link>
+        </Tuile>
+
+        <Tuile largeur={6} icone="eye" titre={`Ses lectures, ${JOURS} jours`}>
+          {totalLectures === 0 ? (
+            <p className="doux">Aucune lecture ces {JOURS} derniers jours.</p>
+          ) : (
+            <Histogramme barres={barresLectures} unite="lecture" resume={`${totalLectures} lectures du ${jours[0]} au ${aujourdhui}, au plus ${Math.max(...barresLectures.map((b) => b.valeur))} en une journée.`} />
+          )}
+        </Tuile>
+
+        <Tuile largeur={7} icone="db" titre="Ce qu’elle a écrit" repliee>
+          <p className="doux">
+            {grille.total.toLocaleString("fr-CA")} fait{grille.total > 1 ? "s" : ""} écrit{grille.total > 1 ? "s" : ""} en mémoire sur {SEMAINES} semaines
+          </p>
+          <div className="defile-heures">
+            <svg
+              className="grille-ecritures"
+              viewBox={`0 0 ${SEMAINES * CASE} ${7 * CASE}`}
+              role="img"
+              aria-label={`Faits écrits par jour sur ${SEMAINES} semaines : ${grille.total} en tout, au plus ${grille.max} en une journée.`}
+            >
+              {grille.semaines.map((semaine, s) =>
+                semaine.map((n, j) =>
+                  n === null ? null : (
+                    <rect key={`${s}-${j}`} x={s * CASE} y={j * CASE} width={CASE - 3} height={CASE - 3} rx={2.5} fill="var(--repere)" fillOpacity={(0.08 + (grille.max ? (n / grille.max) * 0.85 : 0)).toFixed(2)} />
                   ),
-                )}
-              </svg>
-            </div>
-          </section>
+                ),
+              )}
+            </svg>
+          </div>
+        </Tuile>
 
-          <section className="carte tuile" aria-labelledby="t-conv">
-            <h2 id="t-conv">Ses conversations</h2>
-            {sources.length === 0 ? (
-              <p className="doux">Aucune conversation enregistrée.</p>
-            ) : (
-              <ul className="liste-simple">
-                {sources.map((s) => (
-                  <li key={s.source}>
-                    <span>
-                      {LIBELLE_SOURCE[s.source] ?? s.source}
-                      {s.derniere ? <small className="doux"> · {jourCourt.format(s.derniere)}</small> : null}
-                    </span>
-                    <span>
-                      {s.conversations.toLocaleString("fr-CA")} <small className="doux">({s.messages.toLocaleString("fr-CA")} messages)</small>
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-            <Link href="/conversations" className="bouton bouton-second">
-              Toutes les conversations
-            </Link>
-          </section>
-
-          <section className="carte tuile" aria-labelledby="t-lectures">
-            <h2 id="t-lectures">Ses lectures, {JOURS} jours</h2>
-            {totalLectures === 0 ? (
-              <p className="doux">Aucune lecture ces {JOURS} derniers jours.</p>
-            ) : (
-              <Histogramme barres={barresLectures} unite="lecture" resume={`${totalLectures} lectures du ${jours[0]} au ${aujourdhui}, au plus ${Math.max(...barresLectures.map((b) => b.valeur))} en une journée.`} />
-            )}
-          </section>
-
-          <section className="carte tuile" aria-labelledby="t-depense">
-            <h2 id="t-depense">Sa dépense, {JOURS} jours</h2>
-            {totalDepense === 0 ? (
-              <p className="doux">Aucune dépense ces {JOURS} derniers jours.</p>
-            ) : (
-              <>
-                <p className="doux">{usd(totalDepense)} en tout</p>
-                <Histogramme barres={barresDepense} unite="$ US" resume={`Dépense du ${jours[0]} au ${aujourdhui} : ${usd(totalDepense)} en tout.`} />
-              </>
-            )}
-            <Link href="/depenses" className="bouton bouton-second">
-              Dépenses et plafonds
-            </Link>
-          </section>
-        </div>
-      </main>
-    </>
+        <Tuile largeur={5} icone="coin" titre={`Sa dépense, ${JOURS} jours`}>
+          {totalDepense === 0 ? (
+            <p className="doux">Aucune dépense ces {JOURS} derniers jours.</p>
+          ) : (
+            <>
+              <p className="doux">{usd(totalDepense)} en tout</p>
+              <Histogramme barres={barresDepense} unite="$ US" resume={`Dépense du ${jours[0]} au ${aujourdhui} : ${usd(totalDepense)} en tout.`} />
+            </>
+          )}
+          <Link href="/depenses" className="bouton bouton-second">
+            Dépenses et plafonds
+          </Link>
+        </Tuile>
+      </div>
+    </CoqueMemoire>
   );
 }

@@ -68,7 +68,7 @@ describe("l'onglet Historique", () => {
     expect(html).toContain("41 messages");
     expect(html).toContain("2 lectures du 2026-10-09 au 2026-10-22");
     expect(html).toContain("0,31 $ en tout");
-    expect(html).toMatch(/aria-current="page"[^>]*>Historique/);
+    expect(html).toMatch(/aria-label="Historique" aria-current="page"/);
   });
 
   it("une base vide le dit, bloc par bloc", async () => {

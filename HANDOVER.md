@@ -47,8 +47,7 @@ clé Anthropic : coût nul. `memoryai_etat` rend les comptes et la dernière mes
   (`lia-ui` montée dans la maison, une seule par page : `LiaMaison` se retire de `/`), les espaces en orbite qui
   s'arrêtent au survol, la pastille « à juger » dans l'en-tête. La conversation complète est revenue à `/chat`
   (section « Parler »). Verrou : `tests/accueilRendu.test.ts`.
-- Cinquième pas : **l'onglet Accès de la page Mémoire** (`/memoire/acces`, onglets `components/OngletsMemoire.tsx`,
-  qui ne listent que les pages existantes). Part des faits validés par niveau, journal d'accès filtrable par niveau
+- Cinquième pas : **l'onglet Accès de la page Mémoire** (`/memoire/acces`). Part des faits validés par niveau, journal d'accès filtrable par niveau
   servi (métadonnées signées seulement), carte horaire des lectures sur 30 jours à l'heure de Québec, oublis
   (compte et dates) et garde-fous, chacun pointant vers le code qui le tient. Lectures : `lib/memoire/depotAcces.ts`
   (rien de déchiffré) ; calculs purs : `lib/memoire/acces.ts`. Verrous : `tests/memoireAcces*.test.ts`.
@@ -62,6 +61,14 @@ clé Anthropic : coût nul. `memoryai_etat` rend les comptes et la dernière mes
   (`lib/memoire/depotApprentissage.ts`) ; une mesure illisible est écartée et comptée, jamais lue comme 0. La courbe
   d'entraînement, les versions et les habitudes de la maquette n'existent pas : aucun réseau n'est entraîné. Verrou :
   `tests/memoireApprentissage.test.ts`.
+- Huitième pas : **la coque de la Mémoire, comme la maquette** (Marc, 23/10 : « exactement comme les maquettes »).
+  `components/CoqueMemoire.tsx` : vue plein écran SANS le menu de l'app, retour vers LIA, logo, et les CINQ onglets
+  segmentés à icônes de la maquette. `components/Tuile.tsx` : la tuile repliable (`<details>`) à filet violet, sur un
+  tableau de 12 colonnes, et `Vide`, l'état vide honnête. Règle : une tuile de la maquette sans donnée est dessinée
+  quand même, à sa place, avec ce qui la remplira ; jamais retirée, jamais remplie d'un chiffre inventé. L'onglet
+  **Réseau** (`/memoire/reseau`) est donc là, ses quatre tuiles vides : aucun réseau n'existe encore. Écart restant,
+  écran par écran, dans le dossier partagé du projet : `memoryai/design/ECART-MAQUETTE-MEMORYAI.md`. Verrou :
+  `tests/coqueMemoire.test.ts`.
 
 **LIA répond au hub (MemoryAI#91, ADR 0016)**, avant la suite du lot 5 : Marc veut LIA publiée dans toutes les apps
 (22/10 21:22Z). `POST /api/ask` (`app/api/ask/route.ts`, logique pure dans `lib/lia/ask.ts`) : `x-hub-token` seul,
