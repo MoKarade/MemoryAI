@@ -5,12 +5,11 @@
 // page montre la forme de la mémoire. Une valeur s'ouvre fait par fait, sur sa fiche, qui
 // applique la politique des niveaux. Aucune donnée n'est donc déchiffrée pour dessiner.
 //
-// L'onglet Accès vit à `/memoire/acces` ; les autres onglets de la maquette (réseau de LIA,
-// apprentissage, historique) arrivent avec les lots qui produisent leurs données ; d'ici là la
-// page ne les simule pas (`components/OngletsMemoire.tsx` ne liste que ce qui existe).
+// Les cinq onglets de la maquette sont dans la coque (`components/CoqueMemoire.tsx`) ; chacun est
+// une page à part, avec ses propres lectures.
 
-import { Nav } from "@/components/Nav";
-import { OngletsMemoire } from "@/components/OngletsMemoire";
+import { CoqueMemoire } from "@/components/CoqueMemoire";
+import { Tuile, Vide } from "@/components/Tuile";
 import { depotLectureDrizzle } from "@/lib/depotLecture";
 import { depotLiensDrizzle } from "@/lib/depotLiens";
 import { construireReseau } from "@/lib/memoire/reseau";
@@ -27,14 +26,9 @@ export default async function MemoirePage() {
   const acces = await accesDonnees();
   if (!acces.ok) {
     return (
-      <>
-        <Nav active="memoire" />
-        <main className="page">
-          <h1>Mémoire</h1>
-          <OngletsMemoire actif="memoire" />
-          <p className="lead">{MESSAGES_MANQUE[acces.manque]}</p>
-        </main>
-      </>
+      <CoqueMemoire actif="memoire">
+        <Vide>{MESSAGES_MANQUE[acces.manque]}</Vide>
+      </CoqueMemoire>
     );
   }
 
@@ -50,20 +44,19 @@ export default async function MemoirePage() {
   const reseau = construireReseau(faits, liens);
 
   return (
-    <>
-      <Nav active="memoire" />
-      <main className="page">
-        <h1>Mémoire</h1>
-        <OngletsMemoire actif="memoire" />
-        {faits.length === 0 ? (
-          <p className="lead">
-            En construction : aucun fait validé pour l&apos;instant. Le réseau se remplit à mesure que LIA apprend et
-            que tu valides.
-          </p>
-        ) : (
-          <MemoireClient reseau={reseau} totalFaits={faits.length} totalLiens={liens.length} tronque={faitsBruts.length >= LIMITE} />
-        )}
-      </main>
-    </>
+    <CoqueMemoire actif="memoire">
+      <div className="tableau">
+        <Tuile largeur={12} icone="net" titre="Tout ce qu’elle sait, relié">
+          {faits.length === 0 ? (
+            <Vide haute>
+              En construction : aucun fait validé pour l&apos;instant. Le réseau se remplit à mesure que LIA apprend et
+              que tu valides.
+            </Vide>
+          ) : (
+            <MemoireClient reseau={reseau} totalFaits={faits.length} totalLiens={liens.length} tronque={faitsBruts.length >= LIMITE} />
+          )}
+        </Tuile>
+      </div>
+    </CoqueMemoire>
   );
 }
