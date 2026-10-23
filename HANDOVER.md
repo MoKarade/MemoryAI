@@ -96,12 +96,17 @@ journalisée, conversation non consignée en v1. Verrous : `tests/liaAsk.test.ts
 Depuis MemoryAI#74 (étape blocs), la réponse est `{ text, blocks? }` : catalogue FERMÉ de 22 formes dans
 `lib/lia/blocs.ts` (copie lisible : `commun/assistant/BLOCS-lia.md`), offert par l'outil `lia_blocs` à la route ask
 seule ; un bloc ne cite que des faits servis pendant le tour, sinon il est rejeté (ADR 0016 § 6).
-LIA vit aussi CHEZ ELLE (ADR 0016 § 7) : `components/LiaMaison.tsx` monte `@mokarade/lia-ui#v0.13.0` sur toutes les
+LIA vit aussi CHEZ ELLE (ADR 0016 § 7) : `components/LiaMaison.tsx` monte `@mokarade/lia-ui#v0.15.0` sur toutes les
 pages connectées (pas `/login`, pas `/widget`), ses blocs dessinés par `rendreBlocs` ; elle demande à
 `POST /api/lia/ask` (session, `source` et `proprietaire` imposés, lecteur `lia-maison`). Les deux portes partagent
 `lib/lia/repondre.ts`. Re-pinner le tag pour chaque nouvelle version de lia-ui (suivi au scroll, vie de la maquette).
 Depuis le 23/10 (v0.13.0) : une seule LIA, identique au hub ; sa pastille d'humeur est dessinée par le paquet, l'accueil
 n'en a plus d'autre.
+L'état de LIA (`etat_lia` : humeur, silhouette, regard ; `lib/lia/etat.ts`), 3e argument de `ask` à partir de lia-ui
+v0.15.0, entre par les deux portes : humeur et silhouette dans les listes fermées du paquet (`HUMEURS_DETAILLEES`,
+`SILHOUETTES_LIA`), regard `[a-z0-9-]{1,40}` ou null, sinon 400 ; balisé `<etat_lia>` comme une
+DONNÉE sur LIA avant la question, pour qu'elle ne nie plus son humeur. Le navigateur n'envoie qu'un état conforme ;
+sinon la question part sans lui. Verrou : `tests/liaEtat.test.ts`.
 Le hub peut joindre un `contexte` (bilan daté, ≤ 1 500 caractères, ADR 0016 § 8, oui de Marc du 23/10) : balisé
 `<contexte_hub>` comme DONNÉE avant la question, refusé en 400 s'il contient un `<` ou dépasse la limite, ignoré par
 la porte de la maison, jamais journalisé.

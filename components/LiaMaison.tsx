@@ -14,7 +14,8 @@ import { demanderLia } from "@/lib/lia/client";
 
 /** Ce que LIA sait faire chez elle, partagé par l'accueil et les autres pages. */
 export const OPTIONS_LIA_MAISON = {
-  ask: (question: string, signal: AbortSignal) => demanderLia(question, signal, { page: window.location.pathname }),
+  ask: (question: string, signal: AbortSignal, contexte?: unknown) =>
+    demanderLia(question, signal, { page: window.location.pathname, contexte }),
   renderBlocks: (blocs: readonly unknown[], dans: HTMLElement) => {
     rendreBlocs(blocs, dans);
   },
