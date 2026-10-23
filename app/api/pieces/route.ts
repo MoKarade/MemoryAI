@@ -34,6 +34,8 @@ import { estGele, reponseGelee } from "@/lib/gel";
 import { ecrivainAutorise, refusJeton } from "@/lib/jetons";
 import { APPS_PIECES } from "@/lib/pieces/lignee";
 import { assurerMigrations } from "@/lib/migrations";
+import { depotSauvetageDrizzle } from "@/lib/sauvetage/depot";
+import { reponseSauvetage } from "@/lib/sauvetage/porte";
 import { depotPiecesDrizzle } from "@/lib/pieces/depot";
 import { ecrireLotPieces, EcriturePiecesRetireeError, LotPiecesTropGrandError } from "@/lib/pieces/ecrire";
 
@@ -74,6 +76,7 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   await assurerMigrations();
+  if (await depotSauvetageDrizzle(db).ecrituresFermees()) return reponseSauvetage();
   try {
     const r = await ecrireLotPieces(pieces, ecrivain, cle, depotPiecesDrizzle(db));
     // Le CONTRAT, pas l'objet interne : `idsCrees` sert en processus, jamais à un écrivain

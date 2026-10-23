@@ -1,4 +1,4 @@
-// tests/sauvetageExtraire.test.ts — relire le clair dans les VRAIES pages, puis le prouver (ADR 0019).
+// tests/sauvetage.test.ts — relire le clair dans les VRAIES pages, puis le prouver (ADR 0019).
 //
 // ⚠️ Les pages sont rendues par leur propre code (`app/fait/[id]/page`, `app/pieces/[id]/page`),
 // pas par un HTML écrit à la main : une fixture recopiée validerait mes suppositions sur la
@@ -25,6 +25,11 @@ import { ecrireLotPieces } from "@/lib/pieces/ecrire";
 import { decoderHtml, extraireFait, extrairePiece, fileIdDuLien, pairesDl } from "@/lib/sauvetage/extraire";
 import { entreesStructurees, reconstruireFait, reconstruirePiece, tailleJuste, type PieceAncienne } from "@/lib/sauvetage/reconstruire";
 import type { Ecrivain } from "@/lib/jetons";
+import { cleFacette } from "@/lib/pieces/facettes";
+import { empreintePiece } from "@/lib/pieces/ecrire";
+import { depotSauvetageDrizzle } from "@/lib/sauvetage/depot";
+import type { Oracle } from "@/lib/sauvetage/oracle";
+import { passeDeSauvetage } from "@/lib/sauvetage/sauvetage";
 
 const ANCIENNE = deriverCle(Buffer.alloc(32, 7).toString("base64"));
 const DRIVEAI: Ecrivain = { appId: "driveai", role: "ecriture", fiabilites: ["document-officiel"] };
@@ -315,5 +320,121 @@ describe("les briques de lecture", () => {
     ]);
     expect(entreesStructurees("autre chose")).toBeNull();
     expect(entreesStructurees("libelle : sans valeur")).toBeNull();
+  });
+});
+
+// ── Une passe, de bout en bout ───────────────────────────────────────────────────────────────
+// Ces cas viennent APRÈS les précédents (même base) : ils sauvent les lignes que les cas
+// d'extraction ont seulement lues.
+
+const NOUVELLE = deriverCle(Buffer.alloc(32, 9).toString("base64"));
+
+/** L'ancien déploiement, en processus : ses vraies pages, rendues sous l'ancienne clé. */
+const oracleEnProcessus: Oracle = {
+  fait: async (id) => ({ ok: true, html: await pageFait(id) }),
+  piece: async (id) => ({ ok: true, html: await pagePiece(id) }),
+};
+
+describe("une passe de sauvetage, de bout en bout", () => {
+  it("la migration n'ouvre le sauvetage que sur une base qui a déjà des données", async () => {
+    const depot = depotSauvetageDrizzle(db);
+    // Base vide au moment des migrations (beforeAll) : rien d'ouvert, les écritures restent libres.
+    expect(await depot.ecrituresFermees()).toBe(false);
+    // Rejouée sur la base PEUPLÉE (la migration est idempotente) : elle ouvre.
+    const sqlMigration = readFileSync(resolve(process.cwd(), "drizzle", "0024_sauvetage.sql"), "utf8");
+    for (const s of sqlMigration.split("--> statement-breakpoint")) if (s.trim()) await pg.exec(s);
+    expect(await depot.ecrituresFermees()).toBe(true);
+    expect((await depot.bilan()).faits).toEqual({ aSauver: 3, sauves: 0 });
+  });
+
+  it("un refus de l'ancien déploiement arrête la passe, sans noter d'échec ni rien écrire", async () => {
+    const refus: Oracle = { fait: async () => ({ ok: false, raison: "refus" }), piece: async () => ({ ok: false, raison: "refus" }) };
+    const r = await passeDeSauvetage(depotSauvetageDrizzle(db), refus, NOUVELLE, { budgetMs: 60_000 });
+    expect(r.arret).toBe("acces-refuse");
+    expect(r.termine).toBe(false);
+    expect(r.sauves).toEqual({ faits: 0, pieces: 0 });
+    expect((await depotSauvetageDrizzle(db).bilan()).echecs).toEqual({});
+  });
+
+  it("un budget épuisé rend la main avec une reprise, sans rien sauter", async () => {
+    const r = await passeDeSauvetage(depotSauvetageDrizzle(db), oracleEnProcessus, NOUVELLE, { budgetMs: 0 });
+    expect(r).toMatchObject({ termine: false, reprise: { table: "faits", apres: "" }, sauves: { faits: 0, pieces: 0 } });
+  });
+
+  it("sauve faits et papiers sous la nouvelle clé, archive l'ancien, et note le N3 caché", async () => {
+    const depot = depotSauvetageDrizzle(db);
+    const avant = await ligneFait(ids.employeur!);
+    const r = await passeDeSauvetage(depot, oracleEnProcessus, NOUVELLE, { budgetMs: 60_000, lot: 2, parallele: 2 });
+    expect(r).toMatchObject({ termine: true, reprise: null, arret: null, sauves: { faits: 3, pieces: 1 }, echecs: { faits: 0, pieces: 1 } });
+
+    // Les faits se lisent sous la NOUVELLE clé, à l'identique.
+    const apres = await ligneFait(ids.employeur!);
+    expect(apres.valeur!.startsWith("v2:")).toBe(true);
+    expect(dechiffrer(NOUVELLE, apres.valeur!, apres.id, apres.niveau)).toBe(ORIGINAUX.employeur);
+    expect(JSON.parse(dechiffrer(NOUVELLE, apres.attributs!, `${apres.id}#attributs`, apres.niveau))).toEqual({ type: "contrat", annee: "2024" });
+    expect(dechiffrer(NOUVELLE, (await ligneFait(ids.document!)).valeur!, ids.document!, 1)).toBe(ORIGINAUX.fileId);
+
+    // L'ancien scellé est archivé tel quel : rien n'est perdu si l'ancienne clé revient.
+    const archive = (await db.select().from(schema.chiffreV1Archive).where(eq(schema.chiffreV1Archive.ligneId, avant.id)))[0]!;
+    expect(JSON.parse(archive.ancien)).toEqual({ valeur: avant.valeur, attributs: avant.attributs, empreinte: avant.empreinte });
+
+    // L'EMPREINTE est refaite : le même fait repoussé par son écrivain est reconnu, pas doublé.
+    const repousse = await ecrireLot(
+      [{ sujet: "marc", predicat: "emploi.employeur", valeur: ORIGINAUX.employeur, valeur_type: "texte",
+         attributs: { type: "contrat", annee: "2024" },
+         provenance: { source_type: "document", source_ref: "ref-1", extracteur: "moteur-document-v1" } }],
+      DRIVEAI,
+      NOUVELLE,
+      depotDrizzle(db),
+    );
+    expect(repousse).toMatchObject({ acceptes: 0, dejaPresents: 1 });
+
+    // Le papier : facettes, clés de facette, chemins de chaque exemplaire, empreinte.
+    const bail = await lignePiece(ids.bail!);
+    const brute = (await db.select().from(schema.pieces).where(eq(schema.pieces.id, ids.bail!)))[0]!;
+    expect(dechiffrer(NOUVELLE, bail.type!, bail.id, bail.niveau)).toBe("bail");
+    expect(dechiffrer(NOUVELLE, bail.titulaire!, bail.id, bail.niveau)).toBe("Personne Fictive");
+    expect(brute.typeCle).toBe(cleFacette(NOUVELLE, "type", "bail"));
+    expect(brute.empreinte).toBe(empreintePiece(NOUVELLE, brute.sujet, "f-bail-1"));
+    expect(Object.fromEntries(bail.exemplaires.map((x) => [x.fileId, dechiffrer(NOUVELLE, x.chemin!, bail.id, bail.niveau)]))).toEqual({
+      "f-bail-1": "/03 · Logement & véhicule/Bail",
+      "f-bail-2": "/08 · Perso & projets/Copies/Bail",
+    });
+
+    // Le passeport reste en v1, et le bilan dit pourquoi.
+    expect(estScelleAncien((await lignePiece(ids.passeport!)).type)).toBe(true);
+    const bilan = await depot.bilan();
+    expect(bilan).toMatchObject({ faits: { aSauver: 0, sauves: 3 }, pieces: { aSauver: 1, sauves: 1 }, echecs: { "sommaire-n3": 1 } });
+  });
+
+  it("un nouveau balayage retente l'échec ; quand l'ancien environnement montre le N3, il est sauvé", async () => {
+    vi.stubEnv("MEMORYAI_N3_CHAT", "1");
+    try {
+      const depot = depotSauvetageDrizzle(db);
+      const r = await passeDeSauvetage(depot, oracleEnProcessus, NOUVELLE, { budgetMs: 60_000 });
+      expect(r).toMatchObject({ termine: true, sauves: { faits: 0, pieces: 1 }, echecs: { faits: 0, pieces: 0 } });
+      const p = await lignePiece(ids.passeport!);
+      expect(dechiffrer(NOUVELLE, p.resume!, p.id, p.niveau)).toBe("Passeport fictif.");
+      // L'échec est effacé dans la MÊME instruction que la ligne sauvée.
+      expect((await depot.bilan()).echecs).toEqual({});
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
+  it("une ligne qui a bougé depuis sa lecture n'est pas écrasée", async () => {
+    const depot = depotSauvetageDrizzle(db);
+    const f = { id: ids.adresse!, sujet: "marc", predicat: "logement.adresse", niveau: 2, valeurType: "texte",
+      valeur: "v1:perime", attributs: null, empreinte: "ancienne", provenance: null };
+    expect(await depot.sauverFait(f, { valeur: "x", attributs: null, empreinte: "y", ancien: { valeur: null, attributs: null, empreinte: "z" } })).toBe(false);
+    expect(dechiffrer(NOUVELLE, (await ligneFait(ids.adresse!)).valeur!, ids.adresse!, 2)).toBe(ORIGINAUX.adresse);
+  });
+
+  it("clore rouvre les écritures, une seule fois", async () => {
+    const depot = depotSauvetageDrizzle(db);
+    expect(await depot.ecrituresFermees()).toBe(true);
+    expect(await depot.clore()).toBe(true);
+    expect(await depot.ecrituresFermees()).toBe(false);
+    expect(await depot.clore()).toBe(false);
   });
 });

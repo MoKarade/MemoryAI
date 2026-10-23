@@ -2,7 +2,7 @@
 
 <!-- GÉNÉRÉ par `node .github/ci/generer-index.mjs` : ne pas modifier à la main (`--verifier` échoue si ce fichier est périmé). -->
 
-37 document(s). Ancien titre -> nouveau chemin : [correspondance.md](correspondance.md).
+38 document(s). Ancien titre -> nouveau chemin : [correspondance.md](correspondance.md).
 
 ## docs/
 
@@ -32,6 +32,7 @@
 - [ADR 0015 — Le jeton dit QUI écrit : papiers réservés, lignée et quarantaine par app, refus uniforme (INC-31)](adr/0015-le-jeton-dit-qui-ecrit.md) — `docs/adr/0015-le-jeton-dit-qui-ecrit.md`
 - [ADR 0016 — LIA répond au hub, et par lui à toutes les apps](adr/0016-lia-repond-au-hub.md) — `docs/adr/0016-lia-repond-au-hub.md`
 - [ADR 0017 — LIA vit dans MemoryAI, le hub exécute](adr/0017-lia-vit-dans-memoryai.md) — `docs/adr/0017-lia-vit-dans-memoryai.md`
+- [ADR 0019 — Sauver la mémoire par re-chiffrement, l'ancien déploiement servant d'oracle](adr/0019-sauvetage-par-rechiffrement.md) — `docs/adr/0019-sauvetage-par-rechiffrement.md`
 - [Registre des numéros d'ADR](adr/NUMEROS.md) — `docs/adr/NUMEROS.md`
 
 ## docs/claude/

@@ -3,6 +3,20 @@
 > L'état RÉEL, à lire en premier. Ce qui est décidé vit dans `docs/adr/0001-…`, ce qui reste
 > à faire dans `BACKLOG.md`. Ce fichier dit où on en est, et ce qui attend un geste de Marc.
 
+## 🚨 INCIDENT — 23/10/2026 : clés de chiffrement effacées, sauvetage préparé (ADR 0019, PR #117 en `hold`)
+
+Une synchro Infisical → Vercel a vidé les variables de `memory-ai`, dont `MEMORYAI_CHIFFREMENT` et
+`MEMORYAI_JOURNAL_CLE` (503 dès 13:09Z). La production a été remise sur le déploiement de 12:37Z
+(`dpl_6rALo2S7biASr7gytWCoLPGcMA4C`), seul à garder les clés dans son environnement figé ;
+l'auto-promotion est coupée. **Ne jamais supprimer ni remplacer ce déploiement.**
+- Marc a choisi le sauvetage par re-chiffrement (« option 2 », 23/10 14:54Z). Le plan, les étapes et ce qui se
+  perd : `docs/adr/0019-sauvetage-par-rechiffrement.md`. Chaque étape irréversible attend son oui sur une carte.
+- Le code est prêt dans la PR #117 (`lib/sauvetage/`, migration 0024, Régler → Sauvetage) ; rien n'est fusionné.
+  Verrous : `tests/sauvetage.test.ts` (de bout en bout : vraies pages sous l'ancienne clé, nouvelle clé, archive,
+  empreintes), `tests/sauvetageOracle.test.ts`, `tests/sauvetageRoutes.test.ts`.
+- Une fois fusionné et la base migrée, les écritures des apps répondent 503 `sauvetage_en_cours` jusqu'à la
+  clôture par Marc.
+
 ## 🔨 EN COURS — 22/10/2026 : refonte LIA, MemoryAI devient sa maison (chantier MemoryAI#67)
 
 Go de Marc le 22/10 sur les 11 décisions (plan : https://claude.ai/artifact/FjSqJYh6apLY8CPbwrRivY ; décisions

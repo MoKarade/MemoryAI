@@ -22,6 +22,8 @@ import { ecrireLot, EcritureRetireeError, LotTropGrandError } from "@/lib/ecrire
 import { estGele, reponseGelee } from "@/lib/gel";
 import { ecrivainAutorise, refusJeton } from "@/lib/jetons";
 import { assurerMigrations } from "@/lib/migrations";
+import { depotSauvetageDrizzle } from "@/lib/sauvetage/depot";
+import { reponseSauvetage } from "@/lib/sauvetage/porte";
 
 export const dynamic = "force-dynamic";
 
@@ -59,6 +61,7 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   await assurerMigrations();
+  if (await depotSauvetageDrizzle(db).ecrituresFermees()) return reponseSauvetage();
   try {
     const resultat = await ecrireLot(faits, ecrivain, cle, depotDrizzle(db));
     // ⚠️ LE CONTRAT, PAS L'OBJET INTERNE. `ResultatLot` porte aussi `idsCrees` — utile à un

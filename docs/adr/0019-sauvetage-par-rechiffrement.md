@@ -50,11 +50,29 @@ Si Marc retrouve un jour l'ancienne clé, tout redevient lisible depuis l'archiv
 
 **Pendant le sauvetage**, les lignes encore en `v1` sont illisibles en production : elles se disent
 « illisibles », comme aujourd'hui pour un chiffré altéré. Les écritures des apps (`/api/faits`,
-`/api/pieces`, `/api/conversations`) répondent 503 tant qu'une ligne `v1` sauvable reste : sinon un
-écrivain recréerait en `v2` un fait encore en `v1`, et la ligne sauvée heurterait son double.
+`/api/pieces`, `/api/conversations`, et les outils MCP `memoryai_proposer` et `memoryai_consigner`)
+répondent 503 tant que le sauvetage n'est pas clos : sinon un écrivain recréerait en `v2` un fait
+encore en `v1`, et la ligne sauvée heurterait son double sur l'index unique des empreintes.
+
+**Les empreintes aussi.** Ce sont des HMAC sous une clé dérivée de la clé perdue : une ligne N0, qui
+n'a aucun scellé, a quand même une empreinte à refaire, sans quoi l'idempotence ne reconnaîtrait
+plus rien. Le sauvetage parcourt donc TOUTES les lignes vivantes sans archive, pas seulement celles
+qui portent un `v1` ; seules ces dernières demandent une page à l'ancien déploiement. L'empreinte
+d'un fait est refaite sur sa PREMIÈRE provenance ; celle d'un papier, sur son exemplaire principal ;
+les clés de facette (`type_cle`, …) sur les facettes relues.
 
 Le clair ne fait que passer en mémoire. Il ne s'écrit nulle part, ne se journalise pas, et ne sort
 pas du serveur. Le trajet entre les deux déploiements reste en HTTPS.
+
+**Où vit le code.** `lib/sauvetage/` : `extraire.ts` (le clair dans les deux pages), `reconstruire.ts`
+(le texte exact qui avait été scellé, prouvé par la taille, tout ou rien par ligne), `resceller.ts`
+(scellés `v2`, empreintes, valeurs d'avant), `depot.ts` (une instruction SQL par ligne : mise à jour,
+archive et ménage des échecs dans des CTE), `oracle.ts` (l'appel à l'ancien déploiement),
+`sauvetage.ts` (une passe bornée dans le temps, avec sa reprise), `porte.ts` (les écritures fermées).
+La migration 0024 ajoute `chiffre_v1_archive`, `sauvetage_echecs` et `sauvetage_etat` ; elle n'ouvre
+le sauvetage que si la base porte déjà des faits ou des papiers (une base neuve n'a rien à sauver).
+L'écran : Régler → Sauvetage (`/regler/sauvetage`). L'adresse de l'ancien déploiement est la variable
+`MEMORYAI_SAUVETAGE_SOURCE`, contrainte à `https://<nom>.vercel.app`.
 
 ## 3. Ce que chaque donnée devient
 
@@ -64,6 +82,7 @@ pas du serveur. Le trajet entre les deux déploiements reste en HTTPS.
 | Noms des proches (`sujets.nom_chiffre`) | page du fait qui les porte | sauvés si un fait les montre |
 | Papiers lus (résumé, champs) | `/pieces/[id]` | sauvés ; N3 seulement si l'ancien environnement l'ouvrait |
 | Papiers d'inventaire (facettes, chemins) | `/pieces/[id]`, sinon relecture de Drive par DriveAI | sauvés ou relus |
+| Papiers retirés ou remplacés | aucune (leur page ne s'ouvre plus) | gardés tels quels, comptés à part |
 | Conversations d'ici (LIA) | pas de page complète | **perdues**, sauf voie trouvée à l'implémentation |
 | Conversations importées (Claude) | ré-import depuis l'export d'origine | refaites si l'export existe |
 | Avis de la pile (remarques), banc | pas de page | remarques **perdues** ; banc régénéré |
@@ -84,8 +103,9 @@ Parade retenue :
 ## 5. Ce qui ne change pas
 
 - L'échec fermé : sans nouvelle clé, rien ne s'écrit (`deriverCle`).
-- `v1` reste lisible par le code si l'ancienne clé revient un jour : `dechiffrer` accepte `v1` et `v2`,
-  chacune avec sa clé.
+- L'ancien chiffré reste RECONNAISSABLE (`estScelleAncien`) et MESURABLE (`longueurClaire`), mais
+  `dechiffrer` ne lit que `v2`. Si l'ancienne clé revient un jour, la relecture de l'archive sera un
+  petit module à écrire, pas une donnée à retrouver : rien n'a été effacé.
 - Aucune valeur, ancienne ou nouvelle, n'apparaît dans un journal, une erreur ou l'adresse.
 - La production ne passe au nouveau déploiement qu'avec le oui de Marc (étape 3), et l'ancien reste
   joignable pour relire.
@@ -96,7 +116,9 @@ Parade retenue :
 2. **Oui de Marc** : générer la nouvelle clé et la nouvelle clé de journal, les poser dans Vercel et
    dans Infisical (projet à part, aucune synchro). Remettre `AUTH_SECRET` (valeur du hub),
    `AUTHORIZED_EMAIL` et les autres variables effacées. Générer le secret de contournement de la
-   protection (Vercel → Deployment Protection → Protection Bypass for Automation).
+   protection (Vercel → Deployment Protection → Protection Bypass for Automation) AVANT le build du
+   nouveau déploiement : Vercel ne le pose que dans les déploiements créés après. Poser
+   `MEMORYAI_SAUVETAGE_SOURCE` (l'adresse propre du déploiement de 12:37Z).
 3. **Oui de Marc** : fusionner, puis promouvoir le nouveau déploiement. Les lignes `v1` deviennent
    illisibles en production jusqu'à la fin du sauvetage.
 4. **Oui de Marc** : lancer le sauvetage (Régler). Il écrit en base : archive d'abord, puis `v2`.
