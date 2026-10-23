@@ -7,7 +7,8 @@
   Seul le déploiement de 12:37Z (`dpl_6rALo2S7biASr7gytWCoLPGcMA4C`, commit 8a1b681) les porte encore
   dans son environnement figé ; la production a été remise dessus, et l'auto-promotion est coupée.
 - **Portée** : `lib/chiffrement.ts` (une seconde version de scellé), un module de sauvetage
-  (`lib/sauvetage/`), une action de Régler, et une table d'archive. Rien d'autre ne change de forme.
+  (`lib/sauvetage/`), une action de Régler, une table d'archive, et la fermeture des écritures des
+  apps tant que le sauvetage n'est pas clos.
 
 ## 1. Ce qu'on ne peut pas faire
 
@@ -20,47 +21,40 @@
 
 ## 2. La voie : l'ancien déploiement lit, le nouveau écrit
 
-Le déploiement de 12:37Z est la production : `memoryai.hubperso.com` le sert. Son adresse propre
-(`memory-85luh46gm-…vercel.app`) est fermée par la protection de Vercel (302 vers sa connexion,
-vérifié le 23/10) ; le sauvetage lit donc par le domaine, **tant que la production reste dessus**. Ce
-déploiement déchiffre encore tout, une entité par page, pour le propriétaire :
+Le déploiement de 12:37Z déchiffre encore tout, une entité par page, pour le propriétaire :
 
 - `/fait/[id]` : le fait complet, tous niveaux. La valeur exacte est dans le champ « Corriger »
   (`defaultValue`), donc sans mise en forme.
 - `/pieces/[id]` : résumé, champs, facettes et chemins d'un papier, N3 compris si l'environnement
   figé de ce déploiement l'autorise.
 
-Le sauvetage tourne dans le **nouveau** déploiement, qui reçoit une **nouvelle** clé :
+**Le passage.** Le nouveau déploiement, avec une **nouvelle** clé, devient la production : Marc s'y
+connecte normalement. L'ancien reste joignable à son adresse propre (`memory-85luh46gm-…vercel.app`).
+Cette adresse est fermée par la protection de Vercel (302, vérifié le 23/10) ; le sauvetage y passe
+avec le secret de contournement pour l'automatisation, que Vercel fournit au déploiement
+(`VERCEL_AUTOMATION_BYPASS_SECRET`, en-tête `x-vercel-protection-bypass`).
 
-Il travaille en deux temps, pour que la production ne voie rien changer avant la fin.
+**Le sauvetage**, lancé par Marc depuis Régler, relançable, ligne par ligne :
 
-**Lire (relançable, par lots).**
-
-1. Il énumère les lignes encore scellées en `v1`, par leur `id` (en clair en base).
-2. Pour chacune, il demande la page à l'ancien déploiement, avec une session de Marc fabriquée par
-   `AUTH_SECRET` (la même valeur que le hub, qu'on remet de toute façon) et `AUTHORIZED_EMAIL`.
+1. Il prend les lignes encore scellées en `v1`, par leur `id` (en clair en base).
+2. Il demande leur page à l'ancien déploiement, avec une session de Marc fabriquée par `AUTH_SECRET`
+   (la même valeur que le hub) pour `AUTHORIZED_EMAIL`.
 3. Il en extrait le clair, et **vérifie sa taille** : AES-GCM ne change pas la longueur, donc le clair
-   doit faire exactement autant d'octets que le chiffré `v1`. Sinon, la ligne est en échec, et rien
-   n'est retenu pour elle.
-4. Il scelle aussitôt en `v2` avec la nouvelle clé, et range ce scellé dans une table d'attente
-   (`rechiffre_attente`). Jamais de clair en base : seulement des scellés `v2`.
+   doit faire exactement autant d'octets que le chiffré `v1`. Sinon, la ligne reste en `v1`, en
+   échec, et le bilan le dit.
+4. Dans une transaction : il copie le scellé `v1` dans une archive (`chiffre_v1_archive`), scelle le
+   clair en `v2`, recalcule les empreintes, et écrit.
 
-Rien ne change dans les tables vivantes pendant ce temps. C'est voulu : une page de l'ancien
-déploiement déchiffre aussi les voisins d'un fait, et un voisin déjà passé en `v2` la ferait échouer.
+Si Marc retrouve un jour l'ancienne clé, tout redevient lisible depuis l'archive. Une ligne déjà en
+`v2` n'est plus touchée ; une ligne en échec se retente à la relance suivante.
 
-**Basculer (une transaction, avec le oui de Marc).**
-
-5. Une fois la lecture complète, une seule transaction copie chaque scellé `v1` dans une archive
-   (`chiffre_v1_archive`), pose le `v2` à sa place et recalcule les empreintes.
-
-Si Marc retrouve un jour l'ancienne clé, tout redevient lisible depuis l'archive. La lecture ne touche
-que ce qui n'est pas encore en attente, et s'arrête au premier doute.
-
-Le nouveau déploiement n'est pas promu : Marc l'ouvre à son adresse propre, derrière la protection
-de Vercel, pour appuyer sur le bouton.
+**Pendant le sauvetage**, les lignes encore en `v1` sont illisibles en production : elles se disent
+« illisibles », comme aujourd'hui pour un chiffré altéré. Les écritures des apps (`/api/faits`,
+`/api/pieces`, `/api/conversations`) répondent 503 tant qu'une ligne `v1` sauvable reste : sinon un
+écrivain recréerait en `v2` un fait encore en `v1`, et la ligne sauvée heurterait son double.
 
 Le clair ne fait que passer en mémoire. Il ne s'écrit nulle part, ne se journalise pas, et ne sort
-pas du serveur. Le trajet ancien → nouveau déploiement reste en HTTPS.
+pas du serveur. Le trajet entre les deux déploiements reste en HTTPS.
 
 ## 3. Ce que chaque donnée devient
 
@@ -93,25 +87,27 @@ Parade retenue :
 - `v1` reste lisible par le code si l'ancienne clé revient un jour : `dechiffrer` accepte `v1` et `v2`,
   chacune avec sa clé.
 - Aucune valeur, ancienne ou nouvelle, n'apparaît dans un journal, une erreur ou l'adresse.
-- La production reste sur le déploiement de 12:37Z jusqu'à la fin du sauvetage. Elle ne passe au
-  nouveau qu'une fois le bilan à zéro `v1` sauvable.
+- La production ne passe au nouveau déploiement qu'avec le oui de Marc (étape 3), et l'ancien reste
+  joignable pour relire.
 
 ## 6. Les étapes, et celles qui attendent le oui de Marc
 
 1. Ce document, puis le code et ses tests, dans une PR **sans** fusion (`hold`).
 2. **Oui de Marc** : générer la nouvelle clé et la nouvelle clé de journal, les poser dans Vercel et
-   dans Infisical (projet à part, aucune synchro). Remettre `AUTH_SECRET` (valeur du hub) et
-   `AUTHORIZED_EMAIL`.
-3. Fusion et build du nouveau déploiement, **sans** promotion.
-4. Lancer la lecture depuis le nouveau déploiement (Régler), autant de fois qu'il faut. Elle n'écrit
-   que dans la table d'attente.
-5. Bilan : prêts, échecs, perdus, oublis aveugles.
-6. **Oui de Marc** : basculer (archive puis remplacement, en une transaction), puis promouvoir le nouveau déploiement. Après, plus rien ne lit l'ancien : ce qui
-   reste en `v1` y reste, dans l'archive. Le déploiement de 12:37Z n'est **jamais** supprimé tant que
-   l'archive `v1` existe, pour pouvoir le remettre en production et relancer.
+   dans Infisical (projet à part, aucune synchro). Remettre `AUTH_SECRET` (valeur du hub),
+   `AUTHORIZED_EMAIL` et les autres variables effacées. Générer le secret de contournement de la
+   protection (Vercel → Deployment Protection → Protection Bypass for Automation).
+3. **Oui de Marc** : fusionner, puis promouvoir le nouveau déploiement. Les lignes `v1` deviennent
+   illisibles en production jusqu'à la fin du sauvetage.
+4. **Oui de Marc** : lancer le sauvetage (Régler). Il écrit en base : archive d'abord, puis `v2`.
+5. Bilan : sauvées, en échec, perdues, oublis aveugles. Relancer jusqu'à ce que rien de sauvable ne
+   reste.
+6. **Oui de Marc** : clore. Ce qui reste en `v1` est déclaré perdu (gardé dans l'archive), et les
+   écritures des apps rouvrent. Le déploiement de 12:37Z n'est **jamais** supprimé tant que l'archive
+   `v1` existe : on peut toujours le relire.
 
-Pendant ce temps, les écrivains (DriveAI surtout) sont mis en pause : ce qu'ils écrivent dans l'ancien
-déploiement serait encore en `v1`. Si l'un d'eux écrit quand même, la relance l'attrape.
+Entre les étapes 1 et 3, la production reste l'ancien déploiement : ce que les apps y écrivent est
+encore en `v1`, et le sauvetage le reprendra comme le reste.
 
 ## 7. Ce qu'on retient
 
