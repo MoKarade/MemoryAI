@@ -38,6 +38,12 @@ clé Anthropic : coût nul. `memoryai_etat` rend les comptes et la dernière mes
   pour le dessiner (`lib/memoire/reseau.ts`, verrou `tests/memoireReseau.test.ts`). Borné à `MAX_NOEUDS_3D`, les
   plus reliés d'abord, le reste compté et dit. Les autres onglets de la maquette (réseau de LIA, apprentissage,
   historique, accès) viennent avec les lots qui produisent leurs données.
+- Quatrième pas, en deux PR : **l'accueil devient la maison de LIA** (maquette v5). D'abord ses fondations, pures
+  et testées, encore montées nulle part : l'orbite (`lib/accueil/orbite.ts`), le décor, sol en perspective et tapis
+  des heures (`lib/accueil/decor.ts`), ce que montre chaque espace (`contenuEspaces`, `lib/accueil/espaces.ts` :
+  Budget, Outils, Formes, Idées et Souvenirs ont une source, Santé, Sa journée et Monde le disent vides) et le
+  panneau d'un espace ouvert (`components/PanneauEspace.tsx`). Verrous : `tests/accueil.test.ts`,
+  `tests/panneauEspace.test.ts`. La PR suivante monte la maison sur `/` et rend la conversation à `/chat`.
 
 **LIA répond au hub (MemoryAI#91, ADR 0016)**, avant la suite du lot 5 : Marc veut LIA publiée dans toutes les apps
 (22/10 21:22Z). `POST /api/ask` (`app/api/ask/route.ts`, logique pure dans `lib/lia/ask.ts`) : `x-hub-token` seul,
