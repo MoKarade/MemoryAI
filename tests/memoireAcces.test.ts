@@ -4,7 +4,8 @@
 
 import { describe, it, expect } from "vitest";
 import { existsSync, readFileSync } from "node:fs";
-import { carteHoraire, compterIds, GARDE_FOUS, heureQuebec, libelleLecteur, partsParNiveau } from "@/lib/memoire/acces";
+import { corpsAConfirmer } from "@/lib/memoire/tuilesMemoire";
+import { carteHoraire, compterIds, GARDE_FOUS, heureQuebec, libelleLecteur, matriceNiveaux, partsParNiveau } from "@/lib/memoire/acces";
 import { ONGLETS_MEMOIRE } from "@/components/CoqueMemoire";
 
 describe("les parts par niveau", () => {
@@ -94,5 +95,38 @@ describe("les onglets de la Mémoire", () => {
     const depot = readFileSync("lib/memoire/depotAcces.ts", "utf8");
     expect(page).toMatch(/\brequireSession\(\)/);
     for (const src of [page, depot]) expect(src).not.toMatch(/dechiffrer|questionEmpreinte/);
+  });
+});
+
+describe("Outils et niveaux", () => {
+  it("bascules fermées : N0 et N1 pour tous, rien au-delà", () => {
+    for (const l of matriceNiveaux({ n2: false, n3: false })) expect(l.cases).toEqual({ 0: "oui", 1: "oui", 2: "non", 3: "non" });
+  });
+
+  it("bascules ouvertes : N2 sur demande pour ta conversation et Claude, N3 pour ta conversation seule, LIA reste à N1", () => {
+    const m = Object.fromEntries(matriceNiveaux({ n2: true, n3: true }).map((l) => [l.libelle, l.cases]));
+    expect(m["Ta conversation"]).toEqual({ 0: "oui", 1: "oui", 2: "sur-demande", 3: "sur-demande" });
+    expect(m["Claude"]).toEqual({ 0: "oui", 1: "oui", 2: "sur-demande", 3: "non" });
+    expect(m["LIA"]).toEqual({ 0: "oui", 1: "oui", 2: "non", 3: "non" });
+  });
+
+  it("la ligne LIA dit vrai : sa porte ferme le niveau 2", () => {
+    expect(readFileSync("lib/lia/repondre.ts", "utf8")).toContain("inclureN2: false");
+  });
+});
+
+describe("À confirmer", () => {
+  const maintenant = new Date("2026-10-24T12:00:00Z");
+
+  it("sans question ouverte : un vide honnête", () => {
+    expect(corpsAConfirmer([], maintenant)).toEqual([{ genre: "vide", texte: "Rien à confirmer : LIA n'a aucune question ouverte." }]);
+  });
+
+  it("chaque question avec son motif et son âge, puis le lien pour répondre", () => {
+    const c = corpsAConfirmer([{ question: "Question fictive ?", motif: "motif fictif", creeLe: new Date("2026-10-22T12:00:00Z") }], maintenant);
+    expect(c).toEqual([
+      { genre: "liste", elements: [{ libelle: "Question fictive ?", detail: "motif fictif · il y a 2 j" }] },
+      { genre: "texte", texte: "1 question en attente de ta réponse.", lien: { href: "/questions", libelle: "Répondre" } },
+    ]);
   });
 });

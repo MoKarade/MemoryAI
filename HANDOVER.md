@@ -99,6 +99,10 @@ clé Anthropic : coût nul. `memoryai_etat` rend les comptes et la dernière mes
   servi (métadonnées signées seulement), carte horaire des lectures sur 30 jours à l'heure de Québec, oublis
   (compte et dates) et garde-fous, chacun pointant vers le code qui le tient. Lectures : `lib/memoire/depotAcces.ts`
   (rien de déchiffré) ; calculs purs : `lib/memoire/acces.ts`. Verrous : `tests/memoireAcces*.test.ts`.
+  24/10 (écart C2) : disposition de la maquette, plus À confirmer (questions ouvertes, lien pour répondre), Outils
+  et niveaux (qui lit quel niveau, calculé depuis la politique réelle : `matriceNiveaux`) et le filtre « Toi » (les
+  lectures de ta conversation `/chat` seule ; Claude passe par un jeton, LIA lit pour toi). Verrou PGlite :
+  `tests/depotAcces.test.ts`.
 - Sixième pas : **l'onglet Historique** (`/memoire/historique`) : faits écrits par jour sur 26 semaines (grille,
   lundi en haut), lectures et dépense des 14 derniers jours, conversations par source. Des comptes seulement, au
   jour de Québec (`lib/memoire/depotHistorique.ts`) ; humeur, relances et corrections de la maquette ne sont pas
