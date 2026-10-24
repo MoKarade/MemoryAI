@@ -8,6 +8,7 @@
 import type { Poste } from "@/lib/coutChat";
 import { MAX_BLOCS } from "@/lib/lia/blocs";
 import type { LectureMeteo, Meteo } from "@/lib/monde/meteo";
+import type { Actualite } from "@/lib/monde/actualite";
 import { LIBELLE_OUTIL, tableauBudget, tableauFormes, tableauIdees, tableauJournee, tableauMonde, tableauOutils, tableauSante, tableauSouvenirs, type EntreesBudget, type Tableau } from "./tableaux";
 
 export const IDS_ESPACES = ["souvenirs", "sante", "journee", "idees", "monde", "budget", "outils", "formes"] as const;
@@ -72,6 +73,8 @@ export interface EntreesEspaces {
   appels?: readonly { outil: string; n: number }[] | null;
   /** La météo d'ECCC (ADR 0024) ; absente : non lue, l'espace Monde reste vide. */
   meteo?: LectureMeteo | null;
+  /** Les titres des fils d'actualité (ADR 0024) ; absents : non lus. */
+  actualite?: Actualite | null;
   /** Les lectures du jour (journal d'accès), la plus récente d'abord ; null sans base. */
   lectures?: readonly { ts: Date; lecteur: string; outil: string }[] | null;
 }
@@ -88,8 +91,8 @@ const PROCHE_DU_PLAFOND = 0.8;
  * avec la vraie dépense : le total, puis le poste le plus près de son plafond s'il en est proche.
  * Un plafond nul ou absent ne compte pas : on ne dit pas « dépassé » d'un plafond qui n'existe pas.
  */
-/** Le nom de l'outil de la météo (`OUTIL_METEO` de la boucle du chat, que lib/accueil n'importe pas). */
-const OUTIL_METEO_NOM = "monde_meteo";
+/** Les noms des outils du monde (`OUTIL_METEO`, `OUTIL_ACTUALITE` de la boucle du chat, que lib/accueil n'importe pas). */
+const OUTILS_MONDE = { meteo: "monde_meteo", actualite: "monde_actualite" } as const;
 
 function ditMeteo(m: Meteo): string {
   const quoi = [m.temperature === null ? null : `${String(m.temperature).replace(".", ",")} °C`, m.condition?.toLowerCase() ?? null].filter(Boolean).join(", ");
@@ -151,17 +154,24 @@ export function contenuEspaces(e: EntreesEspaces): Record<IdEspace, ContenuEspac
       : { phrase: "Rien à juger pour l'instant.", dit: "Rien à juger pour l'instant.", vide: true, tableau: tableauIdees(null) },
     monde: e.meteo?.ok
       ? {
-          phrase: "La météo d'Environnement Canada, à l'heure de son observation.",
+          phrase: "La météo d'Environnement Canada, à l'heure de son observation, et les titres du jour.",
           dit: ditMeteo(e.meteo.meteo),
           vide: false,
-          tableau: tableauMonde(e.meteo),
+          tableau: tableauMonde(e.meteo, e.actualite ?? null),
         }
-      : {
-          phrase: "Pas encore de source pour la météo ni l'actualité.",
-          dit: "Je n'ai encore ni météo ni actualité.",
-          vide: true,
-          tableau: tableauMonde(e.meteo ?? null),
-        },
+      : e.actualite?.titres.length
+        ? {
+            phrase: "Les derniers titres de l'actualité, à l'heure de leur publication.",
+            dit: "J'ai lu les derniers titres de l'actualité.",
+            vide: false,
+            tableau: tableauMonde(e.meteo ?? null, e.actualite),
+          }
+        : {
+            phrase: "Pas encore de source pour la météo ni l'actualité.",
+            dit: "Je n'ai encore ni météo ni actualité.",
+            vide: true,
+            tableau: tableauMonde(e.meteo ?? null, e.actualite ?? null),
+          },
     budget: e.budget
       ? {
           phrase: "Ce qu'elle a dépensé aujourd'hui, poste par poste, et le plafond de chacun.",
@@ -186,7 +196,7 @@ export function contenuEspaces(e: EntreesEspaces): Record<IdEspace, ContenuEspac
       dit: `J'ai ${e.outils.length} outils, tous en lecture.`,
       vide: e.outils.length === 0,
       puces: e.outils.map((o) => LIBELLE_OUTIL[o] ?? o),
-      tableau: tableauOutils({ outils: e.outils, monde: e.meteo ? [OUTIL_METEO_NOM] : [], formes: e.formes, appels: e.appels ?? null }),
+      tableau: tableauOutils({ outils: e.outils, monde: [...(e.meteo ? [OUTILS_MONDE.meteo] : []), ...(e.actualite ? [OUTILS_MONDE.actualite] : [])], formes: e.formes, appels: e.appels ?? null }),
     },
     formes: {
       phrase: `Elle choisit la forme de sa réponse parmi ${e.formes.length} : chacune cite ses sources.`,

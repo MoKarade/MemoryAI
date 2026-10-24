@@ -6,6 +6,7 @@
 
 import { depotNotesLiaDrizzle } from "@/lib/lia/notes";
 import { sourceMeteoEccc } from "@/lib/monde/meteo";
+import { sourceActualite } from "@/lib/monde/actualite";
 import Anthropic from "@anthropic-ai/sdk";
 import { tourDeChat, PlafondAtteintError } from "@/lib/chat/agent";
 import { chargerCouches } from "@/lib/chat/couches";
@@ -77,6 +78,7 @@ export async function repondreLia(demande: DemandeAsk, origine: string, lecteur:
         conversations: CONVERSATIONS_FERMEES,
         notes: depotNotesLiaDrizzle(db, cle),
         meteo: sourceMeteoEccc(db, process.env.MEMORYAI_METEO_VILLE),
+        actualite: sourceActualite(db),
         cle,
         env: process.env,
         lecteur,

@@ -39,6 +39,7 @@ import { dechiffrer, DechiffrementError } from "../chiffrement";
 import { BANC_COURANT, type DepotBanc } from "../banc/passe";
 import { baliserNotes, type DepotNotesLia } from "../lia/notes";
 import type { SourceMeteo } from "../monde/meteo";
+import type { SourceActualite } from "../monde/actualite";
 
 export interface ContexteOutils {
   lecture: DepotLecture;
@@ -78,6 +79,8 @@ export interface ContexteOutils {
    * un outil du MCP : claude.ai a son propre accès au monde.
    */
   meteo?: SourceMeteo;
+  /** L'actualité des fils RSS de la liste fermée (ADR 0024). Facultatif : absente, `monde_actualite` n'est pas offert. */
+  actualite?: SourceActualite;
   cle: Cle;
   env: Record<string, string | undefined>;
   /** `claude-ai` pour le MCP ; `chat` pour le chat plein écran (lot 5). */

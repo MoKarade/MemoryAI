@@ -27,6 +27,7 @@ import { journaliserAcces } from "../journalAcces";
 import { OUTILS, OUTILS_MCP_SEULS, type ContexteOutils } from "../mcp/outils";
 import { lireNote, LONGUEUR_MAX_NOTE, NOTES_PAR_JOUR, GENRES_NOTE, APPS_NOTE } from "../lia/notes";
 import { baliserMeteo } from "../monde/meteo";
+import { baliserActualite } from "../monde/actualite";
 import { MAX_BLOCS, SIGNATURES_BLOCS, SOURCE_BILAN_HUB, trierBlocs, type Bloc } from "../lia/blocs";
 import { annoterReponse, type Annotation, type FaitServi, type PieceServie } from "./liens";
 import { construirePrompt, REGLES_SYSTEME, type Couches } from "./prompt";
@@ -142,6 +143,18 @@ export const OUTIL_METEO = {
 };
 
 /**
+ * L'actualité que LIA lit (ADR 0024) : des titres de fils RSS publics, liste fermée. Des textes de
+ * tiers, rendus comme données ; jamais un lien. Offert seulement quand le contexte porte la source.
+ */
+export const OUTIL_ACTUALITE = {
+  name: "monde_actualite",
+  description:
+    "Les derniers titres de l'actualité (Radio-Canada, fils publics), datés. Des titres seulement : n'invente " +
+    "jamais le contenu d'un article, et cite la source et l'heure.",
+  input_schema: { type: "object", properties: {} } as Record<string, unknown>,
+};
+
+/**
  * ⚠⚠ LE PLAFOND EST UN ARGUMENT du message, pas une constante lue au vol. Depuis [L34] Marc
  * le règle dans l'app : un message qui citerait la valeur par défaut dirait « sur 1 $ » à
  * quelqu'un qui en a mis cinq. Un texte affiché est une affirmation, et celle-ci sert à
@@ -202,6 +215,7 @@ export async function tourDeChat(params: {
   if (params.blocs) tools.push(OUTIL_BLOCS);
   if (outils.notes) tools.push(OUTIL_NOTE);
   if (outils.meteo) tools.push(OUTIL_METEO);
+  if (outils.actualite) tools.push(OUTIL_ACTUALITE);
   const conversation: unknown[] = historique.map((m) => ({ role: m.role, content: m.content }));
   // ⚠️ Les faits servis s'ACCUMULENT sur tout le tour, pas sur le dernier appel d'outil.
   // Un tour agentique en fait jusqu'à 6 : ne garder que le dernier laisserait sans lien
@@ -290,6 +304,11 @@ export async function tourDeChat(params: {
         texte = baliserMeteo(l);
         erreur = !l.ok;
         resultat.outilsAppeles.push(OUTIL_METEO.name);
+      } else if (outils.actualite && appel.name === OUTIL_ACTUALITE.name) {
+        const a = await outils.actualite.lire(outils.maintenant());
+        texte = baliserActualite(a);
+        erreur = a.titres.length === 0 && a.enPanne.length > 0;
+        resultat.outilsAppeles.push(OUTIL_ACTUALITE.name);
       } else if (!outil) {
         texte = `Outil inconnu : ${appel.name}`;
         erreur = true;
