@@ -12,7 +12,7 @@
 import { AccueilClient } from "./AccueilClient";
 import { depotAccueilDrizzle } from "@/lib/accueil/depotAccueil";
 import { contenuEspaces, type EntreesEspaces } from "@/lib/accueil/espaces";
-import { debutDuMoisQuebec, jourMoins } from "@/lib/accueil/tableaux";
+import { debutDuMoisQuebec, jourMoins, LECTURES_DU_JOUR_MAX, minuitQuebec } from "@/lib/accueil/tableaux";
 import { jourQuebec } from "@/lib/coutChat";
 import { depotAdminDrizzle } from "@/lib/depotAdmin";
 import { OUTILS_LIA_HUB } from "@/lib/lia/ask";
@@ -34,6 +34,7 @@ export default async function MaisonDeLia() {
   let aJuger: BandeauAJuger | null = null;
   let budget: EntreesEspaces["budget"] = null;
   let appels: EntreesEspaces["appels"] = null;
+  let lectures: EntreesEspaces["lectures"] = null;
   if (acces.ok) {
     const { candidats, deductions, questions, avis } = await chargerEntreesPile(acces.db);
     const ordre = composerPile({
@@ -54,7 +55,8 @@ export default async function MaisonDeLia() {
       parModele: await accueil.depenseParModeleDepuis(jourMoins(jour, 29)),
     };
     appels = await accueil.appelsParOutilDepuis(debutDuMoisQuebec(new Date()));
+    lectures = await accueil.lecturesDepuis(minuitQuebec(jour), LECTURES_DU_JOUR_MAX);
   }
-  const contenus = contenuEspaces({ aJuger, budget, appels, outils: [...OUTILS_LIA_HUB], formes: TYPES_BLOCS });
+  const contenus = contenuEspaces({ aJuger, budget, appels, lectures, outils: [...OUTILS_LIA_HUB], formes: TYPES_BLOCS });
   return <AccueilClient contenus={contenus} aJuger={aJuger ? { titre: aJuger.titre, detail: aJuger.detail } : null} />;
 }

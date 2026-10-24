@@ -5,8 +5,9 @@ import { describe, it, expect, vi } from "vitest";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { PanneauEspace } from "@/components/PanneauEspace";
+import { MAX_BLOCS, TYPES_BLOCS } from "@/lib/lia/blocs";
 import { contenuEspaces, ESPACES, type IdEspace } from "@/lib/accueil/espaces";
-import { debutDuMoisQuebec, finDuMois, jourMoins, tableauBudget, tableauIdees, tableauMonde, tableauOutils } from "@/lib/accueil/tableaux";
+import { debutDuMoisQuebec, finDuMois, jourMoins, tableauBudget, tableauFormes, tableauIdees, tableauJournee, tableauMonde, LECTURES_DU_JOUR_MAX, minuitQuebec, tableauOutils, tableauSante, tableauSouvenirs } from "@/lib/accueil/tableaux";
 
 vi.mock("next/link", async () => {
   const { createElement: ce } = await import("react");
@@ -71,8 +72,10 @@ describe("le panneau qui a ses tuiles", () => {
     expect(html).not.toContain("maison-vide");
   });
 
-  it("un espace sans tuiles garde son corps d'avant", () => {
-    const html = rendre("sante");
+  it("un contenu sans tuiles garde son corps d'avant", () => {
+    const contenu = { ...contenuEspaces(entrees).sante, tableau: undefined };
+    const espace = ESPACES.find((e) => e.id === "sante") ?? null;
+    const html = renderToStaticMarkup(createElement(PanneauEspace, { espace, contenu, choisir: () => undefined, fermer: () => undefined }));
     expect(html).toContain("maison-vide");
     expect(html).not.toContain("tab-question");
   });
@@ -220,5 +223,83 @@ describe("Budget, comme la maquette", () => {
   it("un jour moins n jours, au calendrier", () => {
     expect(jourMoins("2026-10-24", 29)).toBe("2026-09-25");
     expect(jourMoins("2026-03-01", 1)).toBe("2026-02-28");
+  });
+});
+
+describe("Souvenirs, Santé et Sa journée, comme la maquette", () => {
+  const titres = (t: { tuiles: { titre: string }[] }) => t.tuiles.map((x) => x.titre);
+  const toutVide = (t: ReturnType<typeof tableauSante>, sauf: string[]) =>
+    t.tuiles.filter((x) => !sauf.includes(x.cle)).every((x) => x.corps.every((c) => c.genre === "vide"));
+
+  it("Souvenirs : les sept tuiles, vides sauf la recherche qui mène à ce qui existe déjà", () => {
+    const t = tableauSouvenirs();
+    expect(titres(t)).toEqual(["Fil", "Filtre", "Chemin", "Journée", "Recherche", "Autour de ce jour", "Papiers liés"]);
+    expect(toutVide(t, ["recherche"])).toBe(true);
+    const html = rendre("souvenirs");
+    expect(html).toContain('href="/conversations"');
+    expect(html).toContain('href="/pieces"');
+    // La question de la maquette nomme une personne FICTIVE : elle n'est pas recopiée.
+    expect(html).not.toContain("Julie");
+  });
+
+  it("Santé : les neuf tuiles, vides sans Health Connect, sauf « Quand consulter » (811, 911)", () => {
+    const t = tableauSante();
+    expect(titres(t)).toEqual(["Signaux", "Ressemblance", "21 jours", "12 mois", "Activité", "Sommeil, 7 nuits", "Quand consulter", "Symptômes, 7 jours", "Rendez-vous"]);
+    expect(toutVide(t, ["consulter"])).toBe(true);
+    expect(rendre("sante")).toContain("811 (Info-Santé)");
+  });
+
+  it("Sa journée : les six tuiles ; sans lecture aujourd'hui, toutes vides", () => {
+    const t = tableauJournee([]);
+    expect(titres(t)).toEqual(["24 h", "Journal", "Son temps", "Relances", "Aujourd'hui", "Ce qu'elle surveille"]);
+    expect(toutVide(t, [])).toBe(true);
+    expect(t.tuiles.filter((x) => x.repliee).map((x) => x.cle)).toEqual(["temps", "relances", "surveille"]);
+    expect(tableauJournee(null).tuiles[0]?.corps[0]).toEqual({ genre: "vide", texte: "La base ne répond pas : le journal du jour n'est pas lisible." });
+  });
+
+  it("Sa journée : ses vraies lectures du jour, heure par heure (Québec) et les plus récentes en tête", () => {
+    const lectures = [
+      { ts: new Date("2026-10-24T19:12:00Z"), lecteur: "lia-maison", outil: "memoryai_chercher" },
+      { ts: new Date("2026-10-24T13:05:00Z"), lecteur: "claude-ai", outil: "memoryai_etat" },
+      { ts: new Date("2026-10-24T13:40:00Z"), lecteur: "chat", outil: "outil_inconnu" },
+    ];
+    const t = tableauJournee(lectures);
+    const h = t.tuiles[0]?.corps[0];
+    if (h?.genre !== "histogramme") throw new Error("histogramme attendu");
+    expect(h.barres).toHaveLength(24);
+    // 13 h 05 et 13 h 40 UTC = 9 h à Québec (UTC−4) ; 19 h 12 UTC = 15 h.
+    expect(h.barres[9]?.valeur).toBe(2);
+    expect(h.barres[15]?.valeur).toBe(1);
+    expect(h.resume).toBe("3 lectures aujourd'hui, heure par heure (Québec).");
+    expect(t.tuiles[1]?.corps[0]).toEqual({
+      genre: "liste",
+      elements: [
+        { libelle: "15 h 12 · Chercher un fait", detail: "LIA ici" },
+        { libelle: "9 h 05 · L'état de sa mémoire", detail: "Claude" },
+        { libelle: "9 h 40 · outil_inconnu", detail: "Conversation" },
+      ],
+    });
+    expect(tableauJournee(Array.from({ length: LECTURES_DU_JOUR_MAX }, () => lectures[0]!)).tuiles[0]?.corps[0]).toMatchObject({ resume: expect.stringMatching(/^Au moins /) });
+  });
+
+  it("minuit à Québec, en instant", () => {
+    expect(minuitQuebec("2026-10-24").toISOString()).toBe("2026-10-24T04:00:00.000Z");
+    expect(minuitQuebec("2026-11-02").toISOString()).toBe("2026-11-02T05:00:00.000Z");
+  });
+});
+
+describe("Formes, comme la maquette", () => {
+  it("« Elle combine » puis une tuile par forme du catalogue fermé, avec son nom pour Marc", () => {
+    const t = tableauFormes(TYPES_BLOCS, MAX_BLOCS);
+    expect(t.question).toBe("Elle choisit la forme de sa réponse");
+    expect(t.tuiles).toHaveLength(TYPES_BLOCS.length + 1);
+    expect(t.tuiles[0]?.corps[0]).toMatchObject({ texte: expect.stringContaining(`jusqu'à ${MAX_BLOCS} formes parmi ${TYPES_BLOCS.length}`) });
+    // Chaque forme du catalogue a son nom et son icône ; aucune ne retombe sur son identifiant technique.
+    expect(t.tuiles.slice(1).every((x) => x.titre !== x.cle && x.icone !== "grid")).toBe(true);
+    expect(t.tuiles.find((x) => x.cle === "camembert")?.titre).toBe("Parts");
+  });
+
+  it("une forme inconnue garde son identifiant, sans inventer de description", () => {
+    expect(tableauFormes(["inconnue"], 1).tuiles[1]).toMatchObject({ titre: "inconnue", icone: "grid" });
   });
 });
