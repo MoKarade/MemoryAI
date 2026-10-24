@@ -856,6 +856,102 @@ export const liaEtat = pgTable(
   (t) => [check("lia_etat_une_ligne", sql`${t.id} = 1`)],
 );
 
+/**
+ * Une PERSONNE (ADR 0020) : « Julie », son adresse et son compte Messenger sont la même. Le nom
+ * est CHIFFRÉ (AAD `personne|<id>|2`) : un nom de tiers est une donnée sur quelqu'un d'autre que
+ * Marc. `est_marc` dit le titulaire du compte qui a généré l'export, sans que son nom soit écrit.
+ */
+export const personnes = pgTable("personnes", {
+  id: text("id").primaryKey(),
+  nom: text("nom").notNull(),
+  estMarc: boolean("est_marc").notNull().default(false),
+  creeLe: timestamp("cree_le", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/** Les façons de désigner une personne. FERMÉE : un genre inconnu n'entre pas en base. */
+export const GENRES_ALIAS = ["messenger", "courriel", "nom"] as const;
+
+/**
+ * Un alias. `cle` = HMAC(genre|valeur normalisée) : c'est elle qui reconnaît la même personne
+ * d'un import à l'autre sans déchiffrer la table. La valeur est chiffrée (AAD `alias|<cle>|2`).
+ */
+export const personneAlias = pgTable(
+  "personne_alias",
+  {
+    cle: text("cle").primaryKey(),
+    personneId: text("personne_id")
+      .notNull()
+      .references(() => personnes.id, { onDelete: "cascade" }),
+    genre: text("genre", { enum: GENRES_ALIAS }).notNull(),
+    valeur: text("valeur").notNull(),
+    creeLe: timestamp("cree_le", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("personne_alias_personne").on(t.personneId)],
+);
+
+export const GENRES_EVENEMENT = ["message"] as const;
+export const SOURCES_EVENEMENT = ["messenger"] as const;
+export const ROLES_EVENEMENT = ["auteur", "destinataire"] as const;
+
+/**
+ * Un ÉVÉNEMENT daté (ADR 0020) : un message, plus tard un courriel. Il n'affirme rien sur Marc,
+ * il rapporte ce qui a été dit, par qui, quand — comme une pièce rapporte un papier.
+ *
+ * ⚠️ `source_ref` + `position` FONT L'IDEMPOTENCE : le même export relu ne crée aucune ligne.
+ * `texte` et `fil` sont CHIFFRÉS au niveau 2 (AAD `evenement|<id>|2`) ; `survenu_le` reste en
+ * clair, c'est lui qu'on filtre (« tel jour »), et une heure seule ne dit pas ce qui a été dit.
+ */
+export const evenements = pgTable(
+  "evenements",
+  {
+    id: text("id").primaryKey(),
+    genre: text("genre", { enum: GENRES_EVENEMENT }).notNull(),
+    source: text("source", { enum: SOURCES_EVENEMENT }).notNull(),
+    /** Le fichier Drive de l'export. */
+    sourceRef: text("source_ref").notNull(),
+    /** Le rang dans l'export, 0 = le plus ancien. */
+    position: integer("position").notNull(),
+    survenuLe: timestamp("survenu_le", { withTimezone: true }).notNull(),
+    auteurId: text("auteur_id")
+      .notNull()
+      .references(() => personnes.id),
+    fil: text("fil"),
+    /** `null` = un message sans texte (photo, audio seuls). */
+    texte: text("texte"),
+    piecesJointes: integer("pieces_jointes").notNull().default(0),
+    secretsRetires: integer("secrets_retires").notNull().default(0),
+    niveau: integer("niveau").notNull().default(2),
+    ecrivainApp: text("ecrivain_app").notNull(),
+    creeLe: timestamp("cree_le", { withTimezone: true }).notNull().defaultNow(),
+    /** Suppression LOGIQUE, posée quand le papier d'origine est oublié. */
+    supprimeLe: timestamp("supprime_le", { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex("evenements_position").on(t.sourceRef, t.position),
+    index("evenements_survenu").on(t.survenuLe),
+    index("evenements_auteur").on(t.auteurId, t.survenuLe),
+    check("evenements_niveau", sql`${t.niveau} BETWEEN 0 AND 3`),
+  ],
+);
+
+/** Qui a écrit, et à qui : la jointure qui répond à « ce que j'ai dit à X ». */
+export const evenementPersonnes = pgTable(
+  "evenement_personnes",
+  {
+    evenementId: text("evenement_id")
+      .notNull()
+      .references(() => evenements.id, { onDelete: "cascade" }),
+    personneId: text("personne_id")
+      .notNull()
+      .references(() => personnes.id, { onDelete: "cascade" }),
+    role: text("role", { enum: ROLES_EVENEMENT }).notNull(),
+  },
+  (t) => [
+    uniqueIndex("evenement_personnes_cle").on(t.evenementId, t.personneId, t.role),
+    index("evenement_personnes_personne").on(t.personneId),
+  ],
+);
+
 export type Fait = typeof faits.$inferSelect;
 export type NouveauFait = typeof faits.$inferInsert;
 export type Provenance = typeof provenances.$inferSelect;
