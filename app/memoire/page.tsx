@@ -15,7 +15,7 @@ import { depotLectureDrizzle } from "@/lib/depotLecture";
 import { depotLiensDrizzle } from "@/lib/depotLiens";
 import { depotMemoireDrizzle } from "@/lib/memoire/depotMemoire";
 import { construireReseau } from "@/lib/memoire/reseau";
-import { corpsSources, corpsThemes } from "@/lib/memoire/tuilesMemoire";
+import { corpsCroissance, corpsPlusRelies, corpsSources, corpsThemes } from "@/lib/memoire/tuilesMemoire";
 import { accesDonnees, MESSAGES_MANQUE } from "@/lib/pageDonnees";
 import { requireSession } from "@/lib/session";
 import { MemoireClient } from "./MemoireClient";
@@ -67,6 +67,12 @@ export default async function MemoirePage() {
         </Tuile>
         <Tuile largeur={5} icone="mail" titre="Sources">
           <CorpsTuile c={corpsSources(parSource, new Date())} />
+        </Tuile>
+        <Tuile largeur={6} icone="chart" titre="Croissance">
+          <CorpsTuile c={corpsCroissance(faitsBruts.map((r) => r.fait), new Date())} />
+        </Tuile>
+        <Tuile largeur={6} icone="link" titre="Les plus reliés">
+          <CorpsTuile c={corpsPlusRelies(faits, liens)} />
         </Tuile>
       </div>
     </CoqueMemoire>

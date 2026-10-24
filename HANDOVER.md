@@ -62,6 +62,8 @@ clé Anthropic : coût nul. `memoryai_etat` rend les comptes et la dernière mes
   messages ne sont pas lus, papiers) ; tuiles Thèmes (bulles par domaine) et Sources (faits validés par type de source,
   depuis quand) : `lib/memoire/tuilesMemoire.ts`, `lib/memoire/depotMemoire.ts`, verrous `tests/tuilesMemoire.test.ts`,
   `tests/depotMemoire.test.ts`.
+  Puis Croissance (faits validés tenus à la fin de chacun des douze derniers mois, Québec) et Les plus reliés (les
+  huit faits aux plus de liens, nommés par leur prédicat).
 - Quatrième pas, en deux PR : **l'accueil devient la maison de LIA** (maquette v5). D'abord ses fondations, pures
   et testées, encore montées nulle part : l'orbite (`lib/accueil/orbite.ts`), le décor, sol en perspective et tapis
   des heures (`lib/accueil/decor.ts`), ce que montre chaque espace (`contenuEspaces`, `lib/accueil/espaces.ts` :
