@@ -2,7 +2,7 @@
 
 <!-- GÉNÉRÉ par `node .github/ci/generer-index.mjs` : ne pas modifier à la main (`--verifier` échoue si ce fichier est périmé). -->
 
-44 document(s). Ancien titre -> nouveau chemin : [correspondance.md](correspondance.md).
+45 document(s). Ancien titre -> nouveau chemin : [correspondance.md](correspondance.md).
 
 ## docs/
 
@@ -39,6 +39,7 @@
 - [ADR 0023 — Des faits DÉDUITS par une règle, reliés à ceux d'où ils viennent](adr/0023-des-faits-deduits-par-regle.md) — `docs/adr/0023-des-faits-deduits-par-regle.md`
 - [ADR 0024 — LIA lit la météo et l'actualité, de sources publiques gratuites et sans clé](adr/0024-lia-lit-la-meteo-et-l-actualite.md) — `docs/adr/0024-lia-lit-la-meteo-et-l-actualite.md`
 - [ADR 0025 — LIA valide seule un fait que deux signaux confirment, Marc ne voit que les doutes](adr/0025-lia-valide-seule-ce-que-deux-signaux-confirment.md) — `docs/adr/0025-lia-valide-seule-ce-que-deux-signaux-confirment.md`
+- [ADR 0026 — Un papier se juge seul quand une seconde lecture de DriveAI concorde avec la première](adr/0026-les-papiers-se-jugent-seuls-par-une-seconde-lecture.md) — `docs/adr/0026-les-papiers-se-jugent-seuls-par-une-seconde-lecture.md`
 - [Registre des numéros d'ADR](adr/NUMEROS.md) — `docs/adr/NUMEROS.md`
 
 ## docs/claude/
