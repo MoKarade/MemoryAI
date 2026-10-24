@@ -41,7 +41,8 @@ empreintes de l'extrait et de la valeur ; un fait n'est relu qu'une fois. Doutes
 (« LIA doute : … ») ; « Validé par LIA » sur la fiche du fait et dans l'onglet Apprentissage.
 Bornes : 400 faits, 8 par appel, 60 s, budget `apprentissage`. Ses comptes sortent dans la réponse du cron (`relecture`),
 avec `relecture.file` : les faits `propose` restants, et combien la relecture ne lira jamais (sensibles, canaris, sans provenance).
-Première passe en production (24/10, 21:11Z) : 0 candidat, d'où `file` pour savoir pourquoi.
+Mesure en production (24/10, 21:44Z) : `file.enAttente` = 0, aucun fait `propose` ; la pile de Marc compte 2 295 PAPIERS
+(relevé du PC). Leur jugement : ADR 0026, seconde lecture par DriveAI (MemoryAI#219).
 **Reste** : mesurer la file en production (« fini » = moins de 50 faits `propose`) ; si trop de faits sont sensibles ou
 sans source lisible ici, le dire à Marc chiffres à l'appui (ADR 0025, « Ce qui reste ouvert »).
 
