@@ -31,6 +31,13 @@ route `/api/demandes` (jeton du hub en temps constant, `x-lia-proprietaire: 1`, 
 Contrat exact dans l'ADR ; il a été envoyé au fil Refonte Hubperso (côté hub : Hubperso#450). Le `nom` est chiffré
 niveau 1 et n'entre dans aucun prompt.
 
+## ✅ 24/10/2026 : LIA laisse des notes au coordinateur (MemoryAI#188, ADR 0022)
+
+Outil `lia_note` (chat et hub) : une observation, un conseil ou une alerte, une ligne de 280 caractères au plus,
+sans balise ni adresse web, refusée si `estCanari` la marque, 5 par jour de Québec. Table `notes_lia` (migration 0028,
+additive), texte chiffré niveau 1. Le coordinateur les lit par `memoryai_notes_lia` (MCP seul, jamais offert au chat),
+balisées comme données, et la lecture les marque lues. Reste : l'écran dans Régler et le compte dans `GET /api/etat`.
+
 ## 🔨 EN COURS — 22/10/2026 : refonte LIA, MemoryAI devient sa maison (chantier MemoryAI#67)
 
 Go de Marc le 22/10 sur les 11 décisions (plan : https://claude.ai/artifact/FjSqJYh6apLY8CPbwrRivY ; décisions

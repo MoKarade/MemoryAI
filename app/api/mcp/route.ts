@@ -14,6 +14,7 @@
 //
 // Chaque appel d'outil est journalisé AVANT sa réponse (`lib/mcp/protocole.ts`).
 
+import { depotNotesLiaDrizzle } from "@/lib/lia/notes";
 import { cleDepuisEnv, ClefAbsenteError } from "@/lib/chiffrement";
 import { baseConfiguree, db } from "@/lib/db";
 import { depotDrizzle } from "@/lib/depotFaits";
@@ -89,6 +90,7 @@ export async function POST(request: Request): Promise<Response> {
     banc: depotBancDrizzle(db),
     questions: depotQuestionsDrizzle(db),
     conversations: depotConversationsDrizzle(db),
+    notes: depotNotesLiaDrizzle(db, cle),
     cle,
     env: process.env,
     lecteur: "claude-ai",

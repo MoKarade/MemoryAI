@@ -6,6 +6,7 @@
 // (crédit épuisé, clé refusée…) · 500 { error, message } pour le reste — jamais un corps vide ·
 // 200 { reponse, coutUsd, outilsAppeles }.
 
+import { depotNotesLiaDrizzle } from "@/lib/lia/notes";
 import Anthropic from "@anthropic-ai/sdk";
 import { after } from "next/server";
 import { apprendreDeLaConversation } from "@/lib/apprentissage";
@@ -98,6 +99,7 @@ export async function POST(request: Request): Promise<Response> {
         banc: depotBancDrizzle(db),
         questions: depotQuestionsDrizzle(db),
         conversations: depotConversationsDrizzle(db),
+        notes: depotNotesLiaDrizzle(db, cle),
         cle,
         env: process.env,
         lecteur: "chat",
