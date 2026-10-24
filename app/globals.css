@@ -242,6 +242,11 @@ code {
 }
 /* Un bouton qui se lit comme une phrase (« Passer », « Effacer ») : sans contour, souligné.
    Propre à MemoryAI ; la cible reste de 44 px. */
+/* `min-height` ne prend pas sur un élément en ligne : un lien `.bouton-texte` serait sous 44 px. */
+a.bouton-texte {
+  display: inline-flex;
+  align-items: center;
+}
 .bouton-texte {
   background: none;
   border: none;
@@ -291,6 +296,12 @@ code {
   font-weight: 600;
   background-color: var(--surface-douce);
   color: var(--texte);
+}
+/* Une pastille qui est un LIEN est une cible : 44 px, comme tout ce qui se touche (audit du
+   24/10, filtres de /pieces). Une pastille d'état, elle, reste à 24 px. */
+a.pastille {
+  min-height: 44px;
+  padding: 2px 14px;
 }
 
 /* ── États : fond sémantique ET libellé texte, jamais la couleur seule. ── */
@@ -584,6 +595,13 @@ code {
   text-align: left;
   padding: 0.4rem 0.3rem;
   border-bottom: 1px solid var(--bordure);
+}
+/* Le lien d'une ligne (/pieces) se touche sur 44 px de haut, pas sur la hauteur de son texte. */
+.table td > a,
+.lien-cible {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
 }
 /* ── Chat : l'écran de Lia (R2 de la refonte, MemoryAI#10). Une colonne calme : la réponse de Lia
    est du TEXTE sur le fond, sans bulle ; seul Marc a sa bulle. Les réglages et l'historique sont
@@ -903,10 +921,6 @@ code {
   border: 1px solid var(--bordure-champ);
   border-radius: 28px;
 }
-.chat-saisie:focus-within {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
 .chat-saisie textarea {
   flex: 1 1 auto;
   min-width: 0;
@@ -914,7 +928,6 @@ code {
   max-height: 8rem;
   padding: 0.65rem 0;
   border: 0;
-  outline: 0;
   background: transparent;
   color: var(--texte);
   font: inherit;
@@ -922,6 +935,12 @@ code {
   line-height: 1.4;
   resize: none;
   field-sizing: content;
+}
+/* Le contour est sur le champ focalisé, plus sur le formulaire (`:focus-within`) : l'audit du
+   24/10 le lisait invisible, puisqu'il regarde l'élément qui a le focus. */
+.chat-saisie textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 .chat-saisie textarea::placeholder {
   color: var(--texte-doux);
@@ -1330,17 +1349,19 @@ code {
 .maison-espace:hover,
 .maison-espace:focus-visible {
   color: var(--texte);
-  outline: none;
+}
+/* Le contour est porté par le bouton lui-même, pas seulement par son rond : un contrôle de
+   focus (axe, le PC) lit l'élément focalisé, et un contour posé sur un enfant ne s'y voit pas. */
+.maison-espace:focus-visible {
+  outline: 2px solid var(--texte);
+  outline-offset: 3px;
+  border-radius: 12px;
 }
 .maison-espace:hover .maison-rond,
 .maison-espace:focus-visible .maison-rond {
   border-color: var(--accent);
   background: var(--surface-douce);
   box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 14%, transparent);
-}
-.maison-espace:focus-visible .maison-rond {
-  outline: 2px solid var(--texte);
-  outline-offset: 3px;
 }
 .maison-etiquette {
   font-size: 0.8rem;
