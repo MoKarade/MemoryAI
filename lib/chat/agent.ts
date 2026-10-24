@@ -150,7 +150,7 @@ export async function tourDeChat(params: {
 }): Promise<ResultatTour> {
   const { client, modele, inclureN2, inclureN3, outils, admin, outilsPermis } = params;
   const offerts = outilsPermis ? OUTILS.filter((o) => outilsPermis.has(o.name)) : OUTILS;
-  const systeme = construirePrompt(params.couches);
+  const systeme = construirePrompt(params.couches, { blocs: params.blocs });
   const historique = params.messages.slice(-MAX_MESSAGES);
   if (historique.length === 0 || historique[historique.length - 1]!.role !== "user") {
     throw new Error("Le dernier message doit venir de Marc.");
