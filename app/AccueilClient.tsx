@@ -19,7 +19,9 @@ import { PanneauEspace } from "@/components/PanneauEspace";
 import { ESPACES, type ContenuEspace, type IdEspace } from "@/lib/accueil/espaces";
 import { peindreDecor } from "@/lib/accueil/decor";
 import { orbite, placerEspaces, VITESSE_ORBITE, zoneDeVie } from "@/lib/accueil/orbite";
+import { parleSeuleMaison, salutSelonHeure, type MotifParole } from "@/lib/accueil/paroles";
 import { estRaccourciParler } from "@/lib/accueil/raccourcis";
+import { heureQuebec } from "@/lib/memoire/acces";
 
 export function AccueilClient({ contenus, aJuger }: { contenus: Record<IdEspace, ContenuEspace>; aJuger: { titre: string; detail: string } | null }) {
   const [monde, setMonde] = useState<HTMLDivElement | null>(null);
@@ -109,6 +111,14 @@ export function AccueilClient({ contenus, aJuger }: { contenus: Record<IdEspace,
     return () => removeEventListener("keydown", parler);
   }, [routeur]);
 
+  // Ce qu'elle dit seule (écart A3) : le salut de l'heure de Québec, puis ce que les espaces disent
+  // de vrai (à juger, dépense du jour), à tour de rôle. Rien d'autre : le reste, elle parle d'elle.
+  const tour = useRef(0);
+  const parleSeule = useCallback(
+    (motif: MotifParole) => parleSeuleMaison(motif, contenus, heureQuebec(new Date()), tour.current++),
+    [contenus],
+  );
+
   const ouvrir = (id: IdEspace, depuis: HTMLElement) => {
     if (!ouvert) retour.current = depuis;
     setOuvert(id);
@@ -149,6 +159,10 @@ export function AccueilClient({ contenus, aJuger }: { contenus: Record<IdEspace,
           }}
           type="button"
           className={`maison-espace teinte-${e.teinte}`}
+          // Elle va voir l'espace et dit ce qu'il contient de vrai (`lia-ui`, comme la maquette).
+          data-lia-cible={e.id}
+          data-lia-dit={contenus[e.id].dit}
+          data-lia-activite={e.activite}
           aria-label={contenus[e.id].pastille ? `${e.libelle}, ${contenus[e.id].pastille} en attente` : e.libelle}
           aria-expanded={ouvert === e.id}
           onClick={(ev) => ouvrir(e.id, ev.currentTarget)}
@@ -175,6 +189,8 @@ export function AccueilClient({ contenus, aJuger }: { contenus: Record<IdEspace,
           etat={etatLiaMaison()}
           container={monde}
           cle="lia-accueil"
+          salut={salutSelonHeure(heureQuebec(new Date()))}
+          onSpontane={parleSeule}
           rayon={rayon}
           bounds={() => {
             const r = monde.getBoundingClientRect();
