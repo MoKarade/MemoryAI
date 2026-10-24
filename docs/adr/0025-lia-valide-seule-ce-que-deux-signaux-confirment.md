@@ -54,3 +54,5 @@ se croit sur parole. Un seul verdict de modèle ne suffit donc jamais.
 - [À vérifier] la taille du lot et le modèle de relecture, sur le coût réel d'une première passe.
 - [À vérifier] la part des faits `propose` qui ont une source lisible ici ; sans elle, la file ne
   descendra pas sous 50 et il faudra le dire à Marc, chiffres à l'appui.
+- **Mesuré (24/10 21:44Z)** : 0 fait `propose` en production ; les « 3 000 » étaient 2 295 PAPIERS
+  de la pile. Leur jugement relève de l'ADR 0026 (seconde lecture par DriveAI).

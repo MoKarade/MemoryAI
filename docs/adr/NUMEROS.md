@@ -30,3 +30,4 @@
 | 0023 | Des faits DÉDUITS par une règle, reliés à ceux d'où ils viennent | proposé (demande de Marc, 24/10 18:44Z) ; code après l'OK de Marc | MemoryAI#185 |
 | 0024 | LIA lit la météo et l'actualité, de sources publiques gratuites et sans clé | proposé (demande de Marc, 24/10 18:41Z) ; code après l'OK de Marc | MemoryAI#189 |
 | 0025 | LIA valide seule un fait que deux signaux confirment, Marc ne voit que les doutes | proposé (option « double signal + doutes », carte close sur l’option recommandée après le « Fais tout » de Marc, 24/10 19:21Z) | MemoryAI#184 |
+| 0026 | Un papier se juge seul quand une seconde lecture de DriveAI concorde avec la première | proposé (carte de Marc, 24/10 21:55Z, « Seconde lecture par DriveAI ») | MemoryAI#219 |
