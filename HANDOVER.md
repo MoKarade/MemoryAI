@@ -185,7 +185,7 @@ journalisée, conversation non consignée en v1. Verrous : `tests/liaAsk.test.ts
 Depuis MemoryAI#74 (étape blocs), la réponse est `{ text, blocks? }` : catalogue FERMÉ de 22 formes dans
 `lib/lia/blocs.ts` (copie lisible : `commun/assistant/BLOCS-lia.md`), offert par l'outil `lia_blocs` à la route ask
 seule ; un bloc ne cite que des faits servis pendant le tour, sinon il est rejeté (ADR 0016 § 6).
-LIA vit aussi CHEZ ELLE (ADR 0016 § 7) : `components/LiaMaison.tsx` monte `@mokarade/lia-ui#v0.34.0` sur toutes les
+LIA vit aussi CHEZ ELLE (ADR 0016 § 7) : `components/LiaMaison.tsx` monte `@mokarade/lia-ui#v0.37.2` sur toutes les
 pages connectées (pas `/login`, pas `/widget`), ses blocs dessinés par `rendreBlocs` ; elle demande à
 `POST /api/lia/ask` (session, `source` et `proprietaire` imposés, lecteur `lia-maison`). Les deux portes partagent
 `lib/lia/repondre.ts`. Re-pinner le tag pour chaque nouvelle version de lia-ui (suivi au scroll, vie de la maquette).
