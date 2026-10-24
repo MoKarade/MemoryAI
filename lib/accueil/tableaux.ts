@@ -10,6 +10,7 @@ import { jourQuebec, POSTES, type Poste } from "@/lib/coutChat";
 import { FUSEAU } from "@/lib/fuseau";
 import { heureQuebec, libelleLecteur } from "@/lib/memoire/acces";
 import { SOURCE_METEO, type LectureMeteo } from "@/lib/monde/meteo";
+import { SOURCE_ACTUALITE, type Actualite } from "@/lib/monde/actualite";
 
 /** Les noms des tracés de `components/IconeEspace.tsx` employés ici (lib ne dépend pas des composants). */
 type IconeTuile = "globe" | "eye" | "cal" | "target" | "shield" | "bulb" | "grid" | "chart" | "croix" | "tool" | "lock" | "spark" | "search" | "star" | "coin" | "clock" | "layers" | "pie" | "bell"
@@ -421,11 +422,14 @@ export function tableauIdees(aJuger: { total: number; titre: string } | null): T
 }
 
 const HEURE = new Intl.DateTimeFormat("fr-CA", { timeZone: FUSEAU, hour: "2-digit", minute: "2-digit" });
+/** La tuile Actualité montre les titres les plus récents, pas tous. */
+const TITRES_TUILE = 5;
 const degres = (v: number) => `${String(v).replace(".", ",")} °C`;
 
 /** `meteo` : `null` quand la page ne l'a pas lue (sans base) ; sinon ce qu'ECCC a rendu, ou pourquoi rien. */
-export function tableauMonde(meteo: LectureMeteo | null = null): Tableau {
+export function tableauMonde(meteo: LectureMeteo | null = null, actualite: Actualite | null = null): Tableau {
   const m = meteo?.ok ? meteo.meteo : null;
+  const sources = [...(m ? [SOURCE_METEO] : []), ...(actualite?.titres.length ? [SOURCE_ACTUALITE] : [])];
   const absente = meteo && !meteo.ok && meteo.raison === "non-reglee" ? "Pas de météo : aucune ville réglée." : meteo ? "Météo indisponible : Environnement Canada ne répond pas." : "Pas de météo : aucune source branchée.";
   return {
     question: "Ce que LIA regarde dans le monde",
@@ -448,7 +452,15 @@ export function tableauMonde(meteo: LectureMeteo | null = null): Tableau {
             ]
           : [vide(absente)],
       },
-      { cle: "actualite", largeur: 6, icone: "eye", titre: "Actualité", corps: [vide("Pas d'actualité : aucune source branchée.")] },
+      {
+        cle: "actualite",
+        largeur: 6,
+        icone: "eye",
+        titre: "Actualité",
+        corps: actualite?.titres.length
+          ? [{ genre: "liste", elements: actualite.titres.slice(0, TITRES_TUILE).map((t) => ({ libelle: t.titre, ...(t.le && { detail: HEURE.format(new Date(t.le)) }) })) }]
+          : [vide(actualite ? "Actualité indisponible : les fils ne répondent pas." : "Pas d'actualité : aucune source branchée.")],
+      },
       {
         cle: "sept",
         largeur: 12,
@@ -457,7 +469,7 @@ export function tableauMonde(meteo: LectureMeteo | null = null): Tableau {
         corps: m?.previsions.length ? [{ genre: "liste", elements: m.previsions.map((p) => ({ libelle: p.periode, detail: p.resume })) }] : [vide("Les sept prochains jours viendront avec la météo.")],
       },
       { cle: "bornes", largeur: 6, icone: "target", titre: "Bornes proches", repliee: true, corps: [vide("Aucune source de bornes de recharge branchée.")] },
-      { cle: "sources", largeur: 6, icone: "shield", titre: "Sources", repliee: true, corps: m ? [{ genre: "texte", texte: `${SOURCE_METEO}.` }] : [vide("Aucune source du monde n'est branchée pour l'instant.")] },
+      { cle: "sources", largeur: 6, icone: "shield", titre: "Sources", repliee: true, corps: sources.length ? sources.map((s): Corps => ({ genre: "texte", texte: `${s}.` })) : [vide("Aucune source du monde n'est branchée pour l'instant.")] },
     ],
   };
 }
@@ -482,6 +494,7 @@ export const LIBELLE_OUTIL: Readonly<Record<string, string>> = {
   memoryai_papiers_facettes: "Les sortes de papiers",
   memoryai_papiers_chercher: "Chercher dans les papiers",
   monde_meteo: "La météo",
+  monde_actualite: "L'actualité",
 };
 const libelleOutil = (o: string) => LIBELLE_OUTIL[o] ?? o;
 

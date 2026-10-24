@@ -8,6 +8,7 @@
 
 import { depotNotesLiaDrizzle } from "@/lib/lia/notes";
 import { sourceMeteoEccc } from "@/lib/monde/meteo";
+import { sourceActualite } from "@/lib/monde/actualite";
 import Anthropic from "@anthropic-ai/sdk";
 import { after } from "next/server";
 import { apprendreDeLaConversation } from "@/lib/apprentissage";
@@ -102,6 +103,7 @@ export async function POST(request: Request): Promise<Response> {
         conversations: depotConversationsDrizzle(db),
         notes: depotNotesLiaDrizzle(db, cle),
         meteo: sourceMeteoEccc(db, process.env.MEMORYAI_METEO_VILLE),
+        actualite: sourceActualite(db),
         cle,
         env: process.env,
         lecteur: "chat",
