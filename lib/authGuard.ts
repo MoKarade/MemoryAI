@@ -80,6 +80,12 @@ export const ROUTES_A_AUTH_PROPRE = [
    */
   "/api/etat-lia",
   /**
+   * Les demandes « Que peut-on changer ici ? » du hub (ADR 0021). Même porte que `/api/etat-lia` :
+   * `x-hub-token` en temps constant et `x-lia-proprietaire: 1`. Contenu borné, sans texte libre,
+   * jamais servi à un modèle. 503 sans `HUB_TOKEN`, 401 jeton faux, 403 sans propriétaire.
+   */
+  "/api/demandes",
+  /**
    * Les quatre endpoints du flux OAuth et les deux de métadonnées. Publics par nécessité :
    * claude.ai les appelle AVANT d'avoir le moindre jeton. Ce qui les garde : PKCE S256,
    * `redirect_uri` sur allowlist, et la clé d'accès de Marc sur `/api/mcp/authorize`.

@@ -98,6 +98,8 @@ describe("les trente tables", () => {
       // [ADR 0019] Le sauvetage du 23/10 : l'archive de l'ancien chiffré (migration 0024).
       "chiffre_v1_archive",
       "conversations",
+      // [ADR 0021] Les demandes « Que peut-on changer ici ? » du hub (migration 0027).
+      "demandes",
       "depenses_chat",
       // [ADR 0020] Les événements datés (messages) et qui y parle (migration 0026).
       "evenement_personnes",
