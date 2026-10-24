@@ -28,7 +28,7 @@ describe("la forme de l'état", () => {
     expect(lireEtat(brut(ETAT))).toEqual({ ok: true, etat: ETAT });
   });
 
-  it("retire les clés inconnues, les faits hors verbe et la mémoire lente hors bornes (comme `validerEtat`)", () => {
+  it("retire les clés inconnues, les faits hors verbe et la mémoire lente hors bornes (`validerEtat` du paquet)", () => {
     const r = lireEtat(
       brut({
         ...ETAT,

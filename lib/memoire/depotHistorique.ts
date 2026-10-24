@@ -27,18 +27,22 @@ export interface DepotHistorique {
 }
 
 const jourDe = (col: PgColumn) => sql<string>`to_char(${col} at time zone ${FUSEAU}, 'YYYY-MM-DD')`;
+// ⚠️ On groupe par la POSITION de la colonne, jamais en répétant `jour` : le fuseau y est un
+// paramètre, deux fois écrit il devient $1 et $3, deux expressions pour Postgres (42803, prod du
+// 23/10). Verrou : `tests/memoireHistoriqueBase.test.ts`, sur une vraie base.
+const PREMIERE_COLONNE = sql`1`;
 
 export function depotHistoriqueDrizzle(db: Base): DepotHistorique {
   return {
     async faitsParJour(depuis) {
       const jour = jourDe(schema.faits.creeLe);
-      const lignes = await db.select({ jour, n: count() }).from(schema.faits).where(gte(schema.faits.creeLe, depuis)).groupBy(jour);
+      const lignes = await db.select({ jour, n: count() }).from(schema.faits).where(gte(schema.faits.creeLe, depuis)).groupBy(PREMIERE_COLONNE);
       return lignes.map((l) => ({ jour: l.jour, n: l.n }));
     },
     async lecturesParJour(depuis) {
       const j = schema.accesJournal;
       const jour = jourDe(j.ts);
-      const lignes = await db.select({ jour, n: count() }).from(j).where(gte(j.ts, depuis)).groupBy(jour);
+      const lignes = await db.select({ jour, n: count() }).from(j).where(gte(j.ts, depuis)).groupBy(PREMIERE_COLONNE);
       return lignes.map((l) => ({ jour: l.jour, n: l.n }));
     },
     async conversationsParSource() {
