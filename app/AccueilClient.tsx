@@ -119,6 +119,13 @@ export function AccueilClient({ contenus, aJuger }: { contenus: Record<IdEspace,
     [contenus],
   );
 
+  // Toucher LIA ouvre la conversation, comme la maquette (lia-ui ≥ v0.33.0, `surToucher`) : la
+  // complète, `/chat`, en attendant le panneau « Parler » de la maison (écart A7).
+  const surToucher = useCallback(() => {
+    routeur.push("/chat");
+    return true;
+  }, [routeur]);
+
   const ouvrir = (id: IdEspace, depuis: HTMLElement) => {
     if (!ouvert) retour.current = depuis;
     setOuvert(id);
@@ -191,6 +198,7 @@ export function AccueilClient({ contenus, aJuger }: { contenus: Record<IdEspace,
           cle="lia-accueil"
           salut={salutSelonHeure(heureQuebec(new Date()))}
           onSpontane={parleSeule}
+          surToucher={surToucher}
           rayon={rayon}
           bounds={() => {
             const r = monde.getBoundingClientRect();

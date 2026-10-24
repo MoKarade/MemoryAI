@@ -74,6 +74,8 @@ clé Anthropic : coût nul. `memoryai_etat` rend les comptes et la dernière mes
   espaces disent de vrai (« N à juger », dépense du jour et plafonds), à tour de rôle ; rien d'autre
   (`lib/accueil/paroles.ts`). Chaque espace porte `data-lia-cible`, `data-lia-dit` (sa phrase, `ContenuEspace.dit`) et
   `data-lia-activite` (le geste de la maquette) : elle va le voir et le dit. Verrou : `tests/accueilParoles.test.ts`.
+  Toucher LIA ouvre la conversation (`surToucher`, lia-ui v0.33.0) : `/chat` pour l'instant, le panneau « Parler » de la
+  maison ensuite (écart A7).
 - Cinquième pas : **l'onglet Accès de la page Mémoire** (`/memoire/acces`). Part des faits validés par niveau, journal d'accès filtrable par niveau
   servi (métadonnées signées seulement), carte horaire des lectures sur 30 jours à l'heure de Québec, oublis
   (compte et dates) et garde-fous, chacun pointant vers le code qui le tient. Lectures : `lib/memoire/depotAcces.ts`
@@ -105,7 +107,7 @@ journalisée, conversation non consignée en v1. Verrous : `tests/liaAsk.test.ts
 Depuis MemoryAI#74 (étape blocs), la réponse est `{ text, blocks? }` : catalogue FERMÉ de 22 formes dans
 `lib/lia/blocs.ts` (copie lisible : `commun/assistant/BLOCS-lia.md`), offert par l'outil `lia_blocs` à la route ask
 seule ; un bloc ne cite que des faits servis pendant le tour, sinon il est rejeté (ADR 0016 § 6).
-LIA vit aussi CHEZ ELLE (ADR 0016 § 7) : `components/LiaMaison.tsx` monte `@mokarade/lia-ui#v0.32.0` sur toutes les
+LIA vit aussi CHEZ ELLE (ADR 0016 § 7) : `components/LiaMaison.tsx` monte `@mokarade/lia-ui#v0.33.0` sur toutes les
 pages connectées (pas `/login`, pas `/widget`), ses blocs dessinés par `rendreBlocs` ; elle demande à
 `POST /api/lia/ask` (session, `source` et `proprietaire` imposés, lecteur `lia-maison`). Les deux portes partagent
 `lib/lia/repondre.ts`. Re-pinner le tag pour chaque nouvelle version de lia-ui (suivi au scroll, vie de la maquette).

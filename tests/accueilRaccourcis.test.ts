@@ -37,6 +37,12 @@ describe("la touche / ouvre la conversation", () => {
     for (const k of ["a", "?", "Enter", "Escape", " "]) expect(estRaccourciParler(touche(k), null)).toBe(false);
   });
 
+  it("toucher LIA ouvre aussi la conversation (lia-ui v0.33.0, surToucher)", () => {
+    const accueil = readFileSync("app/AccueilClient.tsx", "utf8");
+    expect(accueil).toMatch(/surToucher=\{surToucher\}/);
+    expect(accueil).toMatch(/const surToucher = useCallback\(\(\) => \{\s*routeur\.push\("\/chat"\);\s*return true;/);
+  });
+
   it("l'accueil écoute la touche et ouvre /chat", () => {
     const accueil = readFileSync("app/AccueilClient.tsx", "utf8");
     expect(accueil).toMatch(/estRaccourciParler\(e, cible\)/);
