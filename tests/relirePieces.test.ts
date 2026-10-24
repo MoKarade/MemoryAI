@@ -14,7 +14,9 @@ import * as schema from "../lib/db/schema";
 import { deriverCle } from "../lib/chiffrement";
 import { depotPiecesDrizzle } from "../lib/pieces/depot";
 import { ecrireLotPieces, EcriturePiecesRetireeError } from "../lib/pieces/ecrire";
-import { depotRelectureDrizzle } from "../lib/pieces/depotRelecture";
+import { depotRelectureDrizzle, papiersEnTete, papiersVraisParLia, relecturePapier } from "../lib/pieces/depotRelecture";
+import { depotPileDrizzle } from "../lib/pile/depot";
+import { composerPile } from "../lib/pile/composer";
 import { DOUTES_PAR_JOUR, LotRelecturesTropGrandError, relireLot } from "../lib/pieces/relire";
 import { LOT_MAX_RELECTURES } from "../lib/pieces/secondeLecture";
 import type { Ecrivain } from "../lib/jetons";
@@ -140,5 +142,36 @@ describe("relireLot", () => {
     await expect(relire(Array.from({ length: LOT_MAX_RELECTURES + 1 }, () => ({})))).rejects.toBeInstanceOf(LotRelecturesTropGrandError);
     await expect(relireLot([], { ...DRIVEAI, role: "lecture" }, cle, depotRelectureDrizzle(db))).rejects.toBeInstanceOf(EcriturePiecesRetireeError);
     await expect(relireLot([], { ...DRIVEAI, appId: "carai" }, cle, depotRelectureDrizzle(db))).rejects.toBeInstanceOf(EcriturePiecesRetireeError);
+  });
+});
+
+describe("la pile lit la seconde lecture", () => {
+  const idDe = async (fileId: string) =>
+    (await db.select().from(schema.pieceExemplaires).where(eq(schema.pieceExemplaires.fileId, fileId)))[0]!.pieceId;
+
+  it("un papier « vrai » sort de la pile ; un doute y reste, EN TÊTE, et se dit sur sa carte", async () => {
+    const [vrai, doute] = [await idDe("f-vrai"), await idDe("f-doute")];
+    const candidats = await depotPileDrizzle(db).candidatsPieces();
+    expect(candidats.map((c) => c.id)).not.toContain(vrai);
+    expect(candidats.map((c) => c.id)).toContain(doute);
+    const enTete = await papiersEnTete(db);
+    expect(enTete).toContain(doute);
+    const pile = composerPile({ pieces: candidats, faits: [], questions: [], avis: [], aujourdhui: "2026-10-25", piecesEnTete: enTete });
+    expect(pile.slice(0, enTete.length).map((c) => c.id).sort()).toEqual([...enTete].sort());
+    expect(pile.filter((c) => c.id === doute)).toHaveLength(1);
+    expect(await relecturePapier(db, doute)).toEqual({ decision: "doute", champs: ["dateEcheance"] });
+    expect(await papiersVraisParLia(db)).toBe(2); // f-vrai et f-n0
+  });
+
+  it("un doute jugé par Marc ne revient pas en tête", () => {
+    const pile = composerPile({
+      pieces: [{ id: "p1", domaine: null, titulaireConfiance: null, dateEcheance: null, creeLe: MIDI }],
+      faits: [],
+      questions: [],
+      avis: [{ genre: "piece", refId: "p1", verdict: "vrai", avisLe: MIDI }],
+      aujourdhui: "2026-10-24",
+      piecesEnTete: ["p1", "p-oublie"],
+    });
+    expect(pile).toEqual([]);
   });
 });
