@@ -991,6 +991,16 @@ export const notesLia = pgTable(
   (t) => [index("notes_lia_jour").on(t.jour), index("notes_lia_lu_le").on(t.luLe)],
 );
 
+/**
+ * Le CACHE du monde (ADR 0024, migration 0029) : ce qu'une source publique a rendu (la météo d'ECCC),
+ * déjà lu et borné par `lib/monde/`, et quand. Aucune donnée de Marc : rien n'y est chiffré.
+ */
+export const mondeCache = pgTable("monde_cache", {
+  cle: text("cle").primaryKey(),
+  corps: text("corps").notNull(),
+  luLe: timestamp("lu_le", { withTimezone: true }).notNull(),
+});
+
 export type Fait = typeof faits.$inferSelect;
 export type NouveauFait = typeof faits.$inferInsert;
 export type Provenance = typeof provenances.$inferSelect;
