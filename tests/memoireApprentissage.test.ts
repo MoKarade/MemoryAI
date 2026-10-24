@@ -5,7 +5,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { existsSync, readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
-import { comptesFaits, comptesQuestions, ETAPES, lireMesure, pourcent, serieBanc } from "@/lib/memoire/apprentissage";
+import { comptesFaits, comptesQuestions, ETAPES, ETAPES_OUBLI, lireMesure, pourcent, rythmeHoraire, serieBanc } from "@/lib/memoire/apprentissage";
 import type { DepotApprentissage } from "@/lib/memoire/depotApprentissage";
 
 vi.mock("next/navigation", () => ({ usePathname: () => "/memoire/apprentissage", redirect: vi.fn() }));
@@ -19,6 +19,8 @@ vi.mock("@/lib/pageDonnees", () => ({ accesDonnees: vi.fn(async () => ({ ok: tru
 
 let depot: DepotApprentissage;
 vi.mock("@/lib/memoire/depotApprentissage", () => ({ depotApprentissageDrizzle: () => depot }));
+let lectures: { ts: Date; lecteur: string }[] = [];
+vi.mock("@/lib/memoire/depotAcces", () => ({ depotAccesDrizzle: () => ({ lecturesDepuis: async () => lectures, oublis: async () => ({ total: 3, derniers: [] }) }) }));
 
 const { default: ApprentissagePage } = await import("@/app/memoire/apprentissage/page");
 
@@ -76,8 +78,17 @@ describe("les comptes", () => {
     expect(comptesQuestions([{ statut: "ouverte", n: 2 }]).map((c) => c.n)).toEqual([2, 0, 0]);
   });
 
-  it("chaque étape nomme un fichier qui existe", () => {
-    for (const e of ETAPES) expect(existsSync(e.ou), e.ou).toBe(true);
+  it("chaque étape nomme un fichier qui existe, celles de l'oubli comprises", () => {
+    for (const e of [...ETAPES, ...ETAPES_OUBLI]) expect(existsSync(e.ou), e.ou).toBe(true);
+  });
+
+  it("le rythme compte les lectures à l'heure de Québec, 24 cases", () => {
+    // 13 h 05 UTC en octobre = 9 h 05 à Québec ; 03 h 00 UTC = 23 h la veille.
+    const r = rythmeHoraire([{ ts: new Date("2026-10-22T13:05:00Z") }, { ts: new Date("2026-10-22T13:40:00Z") }, { ts: new Date("2026-10-22T03:00:00Z") }]);
+    expect(r).toHaveLength(24);
+    expect(r[9]).toBe(2);
+    expect(r[23]).toBe(1);
+    expect(r.reduce((a, b) => a + b, 0)).toBe(3);
   });
 });
 
@@ -94,6 +105,7 @@ describe("l'onglet Apprentissage", () => {
       ],
       questionsParStatut: async () => [{ statut: "repondue", n: 6 }],
     };
+    lectures = [{ ts: new Date("2026-10-22T13:05:00Z"), lecteur: "chat" }];
   });
 
   it("montre la courbe, les capacités, les faits appris et les questions réelles", async () => {
@@ -105,12 +117,17 @@ describe("l'onglet Apprentissage", () => {
     expect(html).toMatch(/Prendre le plus récent[\s\S]*?<b>—<\/b>/);
     expect(html).toContain("Validés par toi");
     expect(html).toContain("Répondues");
+    expect(html).toContain('class="rose-heures"');
+    expect(html).toContain("1 lecture sur 30 jours");
+    expect(html).toContain("3 faits oubliés à ce jour.");
     expect(html).toMatch(/aria-label="Apprentissage" aria-current="page"/);
   });
 
   it("une base vide le dit, bloc par bloc", async () => {
     depot = { mesures: async () => [], faitsAppris: async () => [], questionsParStatut: async () => [] };
+    lectures = [];
     const html = renderToStaticMarkup(await ApprentissagePage());
+    expect(html).toContain("Aucune lecture ces 30 derniers jours.");
     expect(html).toContain("Aucune mesure du banc pour l&#x27;instant");
     expect(html).toContain("Rien à montrer tant que le banc");
     expect(html).toContain("Aucun fait tiré d&#x27;une conversation");
@@ -118,10 +135,12 @@ describe("l'onglet Apprentissage", () => {
     expect(html).not.toContain("courbe-banc");
   });
 
-  it("ne dessine pas ce qui n'est pas mesuré, et ne déchiffre rien", () => {
+  it("dessine VIDES la porte, les exemples et les versions (aucun réseau entraîné), et ne déchiffre rien", async () => {
+    // Règle de Marc du 23/10 : un bloc de la maquette sans donnée est dessiné vide, jamais rempli.
+    const html = renderToStaticMarkup(await ApprentissagePage());
+    for (const titre of ["Porte de qualité", "Les exemples", "Versions"]) expect(html).toMatch(new RegExp(`${titre}[\\s\\S]*?class="tuile-vide`));
+    expect(html).not.toMatch(/\bv\d+\b|\d+ exemples/);
     const code = (f: string) => readFileSync(f, "utf8").split("\n").filter((l) => !l.trim().startsWith("//")).join("\n");
-    const page = code("app/memoire/apprentissage/page.tsx");
-    expect(page).not.toMatch(/version|habitude|entra[iî]nement/i);
-    for (const src of [page, code("lib/memoire/depotApprentissage.ts")]) expect(src).not.toMatch(/dechiffrer|contenu|valeur\b/);
+    for (const src of [code("app/memoire/apprentissage/page.tsx"), code("lib/memoire/depotApprentissage.ts")]) expect(src).not.toMatch(/dechiffrer|contenu|valeur\b/);
   });
 });

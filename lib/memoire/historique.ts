@@ -2,9 +2,12 @@
 // ce que LIA a écrit, lu et dépensé, jour par jour. Fonctions pures ; les lectures vivent dans
 // `lib/memoire/depotHistorique.ts`.
 //
-// ⚠️ NO FAKE DATA : la maquette dessine aussi son humeur sur 14 jours, ses relances et ses
-// corrections. Rien de cela n'est mesuré aujourd'hui (l'humeur de `lia-ui` n'est pas
-// enregistrée) : ces blocs n'existent pas ici, au lieu d'exister faux.
+// ⚠️ NO FAKE DATA : la maquette dessine aussi son humeur sur 14 jours et ses relances. Rien de
+// cela n'est mesuré aujourd'hui (l'humeur de `lia-ui` n'est pas enregistrée) : ces tuiles sont
+// dessinées VIDES, à leur place, et le disent (règle de Marc du 23/10), jamais remplies au jugé.
+
+import { ligneLecture, type Corps } from "@/lib/accueil/tableaux";
+import { FUSEAU } from "@/lib/fuseau";
 
 /** Les jours `AAAA-MM-JJ` de la fenêtre, du plus ancien à `aujourdhui` compris. */
 export function joursFenetre(aujourdhui: string, n: number): string[] {
@@ -48,3 +51,53 @@ export const LIBELLE_SOURCE: Record<string, string> = {
   "claude-ai": "Claude",
   "claude-code": "Claude Code",
 };
+
+/** Le filtre de « Ce qu'elle a fait » (maquette). Seul « Fait » a une source : le journal d'accès. */
+export const FILTRES_FAIT = [
+  { cle: "tous", libelle: "Tout" },
+  { cle: "fait", libelle: "Fait" },
+  { cle: "plus-tard", libelle: "Plus tard" },
+  { cle: "refuse", libelle: "Refusé" },
+] as const;
+export type FiltreFait = (typeof FILTRES_FAIT)[number]["cle"];
+
+export function lireFiltreFait(brut: unknown): FiltreFait {
+  return FILTRES_FAIT.find((f) => f.cle === brut)?.cle ?? "tous";
+}
+
+/** Ce qu'elle a fait : ses dernières lectures (le journal), ou ce que le filtre ne sait pas encore. */
+export function corpsCeQuElleAFait(lectures: readonly { ts: Date; lecteur: string; outil: string }[], filtre: FiltreFait): Corps {
+  if (filtre === "plus-tard") return { genre: "vide", texte: "Rien de remis à plus tard : elle ne note pas encore ce qu'elle reporte." };
+  if (filtre === "refuse") return { genre: "vide", texte: "Rien de refusé : elle ne note pas encore ce qu'on lui refuse." };
+  if (lectures.length === 0) return { genre: "vide", texte: "Elle n'a encore rien lu dans la mémoire." };
+  return { genre: "liste", elements: lectures.map(ligneLecture) };
+}
+
+// Midi UTC tombe le même jour à Québec : le jour affiché est bien celui de la clé.
+const JOUR_MOIS = new Intl.DateTimeFormat("fr-CA", { day: "numeric", month: "short", timeZone: FUSEAU });
+
+export interface Journee {
+  jour: string;
+  /** « 22 oct. » */
+  etiquette: string;
+  lectures: number;
+  /** En $ US, tous postes confondus. */
+  depense: number;
+}
+
+/** Ses journées, la plus récente d'abord : lectures et dépense de chaque jour de la fenêtre. */
+export function journees(jours: readonly string[], lectures: readonly { jour: string; n: number }[], depenseParJour: ReadonlyMap<string, number>): Journee[] {
+  const lu = new Map(lectures.map((l) => [l.jour, l.n]));
+  return [...jours].reverse().map((jour) => ({
+    jour,
+    etiquette: JOUR_MOIS.format(new Date(`${jour}T12:00:00Z`)),
+    lectures: lu.get(jour) ?? 0,
+    depense: depenseParJour.get(jour) ?? 0,
+  }));
+}
+
+/** Ce qu'elle a corrigé : les faits périmés, nommés par leur prédicat, jamais leur valeur. */
+export function corpsCorrections(lignes: readonly { predicat: string }[]): Corps {
+  if (lignes.length === 0) return { genre: "vide", texte: "Aucun fait corrigé pour l'instant." };
+  return { genre: "liste", elements: lignes.map((l) => ({ libelle: l.predicat, detail: "remplacé par une valeur plus récente, ou dépassé" })) };
+}
