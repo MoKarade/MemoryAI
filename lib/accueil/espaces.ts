@@ -6,6 +6,7 @@
 // recopier. Un espace se remplit quand le lot qui produit sa donnée est livré, pas avant.
 
 import type { Poste } from "@/lib/coutChat";
+import { tableauIdees, tableauMonde, type Tableau } from "./tableaux";
 
 export const IDS_ESPACES = ["souvenirs", "sante", "journee", "idees", "monde", "budget", "outils", "formes"] as const;
 export type IdEspace = (typeof IDS_ESPACES)[number];
@@ -54,6 +55,8 @@ export interface ContenuEspace {
   liens?: Lien[];
   /** Pastille sur l'orbite : un COMPTE réel, jamais décoratif. */
   pastille?: number;
+  /** Les tuiles du panneau, comme la maquette (écart B) ; absent : la phrase, les lignes, les liens. */
+  tableau?: Tableau;
 }
 
 export interface EntreesEspaces {
@@ -132,12 +135,14 @@ export function contenuEspaces(e: EntreesEspaces): Record<IdEspace, ContenuEspac
           vide: false,
           liens: [{ href: "/questions", libelle: e.aJuger.titre }],
           pastille: e.aJuger.total,
+          tableau: tableauIdees(e.aJuger),
         }
-      : { phrase: "Rien à juger pour l'instant.", dit: "Rien à juger pour l'instant.", vide: true },
+      : { phrase: "Rien à juger pour l'instant.", dit: "Rien à juger pour l'instant.", vide: true, tableau: tableauIdees(null) },
     monde: {
       phrase: "Pas encore de source pour la météo ni l'actualité.",
       dit: "Je n'ai encore ni météo ni actualité.",
       vide: true,
+      tableau: tableauMonde(),
     },
     budget: e.budget
       ? {
