@@ -1,7 +1,7 @@
 // tests/liaBlocs.test.ts — le catalogue FERMÉ des blocs de réponse (lot 5). Données fictives.
 
 import { describe, expect, it } from "vitest";
-import { MAX_BLOCS, TYPES_BLOCS, trierBlocs } from "../lib/lia/blocs";
+import { MAX_BLOCS, SIGNATURES_BLOCS, TYPES_BLOCS, trierBlocs } from "../lib/lia/blocs";
 
 const F1 = "0f0e0d0c-0b0a-4908-8706-050403020100";
 const F2 = "1f1e1d1c-1b1a-4918-8716-151413121110";
@@ -74,6 +74,14 @@ describe("trierBlocs", () => {
     expect(r.rejetes[0]!.raison).toContain("source non servie");
   });
 
+  it("une source citée par son adresse `/fait/<id>` vaut son id, et la règle du servi tient", () => {
+    const inventee = "2f2e2d2c-2b2a-4928-8726-252423222120";
+    const r = trierBlocs([{ ...EXEMPLES.chiffre, sources: [`/fait/${F1}`] }, { ...EXEMPLES.chiffre, sources: [`/fait/${inventee}`] }], SERVIS);
+    expect(r.blocs).toHaveLength(1);
+    expect(r.blocs[0]!.type === "chiffre" && r.blocs[0]!.sources).toEqual([F1]);
+    expect(r.rejetes.map((x) => x.indice)).toEqual([1]);
+  });
+
   it("un bloc de données sans source est rejeté ; la confirmation n'en a pas besoin", () => {
     const sansSource = { ...EXEMPLES.barres, sources: [] };
     const r = trierBlocs([sansSource, EXEMPLES.confirmation], SERVIS);
@@ -109,5 +117,26 @@ describe("trierBlocs", () => {
   it("pas une liste : rien, et le dit ; absent : rien, sans bruit", () => {
     expect(trierBlocs({ type: "liste" }, SERVIS).rejetes).toHaveLength(1);
     expect(trierBlocs(undefined, SERVIS)).toEqual({ blocs: [], rejetes: [] });
+  });
+});
+
+describe("SIGNATURES_BLOCS (ce que l'outil dit au modèle)", () => {
+  const lignes = SIGNATURES_BLOCS.split("\n");
+
+  it("une ligne par forme, dans l'ordre du catalogue", () => {
+    expect(lignes.map((l) => l.split(" ")[0])).toEqual(TYPES_BLOCS);
+  });
+
+  it("⚠ chaque champ d'un exemple valide figure dans la ligne de sa forme (Hubperso#360)", () => {
+    for (const t of TYPES_BLOCS) {
+      const ligne = lignes.find((l) => l.startsWith(`${t} `))!;
+      for (const k of Object.keys(EXEMPLES[t]!).filter((k) => !["type", "titre", "sources"].includes(k))) {
+        expect(ligne, `${t}.${k}`).toMatch(new RegExp(`[{,]${k}\\??:`));
+      }
+    }
+  });
+
+  it("reste courte : elle part à chaque tour", () => {
+    expect(SIGNATURES_BLOCS.length).toBeLessThan(2500);
   });
 });

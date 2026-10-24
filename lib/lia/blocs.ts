@@ -28,10 +28,19 @@ const date = z.string().regex(/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2})?(\.\d+)?(
 const heure = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
 const unite = z.string().trim().min(1).max(16).optional();
 
+/**
+ * Une source est l'`id` d'un fait ou d'un papier. Le modèle voit aussi l'adresse `ref="/fait/<id>"`
+ * et la cite parfois : le préfixe est retiré AVANT la règle, qui reste la même (un id servi).
+ */
+const source = z.preprocess(
+  (v) => (typeof v === "string" ? v.trim().replace(/^\/(?:fait|pieces?)\//, "") : v),
+  z.string().regex(ID_FAIT),
+);
+
 /** Ce que tout bloc de données porte. */
 const base = {
   titre: z.string().trim().min(1).max(120).optional(),
-  sources: z.array(z.string().regex(ID_FAIT)).min(1).max(50),
+  sources: z.array(source).min(1).max(50),
 };
 
 const Carte = z.object({
@@ -270,6 +279,48 @@ export type Bloc = { [K in TypeBloc]: z.infer<(typeof SCHEMAS)[K]> }[TypeBloc];
 
 /** Les 22 formes, dans l'ordre de la maquette. */
 export const TYPES_BLOCS = Object.keys(SCHEMAS) as TypeBloc[];
+
+// ── La forme de chaque bloc, pour le MODÈLE ─────────────────────────────────────────────
+//
+// ⚠️ DÉRIVÉE des schémas, jamais recopiée à la main. Le 24/10, l'outil ne donnait que les NOMS
+// des 22 formes : le modèle devinait les champs et le tri rejetait tout (tâche Hubperso 360). Une
+// description écrite à part aurait fini par diverger du tri ; celle-ci ne le peut pas.
+// Compacte exprès (environ 2 Ko, contre 15 Ko pour le JSON Schema complet) : elle part à chaque tour.
+
+type Js = { [k: string]: unknown };
+const COMMUNS = new Set(["type", "titre", "sources"]);
+
+function forme(js: Js, defs: Js, vus: ReadonlySet<string>, racine: boolean): string {
+  const ref = typeof js.$ref === "string" ? js.$ref.replace("#/$defs/", "") : null;
+  if (ref) return vus.has(ref) ? "(même forme)" : forme(defs[ref] as Js, defs, new Set([...vus, ref]), false);
+  if (js.const !== undefined) return JSON.stringify(js.const);
+  const variantes = (js.anyOf ?? js.oneOf) as Js[] | undefined;
+  if (Array.isArray(variantes)) return variantes.map((v) => forme(v, defs, vus, false)).join("|");
+  if (js.type === "array") return `[${forme(js.items as Js, defs, vus, false)}]`;
+  if (js.type === "object") {
+    const requis = new Set((js.required as string[] | undefined) ?? []);
+    const champs = Object.entries((js.properties as Record<string, Js> | undefined) ?? {})
+      .filter(([k]) => !(racine && COMMUNS.has(k)))
+      .map(([k, v]) => `${k}${requis.has(k) ? "" : "?"}:${forme(v, defs, vus, false)}`);
+    return `{${champs.join(",")}}`;
+  }
+  if (js.type === "number" || js.type === "integer") return "nombre";
+  if (js.type === "boolean") return "booléen";
+  if (js.type === "string") {
+    const motif = typeof js.pattern === "string" ? js.pattern : "";
+    if (motif.startsWith("^\\d{4}")) return "date";
+    if (motif.startsWith("^([01]")) return "HH:MM";
+    if (motif.startsWith("^https")) return "https";
+    return "texte";
+  }
+  return "valeur";
+}
+
+/** Une ligne par forme : `chiffre {libelle:texte,unite?:texte,valeur:nombre,variation?:nombre}`. */
+export const SIGNATURES_BLOCS: string = TYPES_BLOCS.map((t) => {
+  const js = z.toJSONSchema(SCHEMAS[t], { io: "input", unrepresentable: "any" }) as Js;
+  return `${t} ${forme(js, (js.$defs as Js | undefined) ?? {}, new Set(), true)}`;
+}).join("\n");
 
 export interface BlocsTries {
   blocs: Bloc[];

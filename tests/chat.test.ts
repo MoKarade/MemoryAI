@@ -168,6 +168,7 @@ describe("tourDeChat", () => {
     expect(outilsVus[0]).toContain("lia_blocs");
     expect(r.blocs).toEqual([chiffre(bon!.id)]);
     expect(r.blocsRejetes).toBe(1);
+    expect(r.raisonsBlocs).toHaveLength(1);
     // Sans `blocs`, l'outil n'est pas offert, et un appel qui le nomme n'est pas exécuté.
     const sans = faux([appel("lia_blocs", { blocs: [chiffre(bon!.id)] }), texte("ok")]);
     const r2 = await tourDeChat({ ...base, client: sans.client });
