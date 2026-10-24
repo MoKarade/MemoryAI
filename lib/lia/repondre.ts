@@ -16,6 +16,7 @@ import { depotDrizzle } from "@/lib/depotFaits";
 import { depotLectureDrizzle } from "@/lib/depotLecture";
 import { depotQuestionsDrizzle } from "@/lib/depotQuestions";
 import { cleJournalDepuisEnv, ClefJournalAbsenteError } from "@/lib/journal";
+import { SOURCE_BILAN_HUB } from "@/lib/lia/blocs";
 import { composerQuestion, composerReponse, CONVERSATIONS_FERMEES, OUTILS_LIA_HUB, type DemandeAsk } from "@/lib/lia/ask";
 import { assurerMigrations } from "@/lib/migrations";
 import { depotBancDrizzle } from "@/lib/banc/passe";
@@ -62,6 +63,8 @@ export async function repondreLia(demande: DemandeAsk, origine: string, lecteur:
       inclureN3: false,
       outilsPermis: OUTILS_LIA_HUB,
       blocs: true,
+      // Le bilan du hub est une source servie SEULEMENT quand il est joint à cette question.
+      sourcesServies: demande.contexte ? new Set([SOURCE_BILAN_HUB]) : undefined,
       outils: {
         lecture: depotLectureDrizzle(db),
         // Requis par le type ; aucun outil de `OUTILS_LIA_HUB` n'écrit.
@@ -81,7 +84,11 @@ export async function repondreLia(demande: DemandeAsk, origine: string, lecteur:
     // Les raisons portent des chemins de champs, jamais des valeurs : un journal n'est pas chiffré.
     if (r.blocsRejetes > 0) console.error(`[${lecteur}] ${r.blocsRejetes} bloc(s) rejeté(s) : ${r.raisonsBlocs.join(" ; ")}`);
     const reponse = composerReponse(r.reponse, origine, r.blocs);
-    if (!reponse) return erreur(503, "reponse_vide", "Le modèle n'a rien répondu.");
+    if (!reponse) {
+      // Un 503 sans trace ne se diagnostique pas : les compteurs du tour, jamais son contenu.
+      console.error(`[${lecteur}] réponse vide : ${r.blocs.length} bloc(s), outils ${r.outilsAppeles.join(", ") || "aucun"}`);
+      return erreur(503, "reponse_vide", "Le modèle n'a rien répondu.");
+    }
     return Response.json(reponse, { headers: NO_STORE });
   } catch (err) {
     // Budget épuisé = LIA indisponible (contrat : 503), pas « trop de requêtes ».

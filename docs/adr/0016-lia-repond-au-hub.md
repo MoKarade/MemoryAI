@@ -78,6 +78,9 @@ v5) ; le paquet `lia-ui` ne fait que les dessiner. Copie lisible pour les autres
   qui n'a pas été servie pendant CE tour rejette le bloc entier : le modèle ne peut pas citer un
   fait qu'il n'a pas lu, ni en inventer un. Seule `confirmation` n'en porte pas (c'est une action
   proposée, que le hub exécute après le oui de Marc, ADR 0017).
+  Complément du 24/10/2026 (Hubperso#360) : un chiffre du bilan du hub (§ 8) se source `hub/bilan`.
+  Cette source n'est servie QUE quand la question porte un bilan ; sans lui, elle est inventée et
+  rejetée comme les autres. Rien de neuf ne sort : ces valeurs viennent du hub et y retournent.
 - **Chaque bloc est validé seul** par Zod, avec ses cohérences (frise, réseau, grille, arbre ≤ 4
   niveaux, lien `https` seulement) ; un bloc faux ne tue pas les autres ; au-delà de 20, le reste
   est rejeté et compté. Les clés inconnues sont retirées, jamais rendues. La raison d'un rejet

@@ -25,7 +25,7 @@ import { budgetOuvert, coutUsd, jourQuebec, lireUsage, type IdModele } from "../
 import { cleJournalDepuisEnv } from "../journal";
 import { journaliserAcces } from "../journalAcces";
 import { OUTILS, type ContexteOutils } from "../mcp/outils";
-import { MAX_BLOCS, SIGNATURES_BLOCS, trierBlocs, type Bloc } from "../lia/blocs";
+import { MAX_BLOCS, SIGNATURES_BLOCS, SOURCE_BILAN_HUB, trierBlocs, type Bloc } from "../lia/blocs";
 import { annoterReponse, type Annotation, type FaitServi, type PieceServie } from "./liens";
 import { construirePrompt, REGLES_SYSTEME, type Couches } from "./prompt";
 
@@ -94,7 +94,8 @@ export const OUTIL_BLOCS = {
   description:
     "Montre ta réponse en blocs visuels, en plus de ton texte. " +
     "Chaque bloc est un objet `{type, titre?, sources, …champs}`. `sources` (sauf confirmation) : la liste des `id` " +
-    "(uuid) des faits ou des papiers que tes outils t'ont servis dans CE tour ; un bloc qui cite un autre id est rejeté. " +
+    `(uuid) des faits ou des papiers que tes outils t'ont servis dans CE tour, ou \`${SOURCE_BILAN_HUB}\` pour un chiffre ` +
+    "du bilan <contexte_hub> joint à CETTE question ; un bloc qui cite autre chose est rejeté. " +
     `${MAX_BLOCS} blocs au plus. N'invente aucune valeur. Champs de chaque forme (\`?\` = facultatif) :\n${SIGNATURES_BLOCS}`,
   input_schema: {
     type: "object",
@@ -141,6 +142,11 @@ export async function tourDeChat(params: {
   outilsPermis?: ReadonlySet<string>;
   /** L'appelant sait rendre des blocs : `lia_blocs` est offert (ADR 0016, route ask). */
   blocs?: boolean;
+  /**
+   * Les sources servies par l'APPELANT, hors outils : `SOURCE_BILAN_HUB` quand la question porte
+   * un bilan du hub. Absentes, seuls les faits et papiers lus pendant le tour comptent.
+   */
+  sourcesServies?: ReadonlySet<string>;
 }): Promise<ResultatTour> {
   const { client, modele, inclureN2, inclureN3, outils, admin, outilsPermis } = params;
   const offerts = outilsPermis ? OUTILS.filter((o) => outilsPermis.has(o.name)) : OUTILS;
@@ -215,7 +221,7 @@ export async function tourDeChat(params: {
       let erreur = false;
       if (params.blocs && appel.name === OUTIL_BLOCS.name) {
         // Validés contre ce qui a été servi JUSQU'ICI : on montre ce qu'on a lu, pas l'inverse.
-        const t = trierBlocs(appel.input.blocs, new Set([...servis.keys(), ...piecesServies.keys()]));
+        const t = trierBlocs(appel.input.blocs, new Set([...servis.keys(), ...piecesServies.keys(), ...(params.sourcesServies ?? [])]));
         const place = MAX_BLOCS - resultat.blocs.length;
         resultat.blocs.push(...t.blocs.slice(0, place));
         resultat.blocsRejetes += t.rejetes.length + Math.max(0, t.blocs.length - place);
