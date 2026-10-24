@@ -34,6 +34,7 @@ import { depotAccesDrizzle } from "@/lib/memoire/depotAcces";
 import { depotApprentissageDrizzle } from "@/lib/memoire/depotApprentissage";
 import { accesDonnees, MESSAGES_MANQUE } from "@/lib/pageDonnees";
 import { valideesParLia } from "@/lib/relectureLia";
+import { papiersVraisParLia } from "@/lib/pieces/depotRelecture";
 import { requireSession } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
@@ -145,13 +146,14 @@ export default async function ApprentissagePage() {
   const depot = depotApprentissageDrizzle(acces.db);
   const maintenant = new Date();
   const accesDepot = depotAccesDrizzle(acces.db);
-  const [lignes, faits, questions, lectures, oublis, parLia] = await Promise.all([
+  const [lignes, faits, questions, lectures, oublis, parLia, papiersParLia] = await Promise.all([
     depot.mesures(BANC_COURANT, MESURES),
     depot.faitsAppris(),
     depot.questionsParStatut(),
     accesDepot.lecturesDepuis(new Date(maintenant.getTime() - RYTHME_JOURS * 86_400_000), LECTURES_MAX),
     accesDepot.oublis(0),
     valideesParLia(acces.db),
+    papiersVraisParLia(acces.db),
   ]);
   const rythme = rythmeHoraire(lectures);
   const banc = serieBanc(lignes);
@@ -201,6 +203,11 @@ export default async function ApprentissagePage() {
               )}
             </ul>
           )}
+          {papiersParLia > 0 ? (
+            <p className="doux">
+              {papiersParLia.toLocaleString("fr-CA")} papier{papiersParLia > 1 ? "s" : ""} jugé{papiersParLia > 1 ? "s" : ""} vrai{papiersParLia > 1 ? "s" : ""} par LIA (seconde lecture concordante).
+            </p>
+          ) : null}
           <Link href="/a-valider" className="bouton bouton-second">
             À valider
           </Link>

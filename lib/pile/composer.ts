@@ -92,6 +92,8 @@ export function composerPile(params: {
   aujourdhui: string;
   /** Les faits dont LIA doute (ADR 0025, cinq par jour au plus) : ils passent EN TÊTE de la pile. */
   faitsEnTete?: readonly string[];
+  /** Les papiers dont la seconde lecture de DriveAI doute (ADR 0026) : en tête, après les faits. */
+  piecesEnTete?: readonly string[];
 }): CarteRef[] {
   const enVigueur = avisEnVigueur(params.avis);
   const passees: { ref: CarteRef; le: number }[] = [];
@@ -103,14 +105,20 @@ export function composerPile(params: {
     return false;
   };
 
+  // ⚠️ Un doute n'est en tête que s'il est encore un candidat : un papier oublié ou jugé n'y revient pas.
+  const candidats = new Set(params.pieces.map((p) => p.id));
+  const papiersEnTete = new Set((params.piecesEnTete ?? []).filter((id) => candidats.has(id)));
   const pieces = params.pieces
-    .filter((p) => garder("piece", p.id))
+    .filter((p) => !papiersEnTete.has(p.id) && garder("piece", p.id))
     .map((p) => ({ p, rang: rangPiece(p, params.aujourdhui) }))
     .sort((x, y) => x.rang - y.rang || plusRecentDabord(x.p, y.p))
     .map(({ p }): CarteRef => ({ genre: "piece", id: p.id }));
 
   const enTete = new Set(params.faitsEnTete ?? []);
-  const tete: CarteRef[] = [...enTete].filter((id) => garder("fait", id)).map((id): CarteRef => ({ genre: "fait", id }));
+  const tete: CarteRef[] = [
+    ...[...enTete].filter((id) => garder("fait", id)).map((id): CarteRef => ({ genre: "fait", id })),
+    ...[...papiersEnTete].filter((id) => garder("piece", id)).map((id): CarteRef => ({ genre: "piece", id })),
+  ];
   const aCote: CarteRef[] = [
     ...[...params.faits].filter((f) => !enTete.has(f.id) && garder("fait", f.id)).sort(plusRecentDabord).map((f): CarteRef => ({ genre: "fait", id: f.id })),
     ...[...params.questions].filter((q) => garder("question", q.id)).sort(plusRecentDabord).map((q): CarteRef => ({ genre: "question", id: q.id })),
