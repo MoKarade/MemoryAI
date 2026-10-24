@@ -346,7 +346,9 @@ code {
 .nav-marque {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   min-height: 44px;
+  min-width: 44px;
   font-size: 1.375rem;
   font-weight: var(--poids-titre);
   letter-spacing: 0.08em;
@@ -1602,8 +1604,11 @@ code {
 }
 .onglets-seg a {
   min-height: 44px;
+  /* À 390 px l'onglet n'a plus que son icône : sans plancher, il tombait à 42 px de large. */
+  min-width: 44px;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.4rem;
   padding: 0 0.9rem;
   border-radius: 999px;
