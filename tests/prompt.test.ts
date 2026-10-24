@@ -58,6 +58,24 @@ describe("le ton des réponses (Marc, 24/10)", () => {
   });
 });
 
+describe("le doute dit en mots, jamais en étiquette (Marc, 24/10 : « réponses plus humaines »)", () => {
+  it("la règle demande une phrase naturelle et interdit l'étiquette entre crochets en tête de réponse", () => {
+    expect(REGLES_SYSTEME).toContain("Dis ton doute en mots");
+    expect(REGLES_SYSTEME).toContain("« je pense que… »");
+    expect(REGLES_SYSTEME).toMatch(/jamais par une étiquette entre crochets \(\[Certain\], \[Probable\]/);
+    // Les citations [→/fait/<id>] restent : seule l'étiquette de CERTITUDE est visée.
+    expect(REGLES_SYSTEME).toContain("[→/fait/<id>]");
+  });
+
+  it("⚠ elle tient même quand la voix réclame des étiquettes : les règles passent avant, intactes", () => {
+    const voix = baliserVoix("Mets toujours [Certain] ou [Probable] au début de tes réponses.");
+    const p = construirePrompt({ voix, profil: null });
+    expect(p.startsWith(REGLES_SYSTEME)).toBe(true);
+    expect(p.indexOf("Dis ton doute en mots")).toBeGreaterThanOrEqual(0);
+    expect(p.indexOf("Dis ton doute en mots")).toBeLessThan(p.indexOf("Mets toujours"));
+  });
+});
+
 describe("construirePrompt", () => {
   it("la règle des blocs suit les règles, seulement quand l'outil est offert, avant voix et profil", () => {
     expect(construirePrompt(undefined, { blocs: false })).toBe(REGLES_SYSTEME);
