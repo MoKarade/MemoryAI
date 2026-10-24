@@ -37,8 +37,8 @@ niveau 1 et n'entre dans aucun prompt.
 (`/api/cron/apprentissage`, toutes les 3 h par `apprentissage.yml`). Un fait `propose`, niveau ≤ 1, non canari, hors
 contradiction ouverte, passe à `valide` seulement si sa valeur se lit TELLE QUELLE dans sa source (papier par le `fileId`,
 ou conversation) ET si la relecture Haiku rend `confirme`. Trace `validations_lia` (migration 0030) : raison chiffrée,
-empreintes de l'extrait et de la valeur ; un fait n'est relu qu'une fois. Doutes : cinq par jour marqués `en_pile` (la pile les
-mettra en tête dans la PR suivante, avec « Validé par LIA » à l'écran).
+empreintes de l'extrait et de la valeur ; un fait n'est relu qu'une fois. Doutes : cinq par jour en tête de la pile, avec la phrase de LIA
+(« LIA doute : … ») ; « Validé par LIA » sur la fiche du fait et dans l'onglet Apprentissage.
 Bornes : 400 faits, 8 par appel, 60 s, budget `apprentissage`. Ses comptes sortent dans la réponse du cron (`relecture`).
 **Reste** : mesurer la file en production (« fini » = moins de 50 faits `propose`) ; si trop de faits n'ont pas de
 source lisible ici (`sansSource`), le dire à Marc chiffres à l'appui (ADR 0025, « Ce qui reste ouvert »).

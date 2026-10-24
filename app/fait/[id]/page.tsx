@@ -28,7 +28,9 @@ import { depotLiensDrizzle } from "@/lib/depotLiens";
 import { autreExtremite, LIBELLES_LIEN, libelleDuFait, sourceDuFait, titreDuFait } from "@/lib/faitPhrase";
 import { rendreLisible } from "@/lib/lecture";
 import { accesDonnees, MESSAGES_MANQUE } from "@/lib/pageDonnees";
+import { relectureDuFait } from "@/lib/relectureLia";
 import { requireSession } from "@/lib/session";
+import { phraseRelecture } from "@/lib/validationLia";
 import { oublierAction, rejeterAction, validerAction } from "../../a-valider/actions";
 import { corrigerAction } from "./actions";
 
@@ -111,6 +113,10 @@ export default async function FaitPage({
   // Les liens ne portent AUCUNE valeur de fait (`pourquoi` est en clair par conception), donc
   // rien à déchiffrer ici — et c'est cette phrase qui rend un lien explicable à l'écran.
   const voisins = await depotLiensDrizzle(acces.db).voisinsDe(f.id, MAX_VOISINS);
+  // ADR 0025 : ce que LIA a dit de ce fait en le relisant seule. ⚠️ « Validé par LIA » ne se dit que
+  // si le fait EST validé : Marc a pu le rejeter depuis, et la trace, elle, ne change pas.
+  const relu = await relectureDuFait(acces.db, acces.cle, f);
+  const phraseLia = relu && (relu.decision !== "valide" || r.fait.statut === "valide") ? phraseRelecture(relu) : null;
 
   const questionPourLia = `Parle-moi de ce que tu sais sur « ${libelle} » (${f.domaine}).`;
 
@@ -128,6 +134,7 @@ export default async function FaitPage({
           </p>
         )}
         <CarteFait f={f} canari={r.fait.canari} detail actions={{ valider: validerAction, rejeter: rejeterAction, oublier: oublierAction }} />
+        {phraseLia && <p className="hint">{phraseLia}</p>}
 
         <div className="actions-fait">
           <Link href={`/chat?a-propos=${encodeURIComponent(questionPourLia)}`} className="bouton bouton-second">

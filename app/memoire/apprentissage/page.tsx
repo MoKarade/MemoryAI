@@ -33,6 +33,7 @@ import { heureQuebec } from "@/lib/memoire/acces";
 import { depotAccesDrizzle } from "@/lib/memoire/depotAcces";
 import { depotApprentissageDrizzle } from "@/lib/memoire/depotApprentissage";
 import { accesDonnees, MESSAGES_MANQUE } from "@/lib/pageDonnees";
+import { valideesParLia } from "@/lib/relectureLia";
 import { requireSession } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
@@ -144,12 +145,13 @@ export default async function ApprentissagePage() {
   const depot = depotApprentissageDrizzle(acces.db);
   const maintenant = new Date();
   const accesDepot = depotAccesDrizzle(acces.db);
-  const [lignes, faits, questions, lectures, oublis] = await Promise.all([
+  const [lignes, faits, questions, lectures, oublis, parLia] = await Promise.all([
     depot.mesures(BANC_COURANT, MESURES),
     depot.faitsAppris(),
     depot.questionsParStatut(),
     accesDepot.lecturesDepuis(new Date(maintenant.getTime() - RYTHME_JOURS * 86_400_000), LECTURES_MAX),
     accesDepot.oublis(0),
+    valideesParLia(acces.db),
   ]);
   const rythme = rythmeHoraire(lectures);
   const banc = serieBanc(lignes);
@@ -191,6 +193,12 @@ export default async function ApprentissagePage() {
                   <span>{c.n.toLocaleString("fr-CA")}</span>
                 </li>
               ))}
+              {parLia > 0 && (
+                <li>
+                  <span>dont validés par LIA</span>
+                  <span>{parLia.toLocaleString("fr-CA")}</span>
+                </li>
+              )}
             </ul>
           )}
           <Link href="/a-valider" className="bouton bouton-second">

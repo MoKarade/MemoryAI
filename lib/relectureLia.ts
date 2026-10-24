@@ -15,7 +15,7 @@ import { and, count, desc, eq, isNotNull, isNull, lte, notExists, sql } from "dr
 import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
 import * as schema from "./db/schema";
 import { estCanari } from "./canari";
-import { chiffrer, empreinte, type Cle } from "./chiffrement";
+import { chiffrer, dechiffrer, empreinte, type Cle } from "./chiffrement";
 import type { ClientModele } from "./chat/agent";
 import { depotConversationsDrizzle } from "./conversations/depot";
 import { budgetOuvert, coutUsd, jourQuebec, lireUsage, type IdModele } from "./coutChat";
@@ -143,6 +143,34 @@ export function depotRelectureDrizzle(db: Base): DepotRelecture {
           .where(and(eq(schema.faits.id, t.faitId), eq(schema.faits.statut, "propose"), isNull(schema.faits.supprimeLe)));
     },
   };
+}
+
+/** Les doutes de LIA à mettre en tête de la pile : encore `propose`, les plus récents d'abord. */
+export async function doutesEnTete(db: Base): Promise<string[]> {
+  const rows = await db
+    .selectDistinct({ id: V.faitId, le: V.reluLe })
+    .from(V)
+    .innerJoin(schema.faits, eq(schema.faits.id, V.faitId))
+    .where(and(eq(V.enPile, true), eq(schema.faits.statut, "propose"), isNull(schema.faits.supprimeLe)))
+    .orderBy(desc(V.reluLe));
+  return rows.map((r) => r.id);
+}
+
+/** Combien de faits VALIDES le sont par LIA (et non par Marc) : l'onglet Apprentissage le dit. */
+export async function valideesParLia(db: Base): Promise<number> {
+  const [r] = await db
+    .select({ n: count() })
+    .from(V)
+    .innerJoin(schema.faits, eq(schema.faits.id, V.faitId))
+    .where(and(eq(V.decision, "valide"), eq(schema.faits.statut, "valide"), isNull(schema.faits.supprimeLe)));
+  return r?.n ?? 0;
+}
+
+/** Ce que LIA a dit d'UN fait, raison déchiffrée ; `null` s'il n'a jamais été relu. */
+export async function relectureDuFait(db: Base, cle: Cle, f: Pick<FaitLisible, "id" | "niveau">): Promise<{ decision: string; signalCode: boolean; raison: string | null } | null> {
+  const [t] = await db.select().from(V).where(eq(V.faitId, f.id)).orderBy(desc(V.reluLe)).limit(1);
+  if (!t) return null;
+  return { decision: t.decision, signalCode: t.signalCode, raison: t.raison ? dechiffrer(cle, t.raison, `${f.id}#lia`, f.niveau) : null };
 }
 
 export interface ContexteRelecture {
