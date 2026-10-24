@@ -79,6 +79,8 @@ clé Anthropic : coût nul. `memoryai_etat` rend les comptes et la dernière mes
   `components/ConversationMaison.tsx`, verrou `tests/conversationMaison.test.ts`) ; `/chat` reste la conversation complète.
   Écart B (tuiles des panneaux) : Monde et Idées ont les tuiles de la maquette, vides tant qu'aucune source ne les
   remplit (`lib/accueil/tableaux.ts`, `components/TableauEspace.tsx`, verrou `tests/tableauxMaison.test.ts`).
+  Outils aussi : vrais comptes (outils, appels du mois de Québec par outil, `lib/accueil/depotAccueil.ts`), un tiret
+  pour « refusés à tort » que rien ne mesure, familles vides honnêtes hors Lire et Afficher.
 - Cinquième pas : **l'onglet Accès de la page Mémoire** (`/memoire/acces`). Part des faits validés par niveau, journal d'accès filtrable par niveau
   servi (métadonnées signées seulement), carte horaire des lectures sur 30 jours à l'heure de Québec, oublis
   (compte et dates) et garde-fous, chacun pointant vers le code qui le tient. Lectures : `lib/memoire/depotAcces.ts`

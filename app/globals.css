@@ -1576,6 +1576,64 @@ code {
   min-height: 44px;
   color: var(--texte);
 }
+.tab-valeur {
+  font-variant-numeric: tabular-nums;
+  color: var(--texte);
+}
+.tab-chiffres,
+.tab-barres {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+}
+.tab-chiffres {
+  grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
+  gap: 0.6rem;
+}
+.tab-chiffres li {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-petit);
+  color: var(--texte-doux);
+}
+.tab-chiffres b {
+  font-size: 1.5rem;
+  font-weight: 300;
+  font-variant-numeric: tabular-nums;
+  color: var(--texte);
+}
+.tab-barres {
+  gap: 0.55rem;
+}
+.tab-barres li {
+  display: grid;
+  grid-template-columns: minmax(0, 9rem) 1fr auto;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.88rem;
+}
+.tab-barres-libelle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--texte-doux);
+}
+.tab-barre {
+  display: block;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--surface-douce);
+  overflow: hidden;
+}
+.tab-barre i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--teinte, var(--repere));
+}
 
 /* « Parler » dans la maison (maquette v5, écart A7, `components/ConversationMaison.tsx`) : le fil
    défile seul, la saisie reste en bas ; suggestions et bouton à 44 px, champ à 16 px. */

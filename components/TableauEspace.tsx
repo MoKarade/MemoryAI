@@ -4,6 +4,7 @@
 
 import Link from "next/link";
 import type { Corps, Tableau } from "@/lib/accueil/tableaux";
+import { IconeEspace } from "./IconeEspace";
 import { Tuile, Vide } from "./Tuile";
 
 /** Le rond de points de LIA, à côté de la question (`ring()` de la maquette). */
@@ -19,17 +20,55 @@ function RondLia() {
 }
 
 function CorpsTuile({ c }: { c: Corps }) {
-  if (c.genre === "vide") return <Vide>{c.texte}</Vide>;
-  return (
-    <p className="tab-texte">
-      {c.texte}{" "}
-      {c.lien ? (
-        <Link href={c.lien.href} className="tab-lien">
-          {c.lien.libelle}
-        </Link>
-      ) : null}
-    </p>
-  );
+  switch (c.genre) {
+    case "vide":
+      return <Vide>{c.texte}</Vide>;
+    case "texte":
+      return (
+        <p className="tab-texte">
+          {c.texte}{" "}
+          {c.lien ? (
+            <Link href={c.lien.href} className="tab-lien">
+              {c.lien.libelle}
+            </Link>
+          ) : null}
+        </p>
+      );
+    case "chiffres":
+      return (
+        <ul className="tab-chiffres">
+          {c.chiffres.map((x) => (
+            <li key={x.libelle}>
+              <IconeEspace nom={x.icone} taille={18} />
+              <b>{x.valeur}</b>
+              <small>{x.libelle}</small>
+            </li>
+          ))}
+        </ul>
+      );
+    case "barres":
+      return (
+        <ul className="tab-barres" aria-label={c.resume}>
+          {c.barres.map((b) => (
+            <li key={b.libelle}>
+              <span className="tab-barres-libelle">{b.libelle}</span>
+              <span className="tab-barre" aria-hidden="true">
+                <i style={{ width: `${Math.max(2, Math.round(b.part * 100))}%` }} />
+              </span>
+              <span className="tab-valeur">{b.valeur}</span>
+            </li>
+          ))}
+        </ul>
+      );
+    case "pastilles":
+      return (
+        <ul className="maison-puces">
+          {c.elements.map((e) => (
+            <li key={e}>{e}</li>
+          ))}
+        </ul>
+      );
+  }
 }
 
 export function TableauEspace({ tableau }: { tableau: Tableau }) {
