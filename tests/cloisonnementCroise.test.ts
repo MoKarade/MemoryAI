@@ -36,6 +36,7 @@ import { GET as getFile, POST as postFile } from "../app/api/pieces/file/route";
 import { POST as postMcp } from "../app/api/mcp/route";
 import { POST as postFaits } from "../app/api/faits/route";
 import { POST as postPieces } from "../app/api/pieces/route";
+import { POST as postEvenements } from "../app/api/evenements/route";
 import { LIGNEE_EXTRACTEURS } from "../lib/pieces/lignee";
 import { BON } from "./fixtures/faits";
 
@@ -326,6 +327,7 @@ describe("5. INC-31 — tests d'acceptation de l'ADR 0015", () => {
       ["GET /api/pieces/file", "/api/pieces/file?extracteur=x&limite=1", "GET", getFile, [J.caraiEcriture, J.driveaiLecture]],
       ["POST /api/pieces/file", "/api/pieces/file", "POST", postFile, [J.caraiEcriture, J.driveaiLecture]],
       ["POST /api/avancement", "/api/avancement", "POST", postAvancement, [J.driveaiLecture]],
+      ["POST /api/evenements", "/api/evenements", "POST", postEvenements, [J.caraiEcriture, J.claudecodeEcriture, J.driveaiLecture]],
     ] as const;
 
     for (const [nom, url, methode, route, refuses] of cas) {

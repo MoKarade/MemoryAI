@@ -53,6 +53,11 @@ export const ROUTES_A_AUTH_PROPRE = [
    * pas de conversation.
    */
   "/api/conversations",
+  /**
+   * Les exports Messenger que DriveAI relit (ADR 0020). Jeton d'écrivain de DriveAI SEULEMENT :
+   * c'est lui qui tient le Drive ; aucune autre app n'écrit de messages.
+   */
+  "/api/evenements",
   /** Connecteur MCP : OAuth 2.1 (`lib/mcp/oauth.ts`), et rien d'autre. */
   "/api/mcp",
   /**

@@ -78,8 +78,9 @@ async function inserer(champs: Partial<typeof FAIT> & { id: string; empreinte: s
 // invente une table de jointure, un reliquat d'essai. Sept de l'ADR 0001, puis les dépenses
 // du chat, les questions, les conversations et leurs messages (ADR 0002), les liens du
 // graphe (ADR 0002 §5.3), puis les pièces et leurs exemplaires (ADR 0004 §6.2), puis le banc
-// de la refonte LIA (MemoryAI#69), puis l'état partagé de LIA.
-describe("les vingt-six tables", () => {
+// de la refonte LIA (MemoryAI#69), puis l'état partagé de LIA, puis les événements et les
+// personnes (ADR 0020).
+describe("les trente tables", () => {
   it("existent, et pas une de plus", async () => {
     const r = await pg.query<{ table_name: string }>(
       `SELECT table_name FROM information_schema.tables WHERE table_schema='public' ORDER BY 1`,
@@ -98,6 +99,9 @@ describe("les vingt-six tables", () => {
       "chiffre_v1_archive",
       "conversations",
       "depenses_chat",
+      // [ADR 0020] Les événements datés (messages) et qui y parle (migration 0026).
+      "evenement_personnes",
+      "evenements",
       "faits",
       // [L35] Les lectures tentées sans résultat (migration 0016, ADR 0007).
       "lectures_tentees",
@@ -107,6 +111,9 @@ describe("les vingt-six tables", () => {
       "messages",
       "oublis",
       "perimetres",
+      // [ADR 0020] Les personnes et leurs alias (migration 0026).
+      "personne_alias",
+      "personnes",
       "piece_exemplaires",
       "pieces",
       // [L34] Les plafonds de dépense, réglables depuis l'app (migration 0015).
