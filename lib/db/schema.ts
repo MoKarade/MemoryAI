@@ -972,6 +972,25 @@ export const demandes = pgTable(
   (t) => [uniqueIndex("demandes_empreinte").on(t.empreinte), index("demandes_demande_le").on(t.demandeLe)],
 );
 
+/**
+ * Les NOTES que LIA laisse au coordinateur (ADR 0022, migration 0028). Des observations, jamais
+ * des consignes : `texte` est CHIFFRÉ au niveau 1 (AAD `note_lia|<id>|1`), borné par
+ * `lib/lia/notes.ts` ; `jour` (Québec) porte le plafond quotidien, `luLe` la lecture.
+ */
+export const notesLia = pgTable(
+  "notes_lia",
+  {
+    id: text("id").primaryKey(),
+    genre: text("genre").notNull(),
+    app: text("app").notNull(),
+    texte: text("texte").notNull(),
+    jour: text("jour").notNull(),
+    creeLe: timestamp("cree_le", { withTimezone: true }).notNull().defaultNow(),
+    luLe: timestamp("lu_le", { withTimezone: true }),
+  },
+  (t) => [index("notes_lia_jour").on(t.jour), index("notes_lia_lu_le").on(t.luLe)],
+);
+
 export type Fait = typeof faits.$inferSelect;
 export type NouveauFait = typeof faits.$inferInsert;
 export type Provenance = typeof provenances.$inferSelect;

@@ -111,6 +111,8 @@ describe("les trente tables", () => {
       "lia_etat",
       "liens",
       "messages",
+      // [ADR 0022] Les notes de LIA au coordinateur (migration 0028).
+      "notes_lia",
       "oublis",
       "perimetres",
       // [ADR 0020] Les personnes et leurs alias (migration 0026).
