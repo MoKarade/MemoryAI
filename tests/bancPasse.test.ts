@@ -82,6 +82,6 @@ describe("la passe du banc", () => {
   });
 
   it("le banc courant a un nom stable", () => {
-    expect(BANC_COURANT).toBe("papiers-v1");
+    expect(BANC_COURANT).toBe("papiers-v2");
   });
 });

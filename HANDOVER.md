@@ -29,13 +29,15 @@ les anciennes tâches d'écran R3 à R7 (#11 à #15) et #56 sont remplacées par
 
 **Lot 0, le banc de questions (MemoryAI#69).** `lib/banc/banc.ts` (pur) tire 40 questions d'un parc de papiers N0 à N2 :
 huit par capacité (extraction, multi-sources, temporel, mise à jour, abstention, soit 20 % d'abstention), les note
-(rappel@20, abstention correcte = rien rendu). `lib/banc/passe.ts` fige le banc `papiers-v1` UNE fois, chiffré
+(rappel@20, abstention correcte = rien rendu). `lib/banc/passe.ts` fige le banc `papiers-v2` UNE fois, chiffré
 (`banc_questions`, AAD `banc|<id>`, migration 0023), puis le mesure au plus une fois par jour avec la recherche plein
 texte nourrie des mots-clés (`banc_mesures`, des nombres seulement). Elle tourne au réveil de l'apprentissage, avant la
 clé Anthropic : coût nul. `memoryai_etat` rend les comptes et la dernière mesure, jamais une question.
 - Le dépôt est public : seuls les gabarits sont versionnés, les questions réelles ne vivent qu'en base, chiffrées.
 - Le N3 (identité, santé) n'est pas dans ce banc ; il aura le sien avec le lot 6. Un banc neuf prend un nom neuf
-  (`messages-v1`…), jamais celui-ci : les lots suivants se comparent à la mesure de base de `papiers-v1`.
+  (`messages-v1`…), jamais celui-ci : les lots suivants se comparent à la mesure de base de `papiers-v2`.
+- `papiers-v1` (figé sous la clé retirée le 23/10, ADR 0019) est illisible : le sauvetage n'a pas rescellé
+  `banc_questions`, chaque passe échouait au déchiffrement. Ses lignes restent en base, jamais réécrites.
 - Verrou : `tests/banc.test.ts` (papiers fictifs).
 
 **Lot 5, l'interface de la maquette v5 (MemoryAI#74), avancé avant les lots 1 à 4** (Marc valide la maquette le 22/10,
