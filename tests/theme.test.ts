@@ -298,6 +298,19 @@ describe("socle visuel — cibles tactiles et champs", () => {
     }
   });
 
+  // Audit du 24/10 (axe et mesure à 390 px) : le logo faisait 36 px de large, les onglets de la
+  // Mémoire 42 px une fois réduits à leur icône. Une cible se mesure dans LES DEUX sens.
+  it("le logo de la barre et les onglets de la Mémoire font au moins 44 × 44 px", () => {
+    for (const classe of ["nav-marque", "onglets-seg a"]) {
+      const corps = regle(classe);
+      for (const cote of ["min-height", "min-width"]) {
+        const m = corps.match(new RegExp(`${cote}:\\s*(\\d+)px`));
+        expect(m, `.${classe} : ${cote} en px attendu`).not.toBeNull();
+        expect(Number(m?.[1]), `.${classe} : ${cote}`).toBeGreaterThanOrEqual(44);
+      }
+    }
+  });
+
   it("`.champ` est à 16 px au moins (en dessous, iOS zoome tout seul)", () => {
     const m = regle("champ").match(/font-size:\s*([\d.]+)rem/);
     expect(m, ".champ : font-size en rem attendu").not.toBeNull();
