@@ -603,6 +603,11 @@ a.pastille {
   align-items: center;
   min-height: 44px;
 }
+/* Un lien court (« détail ») fait 44 px dans les DEUX sens : relevé à 36 px de large (audit du 24/10). */
+.lien-cible {
+  justify-content: center;
+  min-width: 44px;
+}
 /* ── Chat : l'écran de Lia (R2 de la refonte, MemoryAI#10). Une colonne calme : la réponse de Lia
    est du TEXTE sur le fond, sans bulle ; seul Marc a sa bulle. Les réglages et l'historique sont
    repliés dans un `<details>` natif (clavier et lecteur d'écran gratuits). Aucune couleur neuve. ── */
