@@ -7,7 +7,10 @@
 - **Codé, la météo (24/10/2026)** : `lib/monde/meteo.ts`, table `monde_cache` (migration 0029),
   outil `monde_meteo` dans `lib/chat/agent.ts` (chat et hub, hors du MCP), tuiles « Météo »,
   « Sept jours » et « Sources » de l'espace Monde. La ville est le réglage `MEMORYAI_METEO_VILLE`
-  (identifiant ECCC, niveau 0, absent : « météo non réglée »). L'actualité suit dans une autre PR.
+  (identifiant ECCC, niveau 0, absent : « météo non réglée »).
+- **Codé, l'actualité (24/10/2026)** : `lib/monde/actualite.ts`, outil `monde_actualite`, tuile
+  « Actualité ». Liste fermée : Radio-Canada « À la une » et « International » (`FILS`). Des titres
+  seulement, jamais un lien ; un titre que `estCanari` marque est retiré et compté.
 - **Vérifié (24/10/2026)** : la licence d'ECCC
   ([eccc-msc.github.io/open-data/licence](https://eccc-msc.github.io/open-data/licence/readme_fr/))
   permet tout usage légitime, exige « Source des données : Environnement et Changement climatique
@@ -46,5 +49,5 @@ un tiers, donc un canal d'injection, comme une offre d'emploi ou un courriel.
 
 ## Ce qui reste ouvert
 
-- La liste des fils d'actualité, et la ville de la météo : à choisir par Marc.
+- La liste des fils et la ville : posées sur la recommandation (« Fais tout » de Marc) ; Marc peut les changer.
 - [À vérifier] les conditions d'ECCC et de chaque fil, citées dans cet ADR avant le code.
