@@ -1,0 +1,144 @@
+// tests/relirePieces.test.ts — la seconde lecture d'un papier, sur une VRAIE Postgres (ADR 0026).
+//
+// Données FICTIVES. Ce qui se prouve ici : la première lecture est déchiffrée EN MÉMOIRE et
+// jamais rendue, la trace ne garde que des empreintes, un même extracteur ne se confirme pas
+// lui-même, et cinq doutes par jour au plus passent en tête de la pile.
+
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { readdirSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { PGlite } from "@electric-sql/pglite";
+import { drizzle } from "drizzle-orm/pglite";
+import { eq } from "drizzle-orm";
+import * as schema from "../lib/db/schema";
+import { deriverCle } from "../lib/chiffrement";
+import { depotPiecesDrizzle } from "../lib/pieces/depot";
+import { ecrireLotPieces, EcriturePiecesRetireeError } from "../lib/pieces/ecrire";
+import { depotRelectureDrizzle } from "../lib/pieces/depotRelecture";
+import { DOUTES_PAR_JOUR, LotRelecturesTropGrandError, relireLot } from "../lib/pieces/relire";
+import { LOT_MAX_RELECTURES } from "../lib/pieces/secondeLecture";
+import type { Ecrivain } from "../lib/jetons";
+
+const cle = deriverCle(Buffer.alloc(32, 7).toString("base64"));
+const DRIVEAI: Ecrivain = { appId: "driveai", role: "ecriture", fiabilites: ["document-officiel"] };
+const MIDI = new Date("2026-10-24T16:00:00Z");
+
+let pg: PGlite;
+let db: ReturnType<typeof drizzle>;
+
+function papier(fileId: string, extra: Record<string, unknown> = {}) {
+  return {
+    type: "facture",
+    emetteur: "Hydro Exemple",
+    titulaire: "Camille Exemple",
+    titulaire_confiance: 0.9,
+    annee: 2026,
+    domaine: "03 · Logement & véhicule",
+    date_document: "2026-03-01",
+    date_echeance: "2026-04-01",
+    resume: "Facture fictive.",
+    exemplaires: [{ file_id: fileId, chemin: null }],
+    extracteur: "sonnet-vision-v3-a",
+    ...extra,
+  };
+}
+
+function relecture(fileId: string, extra: Record<string, unknown> = {}) {
+  return {
+    file_id: fileId,
+    titulaire: "EXEMPLE Camille",
+    emetteur: "hydro exemple",
+    date_document: "2026-03-01",
+    date_echeance: "2026-04-01",
+    extracteur: "haiku-ocr-relecture-v1",
+    ...extra,
+  };
+}
+
+const relire = (lot: unknown[], maintenant = MIDI) => relireLot(lot, DRIVEAI, cle, depotRelectureDrizzle(db), maintenant);
+
+beforeAll(async () => {
+  pg = new PGlite();
+  for (const f of readdirSync(resolve(process.cwd(), "drizzle")).filter((f) => f.endsWith(".sql")).sort()) {
+    for (const s of readFileSync(resolve(process.cwd(), "drizzle", f), "utf8").split("--> statement-breakpoint")) {
+      if (s.trim()) await pg.exec(s);
+    }
+  }
+  db = drizzle(pg, { schema });
+  const lot = [
+    papier("f-vrai"),
+    papier("f-doute"),
+    papier("f-n0", { domaine: "08 · Perso & projets" }),
+    papier("f-n3", { domaine: "04 · Immigration" }),
+    ...Array.from({ length: DOUTES_PAR_JOUR + 1 }, (_, i) => papier(`f-d${i}`)),
+  ];
+  const r = await ecrireLotPieces(lot, DRIVEAI, cle, depotPiecesDrizzle(db));
+  expect(r.acceptees).toBe(lot.length);
+});
+
+afterAll(async () => {
+  await pg?.close();
+});
+
+const traces = (fileId: string) =>
+  db
+    .select({ t: schema.relecturesPieces })
+    .from(schema.relecturesPieces)
+    .innerJoin(schema.pieceExemplaires, eq(schema.pieceExemplaires.pieceId, schema.relecturesPieces.pieceId))
+    .where(eq(schema.pieceExemplaires.fileId, fileId))
+    .then((rows) => rows.map((x) => x.t));
+
+describe("relireLot", () => {
+  it("concordance complète : vrai, et la trace ne porte aucune valeur", async () => {
+    const r = await relire([relecture("f-vrai")]);
+    expect(r).toMatchObject({ recus: 1, vrais: 1, doutes: 0, exclus: 0, refusees: [] });
+    const [t] = await traces("f-vrai");
+    expect(t).toMatchObject({ decision: "vrai", divergents: null, jour: "2026-10-24", enPile: false });
+    expect(JSON.stringify(t)).not.toMatch(/Camille|Hydro|2026-03-01/);
+    expect(t!.empreintePremiere).toBe(t!.empreinteSeconde);
+  });
+
+  it("ROUGE : une discordance laisse le papier à Marc, en tête de sa pile, champ nommé", async () => {
+    const r = await relire([relecture("f-doute", { date_echeance: "2026-05-01" })]);
+    expect(r).toMatchObject({ vrais: 0, doutes: 1 });
+    const [t] = await traces("f-doute");
+    expect(t).toMatchObject({ decision: "doute", divergents: "dateEcheance", enPile: true });
+    expect(t!.empreintePremiere).not.toBe(t!.empreinteSeconde);
+  });
+
+  it("un papier de niveau 0 se déchiffre aussi : il est scellé comme les autres", async () => {
+    expect((await relire([relecture("f-n0")])).vrais).toBe(1);
+  });
+
+  it("niveau 3 : exclu, rien n'est écrit", async () => {
+    expect(await relire([relecture("f-n3")])).toMatchObject({ vrais: 0, doutes: 0, exclus: 1 });
+    expect(await traces("f-n3")).toEqual([]);
+  });
+
+  it("la même relecture renvoyée ne crée rien ; un fichier inconnu ou le même extracteur sont refusés", async () => {
+    const r = await relire([relecture("f-vrai"), relecture("f-absent"), relecture("f-doute", { extracteur: "sonnet-vision-v3-a" }), { file_id: "x" }]);
+    expect(r).toMatchObject({ vrais: 0, dejaRelus: 1 });
+    expect(r.refusees).toEqual([
+      { index: 1, code: "inconnu" },
+      { index: 2, code: "meme_extracteur" },
+      { index: 3, code: "invalide" },
+    ]);
+    expect(await traces("f-vrai")).toHaveLength(1);
+  });
+
+  it(`au plus ${DOUTES_PAR_JOUR} doutes par jour en tête de la pile ; le lendemain, la place revient`, async () => {
+    const lot = Array.from({ length: DOUTES_PAR_JOUR + 1 }, (_, i) => relecture(`f-d${i}`, { emetteur: "Autre Exemple" }));
+    const r = await relire(lot.slice(0, DOUTES_PAR_JOUR));
+    expect(r.doutes).toBe(DOUTES_PAR_JOUR);
+    const enPile = await db.select().from(schema.relecturesPieces).where(eq(schema.relecturesPieces.enPile, true));
+    expect(enPile).toHaveLength(DOUTES_PAR_JOUR); // f-doute + 4 : le cinquième d'aujourd'hui attend
+    await relire(lot.slice(DOUTES_PAR_JOUR), new Date("2026-10-25T16:00:00Z"));
+    expect((await traces(`f-d${DOUTES_PAR_JOUR}`))[0]).toMatchObject({ jour: "2026-10-25", enPile: true });
+  });
+
+  it("un lot trop grand ou un jeton de lecture : refusés en entier, avant toute écriture", async () => {
+    await expect(relire(Array.from({ length: LOT_MAX_RELECTURES + 1 }, () => ({})))).rejects.toBeInstanceOf(LotRelecturesTropGrandError);
+    await expect(relireLot([], { ...DRIVEAI, role: "lecture" }, cle, depotRelectureDrizzle(db))).rejects.toBeInstanceOf(EcriturePiecesRetireeError);
+    await expect(relireLot([], { ...DRIVEAI, appId: "carai" }, cle, depotRelectureDrizzle(db))).rejects.toBeInstanceOf(EcriturePiecesRetireeError);
+  });
+});

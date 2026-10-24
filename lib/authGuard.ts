@@ -35,6 +35,7 @@ export const ROUTES_A_AUTH_PROPRE = [
   "/api/faits",
   "/api/pieces",
   "/api/pieces/file",
+  "/api/pieces/relecture",
   /**
    * Les COMPTES de la mémoire, pour une app qui l'alimente (23/09/2026). Jeton de LECTURE
    * suffisant : rien n'y écrit. Publie des nombres, jamais un fait ni un papier — c'est ce

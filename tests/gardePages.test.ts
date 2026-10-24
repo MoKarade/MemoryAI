@@ -28,6 +28,7 @@ const ROUTES_A_MARQUEUR: Record<string, { route: string; marqueur: RegExp }> = {
   "app/api/evenements/route.ts": { route: "/api/evenements", marqueur: /ecrivainAutorise\(/ },
   "app/api/pieces/route.ts": { route: "/api/pieces", marqueur: /ecrivainAutorise\(/ },
   "app/api/pieces/file/route.ts": { route: "/api/pieces/file", marqueur: /ecrivainAutorise\(/ },
+  "app/api/pieces/relecture/route.ts": { route: "/api/pieces/relecture", marqueur: /ecrivainAutorise\(/ },
   "app/api/etat/route.ts": { route: "/api/etat", marqueur: /identifierEcrivain\(/ },
   "app/api/avancement/route.ts": { route: "/api/avancement", marqueur: /ecrivainAutorise\(/ },
   "app/api/mcp/route.ts": { route: "/api/mcp", marqueur: /verifyAccessToken\(/ },
