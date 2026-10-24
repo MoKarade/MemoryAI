@@ -78,7 +78,8 @@ export async function repondreLia(demande: DemandeAsk, origine: string, lecteur:
       admin: depotAdminDrizzle(db),
       couches,
     });
-    if (r.blocsRejetes > 0) console.error(`[${lecteur}] ${r.blocsRejetes} bloc(s) rejeté(s)`);
+    // Les raisons portent des chemins de champs, jamais des valeurs : un journal n'est pas chiffré.
+    if (r.blocsRejetes > 0) console.error(`[${lecteur}] ${r.blocsRejetes} bloc(s) rejeté(s) : ${r.raisonsBlocs.join(" ; ")}`);
     const reponse = composerReponse(r.reponse, origine, r.blocs);
     if (!reponse) return erreur(503, "reponse_vide", "Le modèle n'a rien répondu.");
     return Response.json(reponse, { headers: NO_STORE });
