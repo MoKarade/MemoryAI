@@ -46,8 +46,21 @@ describe("faitsParSource", () => {
   });
 });
 
-describe("nombrePapiers", () => {
+describe("nombrePapiers et papiersParDomaine", () => {
   it("rend zéro sans papier", async () => {
     expect(await depotMemoireDrizzle(db).nombrePapiers()).toBe(0);
+    expect(await depotMemoireDrizzle(db).papiersParDomaine()).toEqual([]);
+  });
+
+  it("compte les papiers gardés par dossier ; un papier supprimé ne compte plus", async () => {
+    const papier = (id: string, domaine: string | null) => ({ id, niveau: 2, resumeEnClair: false, extracteur: "fictif", empreinte: `empreinte-${id}`, domaine });
+    await db.insert(schema.pieces).values([papier("p1", "Dossier A"), papier("p2", "Dossier A"), papier("p3", null), papier("p4", "Dossier B")]);
+    await db.update(schema.pieces).set({ supprimeLe: new Date() }).where(eq(schema.pieces.id, "p4"));
+    const r = (await depotMemoireDrizzle(db).papiersParDomaine()).sort((a, b) => (a.domaine ?? "").localeCompare(b.domaine ?? ""));
+    expect(r).toEqual([
+      { domaine: null, n: 1 },
+      { domaine: "Dossier A", n: 2 },
+    ]);
+    expect(await depotMemoireDrizzle(db).nombrePapiers()).toBe(3);
   });
 });

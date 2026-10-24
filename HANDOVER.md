@@ -64,6 +64,9 @@ clé Anthropic : coût nul. `memoryai_etat` rend les comptes et la dernière mes
   `tests/depotMemoire.test.ts`.
   Puis Croissance (faits validés tenus à la fin de chacun des douze derniers mois, Québec) et Les plus reliés (les
   huit faits aux plus de liens, nommés par leur prédicat).
+  Puis À valider (ce que la pile « vrai / faux » attend, par genre, lien vers `/questions` ; le compte vient de
+  `resteAJuger`, `lib/pile/charger.ts`, partagé avec l'accueil) et Papiers, repliée (papiers gardés par dossier
+  DriveAI, `domaine` en clair, rien de déchiffré).
 - Quatrième pas, en deux PR : **l'accueil devient la maison de LIA** (maquette v5). D'abord ses fondations, pures
   et testées, encore montées nulle part : l'orbite (`lib/accueil/orbite.ts`), le décor, sol en perspective et tapis
   des heures (`lib/accueil/decor.ts`), ce que montre chaque espace (`contenuEspaces`, `lib/accueil/espaces.ts` :

@@ -1,5 +1,5 @@
 // lib/memoire/tuilesMemoire.ts — les tuiles de l'onglet Mémoire autour du réseau (maquette v5,
-// écart C) : Thèmes, Sources, Croissance et Les plus reliés. PUR : la page lit la base, ce module compose, `CorpsTuile` dessine.
+// écart C) : Thèmes, Sources, Croissance, Les plus reliés, À valider et Papiers. PUR : la page lit la base, ce module compose, `CorpsTuile` dessine.
 //
 // ⚠️ Des COMPTES et des dates, jamais une valeur de fait : comme le réseau, ces tuiles montrent la
 // forme de la mémoire, pas son contenu.
@@ -7,6 +7,7 @@
 import type { Corps } from "@/lib/accueil/tableaux";
 import type { SOURCES } from "@/lib/db/schema";
 import { jourQuebec } from "@/lib/coutChat";
+import type { GenreCarte } from "@/lib/pile/composer";
 import { domaineDe } from "./reseau";
 
 type Source = (typeof SOURCES)[number];
@@ -80,5 +81,35 @@ export function corpsPlusRelies(faits: readonly { id: string; predicat: string }
     genre: "barres",
     barres: top.map((x) => ({ libelle: x.f.predicat, valeur: String(x.n), part: x.n / max })),
     resume: `Les faits les plus reliés : ${top.map((x) => `${x.f.predicat} ${x.n}`).join(", ")}.`,
+  };
+}
+
+const A_JUGER: Record<GenreCarte, [string, string, string]> = {
+  piece: ["Papiers lus", "papier lu", "papiers lus"],
+  fait: ["Déductions", "déduction", "déductions"],
+  question: ["Questions", "question", "questions"],
+};
+
+/** À valider : ce que la pile « vrai / faux » attend de toi, par genre, et le lien pour juger. */
+export function corpsAValider(reste: Readonly<Record<GenreCarte, number>>): Corps[] {
+  const genres = (["piece", "fait", "question"] as const).filter((g) => reste[g] > 0);
+  if (genres.length === 0) return [{ genre: "vide", texte: "Rien à juger : la pile est vide." }];
+  const total = genres.reduce((t, g) => t + reste[g], 0);
+  return [
+    { genre: "liste", elements: genres.map((g) => ({ libelle: A_JUGER[g][0], detail: `${reste[g]} ${A_JUGER[g][reste[g] > 1 ? 2 : 1]} à juger` })) },
+    { genre: "texte", texte: `${total} à juger en tout.`, lien: { href: "/questions", libelle: "Juger maintenant" } },
+  ];
+}
+
+/** Les papiers : combien de papiers gardés par dossier DriveAI, le plus gros d'abord. */
+export function corpsPapiers(parDomaine: readonly { domaine: string | null; n: number }[]): Corps {
+  const lignes = parDomaine.filter((d) => d.n > 0).map((d) => ({ libelle: d.domaine ?? "Sans dossier", n: d.n }));
+  lignes.sort((a, b) => b.n - a.n || a.libelle.localeCompare(b.libelle));
+  if (lignes.length === 0) return { genre: "vide", texte: "Aucun papier gardé pour l'instant." };
+  const max = lignes[0]?.n ?? 1;
+  return {
+    genre: "barres",
+    barres: lignes.map((l) => ({ libelle: l.libelle, valeur: l.n.toLocaleString("fr-CA"), part: l.n / max })),
+    resume: `Papiers gardés par dossier : ${lignes.map((l) => `${l.libelle} ${l.n}`).join(", ")}.`,
   };
 }

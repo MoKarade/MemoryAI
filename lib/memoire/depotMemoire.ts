@@ -14,6 +14,8 @@ export interface DepotMemoire {
   faitsParSource(): Promise<{ source: (typeof schema.SOURCES)[number]; n: number; dernier: Date | null }[]>;
   /** Les papiers gardés (non supprimés). */
   nombrePapiers(): Promise<number>;
+  /** Les papiers gardés, par dossier DriveAI (`domaine`, en clair ; `null` : sans dossier). */
+  papiersParDomaine(): Promise<{ domaine: string | null; n: number }[]>;
 }
 
 export function depotMemoireDrizzle(db: Base): DepotMemoire {
@@ -32,6 +34,11 @@ export function depotMemoireDrizzle(db: Base): DepotMemoire {
     async nombrePapiers() {
       const [r] = await db.select({ n: count() }).from(schema.pieces).where(isNull(schema.pieces.supprimeLe));
       return Number(r?.n ?? 0);
+    },
+    async papiersParDomaine() {
+      const pc = schema.pieces;
+      const lignes = await db.select({ domaine: pc.domaine, n: count() }).from(pc).where(isNull(pc.supprimeLe)).groupBy(pc.domaine);
+      return lignes.map((l) => ({ domaine: l.domaine, n: Number(l.n) }));
     },
   };
 }

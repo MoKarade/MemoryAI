@@ -2,7 +2,7 @@
 // écart C) : Thèmes et Sources, des comptes et des dates, jamais une valeur de fait.
 
 import { describe, it, expect } from "vitest";
-import { corpsCroissance, corpsPlusRelies, corpsSources, corpsThemes, depuis } from "@/lib/memoire/tuilesMemoire";
+import { corpsAValider, corpsCroissance, corpsPapiers, corpsPlusRelies, corpsSources, corpsThemes, depuis } from "@/lib/memoire/tuilesMemoire";
 
 describe("Thèmes", () => {
   it("compte les faits par domaine (préfixe du prédicat), le plus gros d'abord", () => {
@@ -111,5 +111,46 @@ describe("Les plus reliés", () => {
 
   it("sans lien, la tuile le dit", () => {
     expect(corpsPlusRelies(faits, []).genre).toBe("vide");
+  });
+});
+
+describe("À valider", () => {
+  it("rien à juger : un vide honnête, pas un « 0 »", () => {
+    expect(corpsAValider({ piece: 0, fait: 0, question: 0 })).toEqual([{ genre: "vide", texte: "Rien à juger : la pile est vide." }]);
+  });
+
+  it("par genre, au singulier comme au pluriel, et le lien vers la pile", () => {
+    const [liste, texte] = corpsAValider({ piece: 2, fait: 0, question: 1 });
+    expect(liste).toEqual({
+      genre: "liste",
+      elements: [
+        { libelle: "Papiers lus", detail: "2 papiers lus à juger" },
+        { libelle: "Questions", detail: "1 question à juger" },
+      ],
+    });
+    expect(texte).toEqual({ genre: "texte", texte: "3 à juger en tout.", lien: { href: "/questions", libelle: "Juger maintenant" } });
+  });
+});
+
+describe("Papiers", () => {
+  it("sans papier : vide", () => {
+    expect(corpsPapiers([])).toEqual({ genre: "vide", texte: "Aucun papier gardé pour l'instant." });
+  });
+
+  it("par dossier, le plus gros d'abord, et un papier sans dossier le dit", () => {
+    const c = corpsPapiers([
+      { domaine: "Dossier B", n: 2 },
+      { domaine: null, n: 1 },
+      { domaine: "Dossier A", n: 4 },
+    ]);
+    expect(c).toEqual({
+      genre: "barres",
+      barres: [
+        { libelle: "Dossier A", valeur: "4", part: 1 },
+        { libelle: "Dossier B", valeur: "2", part: 0.5 },
+        { libelle: "Sans dossier", valeur: "1", part: 0.25 },
+      ],
+      resume: "Papiers gardés par dossier : Dossier A 4, Dossier B 2, Sans dossier 1.",
+    });
   });
 });
