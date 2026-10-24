@@ -1473,6 +1473,17 @@ code {
     order: 3;
     width: 100%;
     justify-content: space-between;
+    /* Neuf icônes de 44 px (Parler compris) dépassent un téléphone de 390 px : une seule ligne
+       qui défile, plutôt que deux rangées ou des cibles plus petites (la maquette les met à 36 px). */
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .maison-mini::-webkit-scrollbar {
+    display: none;
+  }
+  .maison-mini button {
+    flex: none;
   }
 }
 .maison-panneau-corps {
@@ -1536,6 +1547,121 @@ code {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+}
+
+/* « Parler » dans la maison (maquette v5, écart A7, `components/ConversationMaison.tsx`) : le fil
+   défile seul, la saisie reste en bas ; suggestions et bouton à 44 px, champ à 16 px. */
+.maison-panneau-corps.parler-corps,
+.parler {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+}
+.parler-fil {
+  flex: 1;
+  overflow: auto;
+  padding: 0.9rem 1.1rem;
+  display: grid;
+  gap: 0.9rem;
+  align-content: start;
+}
+.parler-bienvenue {
+  display: grid;
+  justify-items: center;
+  gap: 0.6rem;
+  padding: 2rem 0;
+  text-align: center;
+}
+.parler-tour,
+.parler-lia {
+  display: grid;
+  gap: 0.6rem;
+  min-width: 0;
+}
+.parler-moi {
+  justify-self: end;
+  max-width: 85%;
+  margin: 0;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid var(--accent);
+  border-radius: 18px 18px 6px 18px;
+  background: color-mix(in srgb, var(--accent) 18%, var(--surface-douce));
+  overflow-wrap: anywhere;
+}
+.parler-lia > p {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: var(--poids-lia);
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.parler-saisie {
+  border-top: 1px solid var(--bordure);
+  padding: 0.6rem 0.8rem calc(0.8rem + env(safe-area-inset-bottom, 0px));
+  display: grid;
+  gap: 0.5rem;
+}
+.parler-suggestions {
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.parler-suggestions button {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 44px;
+  padding: 0 0.85rem;
+  border-radius: 999px;
+  border: 1px solid var(--bordure-forte);
+  background: none;
+  color: var(--texte-doux);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.parler-suggestions button:hover:not(:disabled) {
+  color: var(--texte);
+  background: var(--surface-douce);
+}
+.parler-saisie button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.parler-ligne {
+  display: flex;
+  gap: 0.5rem;
+}
+.parler-ligne .champ {
+  flex: 1;
+  min-width: 0;
+  border-radius: 999px;
+  background: var(--surface-douce);
+}
+.parler-ligne button {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--accent);
+  color: var(--sur-accent);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.parler-complet {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 0.85rem;
 }
 @media (prefers-reduced-motion: reduce) {
   .maison-panneau,
