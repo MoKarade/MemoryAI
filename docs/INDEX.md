@@ -2,7 +2,7 @@
 
 <!-- GÉNÉRÉ par `node .github/ci/generer-index.mjs` : ne pas modifier à la main (`--verifier` échoue si ce fichier est périmé). -->
 
-40 document(s). Ancien titre -> nouveau chemin : [correspondance.md](correspondance.md).
+43 document(s). Ancien titre -> nouveau chemin : [correspondance.md](correspondance.md).
 
 ## docs/
 
@@ -35,6 +35,9 @@
 - [ADR 0019 — Sauver la mémoire par re-chiffrement, l'ancien déploiement servant d'oracle](adr/0019-sauvetage-par-rechiffrement.md) — `docs/adr/0019-sauvetage-par-rechiffrement.md`
 - [ADR 0020 — Les messages deviennent des événements datés, avec leurs personnes](adr/0020-les-messages-deviennent-des-evenements.md) — `docs/adr/0020-les-messages-deviennent-des-evenements.md`
 - [ADR 0021 — Les demandes « Que peut-on changer ici ? » du hub sont gardées dans MemoryAI](adr/0021-les-demandes-de-changement-du-hub.md) — `docs/adr/0021-les-demandes-de-changement-du-hub.md`
+- [ADR 0022 — LIA laisse des notes au coordinateur, qui les lit comme des observations](adr/0022-lia-laisse-des-notes-au-coordinateur.md) — `docs/adr/0022-lia-laisse-des-notes-au-coordinateur.md`
+- [ADR 0023 — Des faits DÉDUITS par une règle, reliés à ceux d'où ils viennent](adr/0023-des-faits-deduits-par-regle.md) — `docs/adr/0023-des-faits-deduits-par-regle.md`
+- [ADR 0024 — LIA lit la météo et l'actualité, de sources publiques gratuites et sans clé](adr/0024-lia-lit-la-meteo-et-l-actualite.md) — `docs/adr/0024-lia-lit-la-meteo-et-l-actualite.md`
 - [Registre des numéros d'ADR](adr/NUMEROS.md) — `docs/adr/NUMEROS.md`
 
 ## docs/claude/
