@@ -9,30 +9,36 @@
 // ⚠️ Couleurs : toutes empruntées aux jetons de `globals.css` (le dessin du sol les lit au montage).
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { LiaHandle } from "@mokarade/lia-ui";
 import { Lia } from "@mokarade/lia-ui/react";
+import { ConversationMaison } from "@/components/ConversationMaison";
 import { IconeEspace } from "@/components/IconeEspace";
 import { LogoMemoire } from "@/components/LogoMemoire";
 import { etatLiaMaison, OPTIONS_LIA_MAISON } from "@/components/LiaMaison";
+import { echouer, enAttente, poser, questionPrete, repondre, type Tour } from "@/lib/accueil/conversation";
 import { PanneauEspace } from "@/components/PanneauEspace";
 import { ESPACES, type ContenuEspace, type IdEspace } from "@/lib/accueil/espaces";
 import { peindreDecor } from "@/lib/accueil/decor";
 import { orbite, placerEspaces, VITESSE_ORBITE, zoneDeVie } from "@/lib/accueil/orbite";
 import { parleSeuleMaison, salutSelonHeure, type MotifParole } from "@/lib/accueil/paroles";
 import { estRaccourciParler } from "@/lib/accueil/raccourcis";
+import { demanderLia } from "@/lib/lia/client";
 import { heureQuebec } from "@/lib/memoire/acces";
+
+/** Ce qui peut être ouvert dans la maison : un espace, ou « Parler » (écart A7). */
+type Ouvert = IdEspace | "parler";
 
 export function AccueilClient({ contenus, aJuger }: { contenus: Record<IdEspace, ContenuEspace>; aJuger: { titre: string; detail: string } | null }) {
   const [monde, setMonde] = useState<HTMLDivElement | null>(null);
   const toile = useRef<HTMLCanvasElement>(null);
   const satellites = useRef<(HTMLButtonElement | null)[]>([]);
   const anneau = useRef<HTMLDivElement>(null);
-  const [ouvert, setOuvert] = useState<IdEspace | null>(null);
+  const [ouvert, setOuvert] = useState<Ouvert | null>(null);
   const retour = useRef<HTMLElement | null>(null);
   const fige = useRef(false);
   // La boucle et la zone de LIA lisent l'espace ouvert sans redémarrer à chaque ouverture.
-  const ouvertRef = useRef<IdEspace | null>(null);
+  const ouvertRef = useRef<Ouvert | null>(null);
   useEffect(() => {
     ouvertRef.current = ouvert;
   }, [ouvert]);
@@ -98,18 +104,55 @@ export function AccueilClient({ contenus, aJuger }: { contenus: Record<IdEspace,
     return () => removeEventListener("keydown", echap);
   }, [ouvert, fermer]);
 
-  // `/` ouvre la conversation (maquette v5), sauf quand Marc écrit dans un champ.
-  const routeur = useRouter();
+  // « Parler » s'ouvre dans la maison (maquette v5) : touche `/` (sauf dans un champ), ou toucher LIA
+  // (`surToucher`, lia-ui ≥ v0.33.0 ; `true` : sa bulle ne s'ouvre pas, le panneau la remplace).
+  const ouvrirParler = useCallback(() => {
+    if (ouvertRef.current === null && document.activeElement instanceof HTMLElement) retour.current = document.activeElement;
+    setOuvert("parler");
+    return true;
+  }, []);
   useEffect(() => {
     const parler = (e: KeyboardEvent) => {
       const cible = e.target instanceof Element ? e.target : null;
       if (!estRaccourciParler(e, cible)) return;
       e.preventDefault();
-      routeur.push("/chat");
+      ouvrirParler();
     };
     addEventListener("keydown", parler);
     return () => removeEventListener("keydown", parler);
-  }, [routeur]);
+  }, [ouvrirParler]);
+
+  // « Parler » (écart A7) : la même route que la bulle de LIA (`POST /api/lia/ask`). Le fil vit ici
+  // pour survivre à la fermeture du panneau ; une réponse arrivée après le départ de la page est jetée.
+  const [fil, setFil] = useState<Tour[]>([]);
+  const filRef = useRef<Tour[]>([]);
+  useEffect(() => {
+    filRef.current = fil;
+  }, [fil]);
+  const lia = useRef<LiaHandle | null>(null);
+  const envois = useRef(new Set<AbortController>());
+  useEffect(() => {
+    const enCours = envois.current;
+    return () => enCours.forEach((c) => c.abort());
+  }, []);
+  const demander = useCallback((brute: string) => {
+    const question = questionPrete(brute);
+    if (!question || enAttente(filRef.current)) return;
+    const id = `q${Date.now().toString(36)}`;
+    setFil((f) => poser(f, id, question));
+    const controle = new AbortController();
+    envois.current.add(controle);
+    lia.current?.setEtat("reflexion");
+    demanderLia(question, controle.signal, { page: "/" })
+      .then((r) => setFil((f) => repondre(f, id, r)))
+      .catch(() => {
+        if (!controle.signal.aborted) setFil((f) => echouer(f, id));
+      })
+      .finally(() => {
+        envois.current.delete(controle);
+        lia.current?.setEtat(null);
+      });
+  }, []);
 
   // Ce qu'elle dit seule (écart A3) : le salut de l'heure de Québec, puis ce que les espaces disent
   // de vrai (à juger, dépense du jour), à tour de rôle. Rien d'autre : le reste, elle parle d'elle.
@@ -119,20 +162,13 @@ export function AccueilClient({ contenus, aJuger }: { contenus: Record<IdEspace,
     [contenus],
   );
 
-  // Toucher LIA ouvre la conversation, comme la maquette (lia-ui ≥ v0.33.0, `surToucher`) : la
-  // complète, `/chat`, en attendant le panneau « Parler » de la maison (écart A7).
-  const surToucher = useCallback(() => {
-    routeur.push("/chat");
-    return true;
-  }, [routeur]);
-
-  const ouvrir = (id: IdEspace, depuis: HTMLElement) => {
+  const ouvrir = (id: Ouvert, depuis: HTMLElement) => {
     if (!ouvert) retour.current = depuis;
     setOuvert(id);
   };
 
-  const espace = ESPACES.find((e) => e.id === ouvert);
-  const contenu = ouvert ? contenus[ouvert] : null;
+  const espace = ouvert === "parler" ? undefined : ESPACES.find((e) => e.id === ouvert);
+  const contenu = ouvert && ouvert !== "parler" ? contenus[ouvert] : null;
 
   return (
     <div className={`maison${ouvert ? " maison--ouverte" : ""}`} ref={setMonde}>
@@ -188,7 +224,13 @@ export function AccueilClient({ contenus, aJuger }: { contenus: Record<IdEspace,
 
       <p className="maison-aide">Touche LIA pour lui parler. Clic droit : ses actions.</p>
 
-      <PanneauEspace espace={espace ?? null} contenu={contenu} choisir={setOuvert} fermer={fermer} />
+      <PanneauEspace
+        espace={espace ?? null}
+        contenu={contenu}
+        choisir={setOuvert}
+        fermer={fermer}
+        parler={ouvert === "parler" ? <ConversationMaison fil={fil} demander={demander} /> : null}
+      />
 
       {monde ? (
         <Lia
@@ -198,7 +240,10 @@ export function AccueilClient({ contenus, aJuger }: { contenus: Record<IdEspace,
           cle="lia-accueil"
           salut={salutSelonHeure(heureQuebec(new Date()))}
           onSpontane={parleSeule}
-          surToucher={surToucher}
+          surToucher={ouvrirParler}
+          onPret={(h) => {
+            lia.current = h;
+          }}
           rayon={rayon}
           bounds={() => {
             const r = monde.getBoundingClientRect();

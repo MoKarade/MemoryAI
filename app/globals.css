@@ -1473,6 +1473,17 @@ code {
     order: 3;
     width: 100%;
     justify-content: space-between;
+    /* Neuf icônes de 44 px (Parler compris) dépassent un téléphone de 390 px : une seule ligne
+       qui défile, plutôt que deux rangées ou des cibles plus petites (la maquette les met à 36 px). */
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .maison-mini::-webkit-scrollbar {
+    display: none;
+  }
+  .maison-mini button {
+    flex: none;
   }
 }
 .maison-panneau-corps {
@@ -1536,6 +1547,319 @@ code {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+}
+
+/* Les tuiles d'un panneau de la maison (maquette v5, écart B, `components/TableauEspace.tsx`) :
+   la question à côté du rond de LIA, puis le tableau de tuiles de la page Mémoire. */
+.tab-question {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.tab-question p {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 300;
+  line-height: 1.3;
+}
+.tab-lia {
+  flex: none;
+  fill: var(--repere);
+}
+.tab-texte {
+  margin: 0;
+  color: var(--texte-doux);
+}
+.tab-lien {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--texte);
+}
+.tab-valeur {
+  font-variant-numeric: tabular-nums;
+  color: var(--texte);
+}
+.tab-chiffres,
+.tab-barres {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+}
+.tab-chiffres {
+  grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
+  gap: 0.6rem;
+}
+.tab-chiffres li {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-petit);
+  color: var(--texte-doux);
+}
+.tab-chiffres b {
+  font-size: 1.5rem;
+  font-weight: 300;
+  font-variant-numeric: tabular-nums;
+  color: var(--texte);
+}
+.tab-barres {
+  gap: 0.55rem;
+}
+.tab-barres li {
+  display: grid;
+  grid-template-columns: minmax(0, 9rem) 1fr auto;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.88rem;
+}
+.tab-barres-libelle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--texte-doux);
+}
+.tab-barre {
+  display: block;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--surface-douce);
+  overflow: hidden;
+}
+.tab-barre i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--teinte, var(--repere));
+}
+.tab-barre--alerte i {
+  background: var(--alerte-texte);
+}
+.tab-jauges,
+.tab-liste,
+.tab-legende {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.tab-jauges,
+.tab-liste {
+  display: grid;
+  gap: 0.6rem;
+}
+.tab-jauges li {
+  display: grid;
+  gap: 0.3rem;
+}
+.tab-jauges li > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  color: var(--texte-doux);
+  font-size: 0.9rem;
+}
+.tab-liste li {
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.55rem 0.75rem;
+  border-left: 3px solid var(--teinte, var(--repere));
+  background: var(--surface-douce);
+  border-radius: 0 var(--rayon-petit) var(--rayon-petit) 0;
+}
+.tab-liste small {
+  color: var(--texte-doux);
+}
+.tab-anneau {
+  display: grid;
+  justify-items: center;
+  gap: 0.6rem;
+}
+.tab-anneau svg {
+  width: min(100%, 200px);
+  height: auto;
+}
+.tab-anneau-piste,
+.tab-anneau-part {
+  fill: none;
+  stroke-width: 14;
+}
+.tab-anneau-piste {
+  stroke: var(--surface-douce);
+}
+.tab-anneau-part {
+  stroke: var(--teinte);
+}
+.tab-anneau-centre {
+  fill: var(--texte);
+  font-size: 20px;
+  font-weight: 200;
+}
+.tab-anneau-sous {
+  fill: var(--texte-doux);
+  font-size: 10px;
+}
+.tab-legende {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem 1rem;
+  font-size: 0.85rem;
+  color: var(--texte-doux);
+}
+.tab-legende li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.tab-bulles {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.6rem;
+}
+.tab-bulles li {
+  --diametre: 72px; /* la taille réelle vient de l'aire de la bulle (TableauEspace) */
+  width: var(--diametre);
+  height: var(--diametre);
+  border-radius: 50%;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  padding: 0.4rem;
+  background: color-mix(in srgb, var(--teinte) 14%, transparent);
+  border: 1.5px solid var(--teinte);
+  overflow-wrap: anywhere;
+  font-size: 0.9rem;
+}
+.tab-bulles small {
+  color: var(--texte-doux);
+}
+.tab-legende i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--teinte);
+}
+
+/* « Parler » dans la maison (maquette v5, écart A7, `components/ConversationMaison.tsx`) : le fil
+   défile seul, la saisie reste en bas ; suggestions et bouton à 44 px, champ à 16 px. */
+.maison-panneau-corps.parler-corps,
+.parler {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+}
+.parler-fil {
+  flex: 1;
+  overflow: auto;
+  padding: 0.9rem 1.1rem;
+  display: grid;
+  gap: 0.9rem;
+  align-content: start;
+}
+.parler-bienvenue {
+  display: grid;
+  justify-items: center;
+  gap: 0.6rem;
+  padding: 2rem 0;
+  text-align: center;
+}
+.parler-tour,
+.parler-lia {
+  display: grid;
+  gap: 0.6rem;
+  min-width: 0;
+}
+.parler-moi {
+  justify-self: end;
+  max-width: 85%;
+  margin: 0;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid var(--accent);
+  border-radius: 18px 18px 6px 18px;
+  background: color-mix(in srgb, var(--accent) 18%, var(--surface-douce));
+  overflow-wrap: anywhere;
+}
+.parler-lia > p {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: var(--poids-lia);
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.parler-saisie {
+  border-top: 1px solid var(--bordure);
+  padding: 0.6rem 0.8rem calc(0.8rem + env(safe-area-inset-bottom, 0px));
+  display: grid;
+  gap: 0.5rem;
+}
+.parler-suggestions {
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.parler-suggestions button {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 44px;
+  padding: 0 0.85rem;
+  border-radius: 999px;
+  border: 1px solid var(--bordure-forte);
+  background: none;
+  color: var(--texte-doux);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.parler-suggestions button:hover:not(:disabled) {
+  color: var(--texte);
+  background: var(--surface-douce);
+}
+.parler-saisie button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.parler-ligne {
+  display: flex;
+  gap: 0.5rem;
+}
+.parler-ligne .champ {
+  flex: 1;
+  min-width: 0;
+  border-radius: 999px;
+  background: var(--surface-douce);
+}
+.parler-ligne button {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--accent);
+  color: var(--sur-accent);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.parler-complet {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 0.85rem;
 }
 @media (prefers-reduced-motion: reduce) {
   .maison-panneau,
@@ -1859,6 +2183,26 @@ code {
   min-width: 34rem;
   height: auto;
 }
+/* Ses journées (Historique) : une carte par jour, la plus récente à gauche, défilement horizontal. */
+.journees {
+  list-style: none;
+  margin: 0 0 0.6rem;
+  padding: 0 0 0.4rem;
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+}
+.journees li {
+  flex: 0 0 7.5rem;
+  scroll-snap-align: start;
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--rayon-petit);
+  background: var(--surface-douce);
+  border-top: 3px solid var(--repere);
+}
 .grille-ecritures {
   width: 100%;
   min-width: 30rem;
@@ -1916,6 +2260,17 @@ code {
 .capacites li > svg {
   grid-column: 1 / -1;
 }
+/* Ton rythme habituel (Apprentissage) : le cadran des 24 heures. */
+.rose-heures {
+  display: block;
+  width: 100%;
+  max-width: 15rem;
+  margin: 0 auto 0.5rem;
+}
+.rose-heures text {
+  fill: var(--texte-doux);
+  font-size: 10px;
+}
 .etapes-apprentissage {
   margin: 0;
   padding: 0;
@@ -1936,6 +2291,42 @@ code {
   display: block;
   font-weight: 600;
   color: var(--repere);
+}
+/* Outils et niveaux : qui peut lire quel niveau. Plein = toujours, anneau = sur demande, petit point = jamais. */
+.matrice-niveaux {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0.4rem;
+  margin-bottom: 0.4rem;
+}
+.matrice-niveaux th {
+  font-weight: 600;
+  text-align: left;
+}
+.matrice-niveaux thead th {
+  color: var(--teinte);
+  text-align: center;
+}
+.matrice-niveaux td {
+  text-align: center;
+  height: 44px;
+}
+.matrice-niveaux td i {
+  display: inline-block;
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: var(--bordure-champ);
+}
+.matrice-niveaux td[data-permis="oui"] i,
+.matrice-niveaux td[data-permis="sur-demande"] i {
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 2px solid var(--teinte);
+  background: var(--teinte);
+}
+.matrice-niveaux td[data-permis="sur-demande"] i {
+  background: transparent;
 }
 .garde-fous {
   list-style: none;

@@ -58,6 +58,15 @@ clé Anthropic : coût nul. `memoryai_etat` rend les comptes et la dernière mes
   pour le dessiner (`lib/memoire/reseau.ts`, verrou `tests/memoireReseau.test.ts`). Borné à `MAX_NOEUDS_3D`, les
   plus reliés d'abord, le reste compté et dit. Les autres onglets de la maquette (réseau de LIA, apprentissage,
   historique, accès) viennent avec les lots qui produisent leurs données.
+  24/10 (écart C) : en tête, les quatre chiffres de la maquette (faits affichés, liens, épisodes « — » tant que les
+  messages ne sont pas lus, papiers) ; tuiles Thèmes (bulles par domaine) et Sources (faits validés par type de source,
+  depuis quand) : `lib/memoire/tuilesMemoire.ts`, `lib/memoire/depotMemoire.ts`, verrous `tests/tuilesMemoire.test.ts`,
+  `tests/depotMemoire.test.ts`.
+  Puis Croissance (faits validés tenus à la fin de chacun des douze derniers mois, Québec) et Les plus reliés (les
+  huit faits aux plus de liens, nommés par leur prédicat).
+  Puis À valider (ce que la pile « vrai / faux » attend, par genre, lien vers `/questions` ; le compte vient de
+  `resteAJuger`, `lib/pile/charger.ts`, partagé avec l'accueil) et Papiers, repliée (papiers gardés par dossier
+  DriveAI, `domaine` en clair, rien de déchiffré).
 - Quatrième pas, en deux PR : **l'accueil devient la maison de LIA** (maquette v5). D'abord ses fondations, pures
   et testées, encore montées nulle part : l'orbite (`lib/accueil/orbite.ts`), le décor, sol en perspective et tapis
   des heures (`lib/accueil/decor.ts`), ce que montre chaque espace (`contenuEspaces`, `lib/accueil/espaces.ts` :
@@ -68,28 +77,50 @@ clé Anthropic : coût nul. `memoryai_etat` rend les comptes et la dernière mes
   s'arrêtent au survol, la pastille « à juger » dans l'en-tête. La conversation complète est revenue à `/chat`
   (section « Parler »). Verrou : `tests/accueilRendu.test.ts`. Le 24/10 (écarts A1 et A6 de la maquette) : l'en-tête
   de l'accueil n'a plus que le logo, « LIA », la pastille et UN bouton à droite, « Mémoire » ; ni menu ni « Parler ».
-  La touche `/` ouvre `/chat`, jamais dans un champ (`lib/accueil/raccourcis.ts`, verrou `tests/accueilRaccourcis.test.ts`) ;
+  La touche `/` ouvre « Parler », jamais dans un champ (`lib/accueil/raccourcis.ts`, verrou `tests/accueilRaccourcis.test.ts`) ;
   les autres sections passent par la Mémoire (son menu) et les liens des espaces.
   Écart A3 : LIA salue selon l'heure de Québec à l'arrivée (les quatre saluts de la maquette) et dit seule ce que les
   espaces disent de vrai (« N à juger », dépense du jour et plafonds), à tour de rôle ; rien d'autre
   (`lib/accueil/paroles.ts`). Chaque espace porte `data-lia-cible`, `data-lia-dit` (sa phrase, `ContenuEspace.dit`) et
   `data-lia-activite` (le geste de la maquette) : elle va le voir et le dit. Verrou : `tests/accueilParoles.test.ts`.
-  Toucher LIA ouvre la conversation (`surToucher`, lia-ui v0.33.0) : `/chat` pour l'instant, le panneau « Parler » de la
-  maison ensuite (écart A7).
+  Écart A7 : toucher LIA (`surToucher`, lia-ui v0.33.0) ou `/` ouvre le panneau « Parler » de la maison : accueil, fil,
+  huit suggestions vraies, saisie ; même route que la bulle, échec fermé (`lib/accueil/conversation.ts`,
+  `components/ConversationMaison.tsx`, verrou `tests/conversationMaison.test.ts`) ; `/chat` reste la conversation complète.
+  Écart B (tuiles des panneaux) : Monde et Idées ont les tuiles de la maquette, vides tant qu'aucune source ne les
+  remplit (`lib/accueil/tableaux.ts`, `components/TableauEspace.tsx`, verrou `tests/tableauxMaison.test.ts`).
+  Outils aussi : vrais comptes (outils, appels du mois de Québec par outil, `lib/accueil/depotAccueil.ts`), un tiret
+  pour « refusés à tort » que rien ne mesure, familles vides honnêtes hors Lire et Afficher.
+  Budget aussi : anneau du jour par poste, rythme face aux plafonds, trente jours, part par modèle, fin du mois au
+  rythme des sept derniers jours (rien avant trois jours de dépense dans le mois), garde-fous repliés.
+  Souvenirs, Santé et Sa journée aussi : la recherche mène à ce qui existe, « Quand consulter » rappelle le 811 et le
+  911, « 24 h » et « Journal » montrent ses vraies lectures du jour ; le reste est vide honnête. Formes : une tuile par
+  forme du catalogue fermé (`TYPES_BLOCS`), nommée pour Marc, sans dessin d'exemple pour l'instant.
 - Cinquième pas : **l'onglet Accès de la page Mémoire** (`/memoire/acces`). Part des faits validés par niveau, journal d'accès filtrable par niveau
   servi (métadonnées signées seulement), carte horaire des lectures sur 30 jours à l'heure de Québec, oublis
   (compte et dates) et garde-fous, chacun pointant vers le code qui le tient. Lectures : `lib/memoire/depotAcces.ts`
   (rien de déchiffré) ; calculs purs : `lib/memoire/acces.ts`. Verrous : `tests/memoireAcces*.test.ts`.
+  24/10 (écart C2) : disposition de la maquette, plus À confirmer (questions ouvertes, lien pour répondre), Outils
+  et niveaux (qui lit quel niveau, calculé depuis la politique réelle : `matriceNiveaux`) et le filtre « Toi » (les
+  lectures de ta conversation `/chat` seule ; Claude passe par un jeton, LIA lit pour toi). Verrou PGlite :
+  `tests/depotAcces.test.ts`.
 - Sixième pas : **l'onglet Historique** (`/memoire/historique`) : faits écrits par jour sur 26 semaines (grille,
   lundi en haut), lectures et dépense des 14 derniers jours, conversations par source. Des comptes seulement, au
   jour de Québec (`lib/memoire/depotHistorique.ts`) ; humeur, relances et corrections de la maquette ne sont pas
   dessinées tant qu'elles ne sont pas mesurées. Verrou : `tests/memoireHistorique.test.ts`.
+  24/10 (écart C2) : les huit tuiles de la maquette dans son ordre. Humeur et relances dessinées VIDES (règle du
+  23/10) ; Ce qu'elle a fait = les dernières lectures du journal (filtre Tout / Fait ; Plus tard et Refusé disent
+  qu'ils n'ont pas de source) ; Ses journées = lectures et dépense par jour ; Ce qu'elle a corrigé = les faits périmés
+  (remplacés par une valeur validée plus récente, prédicat seul) ; Actions par jour = l'ancien histogramme des lectures.
 - Septième pas : **l'onglet Apprentissage** (`/memoire/apprentissage`) : courbe du banc mesure après mesure (papiers
   attendus retrouvés, « je n'ai rien » justes), score par capacité de la dernière mesure, faits tirés des conversations
   par statut (`extracteur` `conversation-*`), questions par statut, et les étapes de la passe. Des nombres seulement
   (`lib/memoire/depotApprentissage.ts`) ; une mesure illisible est écartée et comptée, jamais lue comme 0. La courbe
   d'entraînement, les versions et les habitudes de la maquette n'existent pas : aucun réseau n'est entraîné. Verrou :
   `tests/memoireApprentissage.test.ts`.
+  24/10 (écart C2) : les sept tuiles de la maquette dans son ordre. La courbe = le banc ; Porte de qualité, Les
+  exemples et Versions dessinées VIDES (aucun réseau entraîné) ; Ce qu'elle a appris de toi = faits tirés des
+  conversations ; Ton rythme habituel = lectures par heure sur 30 jours ; Oubli réel = le vrai chemin d'un oubli
+  (`ETAPES_OUBLI`) et le compte. Par capacité, Ce qu'elle te demande et Comment elle apprend restent, repliés.
 - Huitième pas : **la coque de la Mémoire, comme la maquette** (Marc, 23/10 : « exactement comme les maquettes »).
   `components/CoqueMemoire.tsx` : vue plein écran SANS le menu de l'app, retour vers LIA, logo, et les CINQ onglets
   segmentés à icônes de la maquette. `components/Tuile.tsx` : la tuile repliable (`<details>`) à filet violet, sur un

@@ -8,6 +8,8 @@
 // question, jamais une valeur.
 
 import { FUSEAU } from "@/lib/fuseau";
+import { lecteurPeutN3 } from "@/lib/lecture";
+import { LECTEUR_LIA_MAISON } from "@/lib/lia/ask";
 import type { Niveau } from "@/lib/vocabulaire";
 
 export const NIVEAUX: readonly Niveau[] = [0, 1, 2, 3];
@@ -42,6 +44,16 @@ const LECTEURS: Record<string, string> = {
   "lia-hub": "LIA dans le hub",
   "lia-maison": "LIA ici",
 };
+
+/**
+ * Le filtre « Toi » du journal : les lectures faites dans TA conversation (`/chat`), seule porte
+ * ouverte par ta session. Claude passe par un jeton (d'autres sessions peuvent s'en servir) et
+ * LIA lit pour te répondre, mais aucune des deux n'est toi.
+ */
+export const LECTEUR_TOI = "chat";
+
+/** Le filtre du journal : un niveau servi, tes propres lectures, ou rien. */
+export type FiltreJournal = Niveau | "toi" | null;
 
 /** Un lecteur inconnu s'affiche tel quel : le renommer au jugé cacherait qui a lu. */
 export function libelleLecteur(lecteur: string): string {
@@ -112,3 +124,31 @@ export const GARDE_FOUS: readonly { texte: string; ou: string }[] = [
   { texte: "Papiers de niveau 3 : seulement dans ta conversation, sous deux verrous", ou: "lib/lecture.ts (LECTEURS_N3)" },
   { texte: "Dépense de l'IA plafonnée chaque jour", ou: "lib/coutChat.ts" },
 ];
+
+/** Ce qu'une porte peut lire à un niveau : toujours, sur demande appel par appel, ou jamais. */
+export type Permis = "oui" | "sur-demande" | "non";
+
+export interface LigneMatrice {
+  libelle: string;
+  cases: Record<Niveau, Permis>;
+}
+
+/**
+ * Qui peut lire quel niveau, tel que le code l'applique AUJOURD'HUI (`politique`,
+ * `lib/mcp/outils.ts`) : N0 et N1 toujours ; N2 sur demande si `MEMORYAI_N2_CHAT` l'ouvre ; N3
+ * sous deux verrous, et seulement pour les lecteurs de `LECTEURS_N3`. LIA reste à N0 et N1
+ * (`inclureN2: false`, `lib/lia/repondre.ts`). Les deux bascules arrivent en booléens : la page
+ * ne lit jamais une valeur d'environnement, seulement si elle est posée.
+ */
+export function matriceNiveaux(ouvert: { n2: boolean; n3: boolean }): LigneMatrice[] {
+  const porte = (libelle: string, lecteur: string, n2Possible: boolean): LigneMatrice => ({
+    libelle,
+    cases: {
+      0: "oui",
+      1: "oui",
+      2: n2Possible && ouvert.n2 ? "sur-demande" : "non",
+      3: lecteurPeutN3(lecteur) && ouvert.n3 ? "sur-demande" : "non",
+    },
+  });
+  return [porte("Ta conversation", "chat", true), porte("Claude", "claude-ai", true), porte("LIA", LECTEUR_LIA_MAISON, false)];
+}

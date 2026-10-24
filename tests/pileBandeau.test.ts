@@ -67,9 +67,13 @@ describe("le bandeau « à juger » suit la pile, pas les seules questions", () 
 describe("app/page.tsx compte via la pile", () => {
   const src = readFileSync("app/page.tsx", "utf8");
   // Ancré sur des APPELS, jamais sur le nom nu : le fichier parle de lui-même en commentaire.
-  it("appelle composerPile( et restantParGenre(", () => {
-    expect(src).toContain("composerPile(");
-    expect(src).toContain("restantParGenre(");
+  // La composition vit dans `resteAJuger` (partagée avec l'onglet Mémoire) : la page l'appelle, et
+  // elle seule compose la pile puis compte.
+  it("appelle resteAJuger(, qui appelle composerPile( et restantParGenre(", () => {
+    const charger = readFileSync("lib/pile/charger.ts", "utf8");
+    expect(src).toContain("resteAJuger(acces.db");
+    expect(charger).toContain("composerPile(");
+    expect(charger).toContain("restantParGenre(");
   });
   it("n'appelle plus le compte des seules questions ouvertes", () => {
     expect(src).not.toMatch(/\.comptes\(\)/);

@@ -6,6 +6,8 @@
 // recopier. Un espace se remplit quand le lot qui produit sa donnée est livré, pas avant.
 
 import type { Poste } from "@/lib/coutChat";
+import { MAX_BLOCS } from "@/lib/lia/blocs";
+import { LIBELLE_OUTIL, tableauBudget, tableauFormes, tableauIdees, tableauJournee, tableauMonde, tableauOutils, tableauSante, tableauSouvenirs, type EntreesBudget, type Tableau } from "./tableaux";
 
 export const IDS_ESPACES = ["souvenirs", "sante", "journee", "idees", "monde", "budget", "outils", "formes"] as const;
 export type IdEspace = (typeof IDS_ESPACES)[number];
@@ -54,25 +56,22 @@ export interface ContenuEspace {
   liens?: Lien[];
   /** Pastille sur l'orbite : un COMPTE réel, jamais décoratif. */
   pastille?: number;
+  /** Les tuiles du panneau, comme la maquette (écart B) ; absent : la phrase, les lignes, les liens. */
+  tableau?: Tableau;
 }
 
 export interface EntreesEspaces {
   /** « N à juger » de la pile (`bandeauAJuger`), ou null sans base / rien à juger. */
   aJuger: { total: number; titre: string } | null;
-  /** Dépense du jour et plafond par poste ; null sans base (on ne devine pas un zéro). */
-  budget: { depense: Record<Poste, number>; plafonds: Record<Poste, number> } | null;
+  /** Dépense du jour et plafond par poste (+ le détail des tuiles Budget) ; null sans base (on ne devine pas un zéro). */
+  budget: ({ depense: Record<Poste, number>; plafonds: Record<Poste, number> } & Partial<Pick<EntreesBudget, "jour" | "parJour" | "parModele">>) | null;
   outils: readonly string[];
   formes: readonly string[];
+  /** Les appels de ce mois par outil (journal d'accès) ; null sans base, absent : non lus. */
+  appels?: readonly { outil: string; n: number }[] | null;
+  /** Les lectures du jour (journal d'accès), la plus récente d'abord ; null sans base. */
+  lectures?: readonly { ts: Date; lecteur: string; outil: string }[] | null;
 }
-
-const LIBELLE_OUTIL: Record<string, string> = {
-  memoryai_contexte: "Ce qu'elle sait de toi, en bref",
-  memoryai_chercher: "Chercher un fait",
-  memoryai_etat: "L'état de sa mémoire",
-  memoryai_inventaire: "L'inventaire de ce qu'elle sait",
-  memoryai_papiers_facettes: "Les sortes de papiers",
-  memoryai_papiers_chercher: "Chercher dans les papiers",
-};
 
 const LIBELLE_POSTE: Record<Poste, string> = { chat: "Parler", apprentissage: "Apprendre" };
 
@@ -113,16 +112,19 @@ export function contenuEspaces(e: EntreesEspaces): Record<IdEspace, ContenuEspac
         { href: "/conversations", libelle: "Anciennes conversations" },
         { href: "/pieces", libelle: "Ce qu'elle sait" },
       ],
+      tableau: tableauSouvenirs(),
     },
     sante: {
       phrase: "Pas encore de données de santé. Elles arriveront par Health Connect, sur ton téléphone.",
       dit: "Rien sur ta santé pour l'instant : j'attends Health Connect.",
       vide: true,
+      tableau: tableauSante(),
     },
     journee: {
       phrase: "Elle ne tient pas encore le journal de sa journée. Il viendra quand elle agira seule.",
       dit: "Je ne tiens pas encore le journal de ma journée.",
       vide: true,
+      tableau: tableauJournee(e.lectures ?? null),
     },
     idees: e.aJuger
       ? {
@@ -132,12 +134,14 @@ export function contenuEspaces(e: EntreesEspaces): Record<IdEspace, ContenuEspac
           vide: false,
           liens: [{ href: "/questions", libelle: e.aJuger.titre }],
           pastille: e.aJuger.total,
+          tableau: tableauIdees(e.aJuger),
         }
-      : { phrase: "Rien à juger pour l'instant.", dit: "Rien à juger pour l'instant.", vide: true },
+      : { phrase: "Rien à juger pour l'instant.", dit: "Rien à juger pour l'instant.", vide: true, tableau: tableauIdees(null) },
     monde: {
       phrase: "Pas encore de source pour la météo ni l'actualité.",
       dit: "Je n'ai encore ni météo ni actualité.",
       vide: true,
+      tableau: tableauMonde(),
     },
     budget: e.budget
       ? {
@@ -150,23 +154,27 @@ export function contenuEspaces(e: EntreesEspaces): Record<IdEspace, ContenuEspac
             valeur: `${dollars(e.budget?.depense[p] ?? 0)} sur ${dollars(e.budget?.plafonds[p] ?? 0)}`,
           })),
           liens: [{ href: "/depenses", libelle: "Toutes les dépenses" }],
+          tableau: tableauBudget({ jour: e.budget.jour ?? "", depense: e.budget.depense, plafonds: e.budget.plafonds, parJour: e.budget.parJour ?? [], parModele: e.budget.parModele ?? [] }),
         }
       : {
           phrase: "La base n'est pas joignable : la dépense du jour n'est pas lisible.",
           dit: "Je ne lis pas la dépense du jour : la base ne répond pas.",
           vide: true,
+          tableau: tableauBudget(null),
         },
     outils: {
       phrase: `${e.outils.length} outils, tous en lecture seule : depuis ici, elle ne change rien.`,
       dit: `J'ai ${e.outils.length} outils, tous en lecture.`,
       vide: e.outils.length === 0,
       puces: e.outils.map((o) => LIBELLE_OUTIL[o] ?? o),
+      tableau: tableauOutils({ outils: e.outils, formes: e.formes, appels: e.appels ?? null }),
     },
     formes: {
       phrase: `Elle choisit la forme de sa réponse parmi ${e.formes.length} : chacune cite ses sources.`,
       dit: `Carte, courbe, liste… je choisis parmi ${e.formes.length} formes.`,
       vide: e.formes.length === 0,
       puces: [...e.formes],
+      tableau: tableauFormes(e.formes, MAX_BLOCS),
     },
   };
 }

@@ -1,6 +1,6 @@
 // app/memoire/acces/page.tsx — l'onglet ACCÈS de la page Mémoire (MemoryAI#74, maquette v5) :
-// la part des faits par niveau, le journal des lectures, quand chaque lecteur lit, ce qui
-// protège la mémoire et les oublis.
+// la part des faits par niveau, le journal des lectures, ce qui attend ta réponse, quand chaque
+// lecteur lit, qui peut lire quel niveau, ce qui protège la mémoire et les oublis.
 //
 // ⚠️ Rien de la maquette n'est recopié tel quel : ses chiffres sont fictifs. Chaque bloc lit la
 // base (`lib/memoire/depotAcces.ts`) et dit honnêtement quand il n'y a rien. Le journal ne
@@ -9,14 +9,18 @@
 
 import Link from "next/link";
 import { CoqueMemoire } from "@/components/CoqueMemoire";
+import { CorpsTuile } from "@/components/TableauEspace";
 import { Tuile, Vide } from "@/components/Tuile";
+import { depotQuestionsDrizzle } from "@/lib/depotQuestions";
 import { FUSEAU } from "@/lib/fuseau";
-import { carteHoraire, GARDE_FOUS, libelleLecteur, NIVEAUX, partsParNiveau, REGLE_NIVEAU } from "@/lib/memoire/acces";
+import { n2Autorise, n3Autorise } from "@/lib/lecture";
+import { corpsAConfirmer } from "@/lib/memoire/tuilesMemoire";
+import { carteHoraire, GARDE_FOUS, libelleLecteur, matriceNiveaux, NIVEAUX, partsParNiveau, REGLE_NIVEAU, type FiltreJournal, type Permis } from "@/lib/memoire/acces";
 import { depotAccesDrizzle } from "@/lib/memoire/depotAcces";
 import { JETON_NIVEAU } from "@/lib/memoire/reseau";
 import { accesDonnees, MESSAGES_MANQUE } from "@/lib/pageDonnees";
+import { MAX_OUVERTES } from "@/lib/questions";
 import { requireSession } from "@/lib/session";
-import type { Niveau } from "@/lib/vocabulaire";
 
 export const dynamic = "force-dynamic";
 const JOURNAL = 40;
@@ -32,10 +36,15 @@ const teinte = (n: number) => ({ "--teinte": `var(${JETON_NIVEAU[n] ?? "--texte-
 /** Le début de la fenêtre de la carte horaire. */
 const joursAvant = (maintenant: Date, jours: number) => new Date(maintenant.getTime() - jours * 86_400_000);
 
-function lireNiveau(brut: string | string[] | undefined): Niveau | null {
-  const n = Number(Array.isArray(brut) ? brut[0] : brut);
+const premier = (brut: string | string[] | undefined) => (Array.isArray(brut) ? brut[0] : brut);
+
+function lireFiltre(p: Record<string, string | string[] | undefined>): FiltreJournal {
+  if (premier(p.qui) === "toi") return "toi";
+  const n = Number(premier(p.niveau));
   return n === 0 || n === 1 || n === 2 || n === 3 ? n : null;
 }
+
+const PERMIS: Record<Permis, string> = { oui: "toujours", "sur-demande": "sur demande", non: "jamais" };
 
 export default async function AccesPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   await requireSession();
@@ -48,17 +57,20 @@ export default async function AccesPage({ searchParams }: { searchParams: Promis
     );
   }
 
-  const filtre = lireNiveau((await searchParams).niveau);
+  const filtre = lireFiltre(await searchParams);
   const depot = depotAccesDrizzle(acces.db);
   const depuis = joursAvant(new Date(), FENETRE_JOURS);
-  const [comptes, journal, lectures, oublis] = await Promise.all([
+  const [comptes, journal, lectures, oublis, questions] = await Promise.all([
     depot.faitsParNiveau(),
     depot.journal(JOURNAL, filtre),
     depot.lecturesDepuis(depuis, LECTURES_MAX),
     depot.oublis(5),
+    depotQuestionsDrizzle(acces.db).ouvertes(MAX_OUVERTES),
   ]);
   const parts = partsParNiveau(comptes);
   const carte = carteHoraire(lectures);
+  // Seulement SI les bascules sont posées, jamais leur valeur.
+  const matrice = matriceNiveaux({ n2: n2Autorise(), n3: n3Autorise() });
 
   return (
     <CoqueMemoire actif="acces">
@@ -82,17 +94,20 @@ export default async function AccesPage({ searchParams }: { searchParams: Promis
           </ul>
         </Tuile>
 
-        <Tuile largeur={12} icone="search" titre="Journal d’accès">
-          <nav className="puces-filtre" aria-label="Filtrer par niveau servi">
+        <Tuile largeur={7} icone="search" titre="Journal d’accès">
+          <nav className="puces-filtre" aria-label="Filtrer par niveau servi ou par lecteur">
             <Link href="/memoire/acces" aria-current={filtre === null ? "true" : undefined}>Tout</Link>
             {NIVEAUX.map((n) => (
               <Link key={n} href={`/memoire/acces?niveau=${n}`} aria-current={filtre === n ? "true" : undefined} style={teinte(n)}>
                 N{n}
               </Link>
             ))}
+            <Link href="/memoire/acces?qui=toi" aria-current={filtre === "toi" ? "true" : undefined}>Toi</Link>
           </nav>
           {journal.length === 0 ? (
-            <p className="doux">{filtre === null ? "Personne n'a encore lu la mémoire." : `Aucune lecture n'a servi jusqu'au niveau ${filtre}.`}</p>
+            <p className="doux">
+              {filtre === null ? "Personne n'a encore lu la mémoire." : filtre === "toi" ? "Ta conversation n'a encore rien lu." : `Aucune lecture n'a servi jusqu'au niveau ${filtre}.`}
+            </p>
           ) : (
             <ul className="journal-acces">
               {journal.map((l) => (
@@ -112,6 +127,12 @@ export default async function AccesPage({ searchParams }: { searchParams: Promis
               ))}
             </ul>
           )}
+        </Tuile>
+
+        <Tuile largeur={5} icone="cardok" titre="À confirmer">
+          {corpsAConfirmer(questions, new Date()).map((c, i) => (
+            <CorpsTuile key={i} c={c} />
+          ))}
         </Tuile>
 
         <Tuile largeur={6} icone="eye" titre="Quand elle lit quoi">
@@ -143,6 +164,44 @@ export default async function AccesPage({ searchParams }: { searchParams: Promis
           )}
         </Tuile>
 
+        <Tuile largeur={6} icone="tool" titre="Outils et niveaux">
+          <table className="matrice-niveaux">
+            <caption className="sr-only">Qui peut lire quel niveau, tel que le code l&apos;applique aujourd&apos;hui</caption>
+            <thead>
+              <tr>
+                <td />
+                {NIVEAUX.map((n) => (
+                  <th key={n} scope="col" style={teinte(n)}>
+                    N{n}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {matrice.map((l) => (
+                <tr key={l.libelle}>
+                  <th scope="row">{l.libelle}</th>
+                  {NIVEAUX.map((n) => (
+                    <td key={n} data-permis={l.cases[n]} style={teinte(n)}>
+                      <i aria-hidden="true" />
+                      <span className="sr-only">{PERMIS[l.cases[n]]}</span>
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p className="doux">Plein : toujours. Anneau : sur demande, un appel à la fois. Petit point : jamais.</p>
+        </Tuile>
+
+        <Tuile largeur={6} icone="shield" titre="Garde-fous">
+          <ul className="garde-fous">
+            {GARDE_FOUS.map((g) => (
+              <li key={g.texte}>{g.texte}</li>
+            ))}
+          </ul>
+        </Tuile>
+
         <Tuile largeur={6} icone="trash" titre="Oublis">
           <p className="chiffre">{oublis.total.toLocaleString("fr-CA")}</p>
           <p className="doux">{oublis.total > 1 ? "faits oubliés, qui ne reviendront pas" : "fait oublié, qui ne reviendra pas"}</p>
@@ -153,14 +212,6 @@ export default async function AccesPage({ searchParams }: { searchParams: Promis
               ))}
             </ul>
           ) : null}
-        </Tuile>
-
-        <Tuile largeur={12} icone="shield" titre="Garde-fous">
-          <ul className="garde-fous">
-            {GARDE_FOUS.map((g) => (
-              <li key={g.texte}>{g.texte}</li>
-            ))}
-          </ul>
         </Tuile>
       </div>
     </CoqueMemoire>

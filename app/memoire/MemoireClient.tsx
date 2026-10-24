@@ -11,7 +11,7 @@ import { filtrerVisibles, JETON_NIVEAU, type Reseau } from "@/lib/memoire/reseau
 const NIVEAUX = [0, 1, 2, 3] as const;
 const SENS_NIVEAU = ["public", "courant", "privé", "intime"] as const;
 
-export function MemoireClient({ reseau, totalFaits, totalLiens, tronque }: { reseau: Reseau; totalFaits: number; totalLiens: number; tronque: boolean }) {
+export function MemoireClient({ reseau, totalLiens, papiers, tronque }: { reseau: Reseau; totalLiens: number; papiers: number | null; tronque: boolean }) {
   const [niveaux, setNiveaux] = useState<ReadonlySet<number>>(new Set(NIVEAUX));
   const [recherche, setRecherche] = useState("");
   const [choisi, setChoisi] = useState(-1);
@@ -31,9 +31,11 @@ export function MemoireClient({ reseau, totalFaits, totalLiens, tronque }: { res
   return (
     <>
       <ul className="memoire-chiffres" aria-label="La mémoire en chiffres">
-        <li><b>{totalFaits.toLocaleString("fr-CA")}</b> faits validés</li>
-        <li><b>{reseau.domaines.length}</b> domaines</li>
+        <li><b>{nombreVisibles.toLocaleString("fr-CA")}</b> faits affichés</li>
         <li><b>{totalLiens.toLocaleString("fr-CA")}</b> liens</li>
+        {/* Les épisodes (messages, journées) arrivent avec la lecture des messages : un tiret, pas un zéro. */}
+        <li><b>—</b> épisodes</li>
+        <li><b>{papiers === null ? "—" : papiers.toLocaleString("fr-CA")}</b> papiers</li>
       </ul>
 
       <div className="memoire-filtres">
