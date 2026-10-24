@@ -20,6 +20,7 @@ vi.mock("@/lib/pageDonnees", () => ({ accesDonnees: vi.fn(async () => ({ ok: tru
 let depot: DepotApprentissage;
 vi.mock("@/lib/memoire/depotApprentissage", () => ({ depotApprentissageDrizzle: () => depot }));
 let lectures: { ts: Date; lecteur: string }[] = [];
+vi.mock("@/lib/relectureLia", () => ({ valideesParLia: async () => 5 }));
 vi.mock("@/lib/memoire/depotAcces", () => ({ depotAccesDrizzle: () => ({ lecturesDepuis: async () => lectures, oublis: async () => ({ total: 3, derniers: [] }) }) }));
 
 const { default: ApprentissagePage } = await import("@/app/memoire/apprentissage/page");
@@ -115,7 +116,9 @@ describe("l'onglet Apprentissage", () => {
     expect(html).toContain("75 %");
     // Une capacité sans question ne se dessine pas : « — », et pas de jauge.
     expect(html).toMatch(/Prendre le plus récent[\s\S]*?<b>—<\/b>/);
-    expect(html).toContain("Validés par toi");
+    expect(html).toContain("Validés");
+    // ADR 0025 : la part que LIA a validée seule se dit, à part.
+    expect(html).toMatch(/dont validés par LIA<\/span><span>5</);
     expect(html).toContain("Répondues");
     expect(html).toContain('class="rose-heures"');
     expect(html).toContain("1 lecture sur 30 jours");

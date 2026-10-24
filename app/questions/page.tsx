@@ -29,7 +29,9 @@ import { libelleExtracteur, titrePiece } from "@/lib/pieces/presentation";
 import { lireOptions } from "@/lib/questions";
 import type { Question } from "@/lib/db/schema";
 import type { Cle } from "@/lib/chiffrement";
+import { relectureDuFait } from "@/lib/relectureLia";
 import { requireSession } from "@/lib/session";
+import { phraseRelecture } from "@/lib/validationLia";
 import { definition } from "@/lib/vocabulaire";
 import { choisirOptionAction, ecarterAction, jugerCarteAction, repondreAction } from "./actions";
 
@@ -186,12 +188,14 @@ async function CarteFaitPropose({ id, db, cle }: { id: string; db: Db; cle: Cle 
       </article>
     );
   }
+  const relu = await relectureDuFait(db, cle, f);
   return (
     <CarteGlissable formVrai={`vrai-${id}`} formFaux={`faux-${id}`}>
       <article className="carte tuile pile-carte">
         <p className="surtitre">Ce que j&rsquo;ai déduit — est-ce juste ?</p>
         <h2>{f.description}</h2>
         <p className="pile-valeur">{f.valeur}</p>
+        {relu ? <p className="hint">{phraseRelecture(relu)}</p> : null}
         <p className="hint">
           Source : {LIBELLES_FIABILITE[f.fiabiliteSource] ?? f.fiabiliteSource}
           {f.provenance?.dateSource ? `, ${f.provenance.dateSource}` : ""} · <Link href={`/fait/${id}`}>la fiche</Link>
@@ -278,8 +282,9 @@ export default async function QuestionsPage() {
     );
   }
 
-  const { candidats, deductions, questions, avis } = await chargerEntreesPile(acces.db);
+  const { candidats, deductions, questions, avis, faitsEnTete } = await chargerEntreesPile(acces.db);
   const ordre = composerPile({
+    faitsEnTete,
     pieces: candidats,
     faits: deductions.map((d) => ({ id: d.fait.id, creeLe: d.fait.creeLe })),
     questions: questions.map((q) => ({ id: q.id, creeLe: q.creeLe })),

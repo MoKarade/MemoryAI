@@ -1,6 +1,6 @@
 // tests/relectureLia.test.ts — la passe où LIA relit seule (ADR 0025), sur une VRAIE Postgres
 // (PGlite) : deux signaux ou le fait reste à Marc, la trace chiffrée, un fait relu une seule fois,
-// les cinq doutes du jour marqués pour la pile, les bornes de budget et de temps. Données FICTIVES.
+// les doutes en tête de la pile, les bornes de budget et de temps. Données FICTIVES.
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { randomBytes } from "node:crypto";
@@ -10,10 +10,11 @@ import { PGlite } from "@electric-sql/pglite";
 import { drizzle } from "drizzle-orm/pglite";
 import { eq } from "drizzle-orm";
 import * as schema from "../lib/db/schema";
-import { chiffrer, dechiffrer, deriverCle } from "../lib/chiffrement";
+import { chiffrer, deriverCle } from "../lib/chiffrement";
 import type { ClientModele, ReponseModele } from "../lib/chat/agent";
 import { depotAdminDrizzle } from "../lib/depotAdmin";
-import { depotRelectureDrizzle, passeRelecture, type ContexteRelecture } from "../lib/relectureLia";
+import { composerPile } from "../lib/pile/composer";
+import { depotRelectureDrizzle, doutesEnTete, passeRelecture, relectureDuFait, valideesParLia, type ContexteRelecture } from "../lib/relectureLia";
 
 let pg: PGlite;
 let db: ReturnType<typeof drizzle<typeof schema>>;
@@ -145,12 +146,27 @@ describe("la passe de relecture (PGlite)", () => {
     expect(proprio.empreinteValeur).toMatch(/^[0-9a-f]{64}$/);
     expect(traces.find((t) => t.faitId === "f-ville")).toMatchObject({ decision: "doute", signalCode: false, raison: null });
     expect(traces.find((t) => t.faitId === "f-orphelin")).toMatchObject({ decision: "sans-source", empreinteSource: null });
-    expect(dechiffrer(cle, proprio.raison!, "f-proprio#lia", 1)).toBe("Le propriétaire est nommé sur le bail.");
-    expect(traces.filter((t) => t.enPile).map((t) => t.faitId).sort()).toEqual(["f-debut", "f-ville"]);
+    expect(await relectureDuFait(db, cle, { id: "f-proprio", niveau: 1 })).toEqual({ decision: "valide", signalCode: true, raison: "Le propriétaire est nommé sur le bail." });
+    expect(await valideesParLia(db)).toBe(1);
 
     const f = faux();
     // Seul le fait en contradiction revient (exclu, jamais tracé : il sera relu une fois la question tranchée).
     expect(await passeRelecture(contexte(f.client))).toMatchObject({ relus: 0, exclus: 1, coutUsd: 0 });
     expect(f.vus).toHaveLength(0);
+  });
+
+  it("les doutes du jour passent EN TÊTE de la pile de Marc", async () => {
+    const tete = await doutesEnTete(db);
+    expect(new Set(tete)).toEqual(new Set(["f-debut", "f-ville"]));
+    const pile = composerPile({
+      pieces: [{ id: "p", domaine: null, titulaireConfiance: null, dateEcheance: null, creeLe: T0 }],
+      faits: [{ id: "f-autre", creeLe: T0 }, { id: "f-debut", creeLe: T0 }],
+      questions: [],
+      avis: [],
+      aujourdhui: "2026-10-24",
+      faitsEnTete: tete,
+    });
+    expect(pile.slice(0, 2).map((c) => c.id).sort()).toEqual(["f-debut", "f-ville"]);
+    expect(pile.filter((c) => c.id === "f-debut")).toHaveLength(1);
   });
 });
