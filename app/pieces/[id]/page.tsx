@@ -22,6 +22,8 @@ import { rendreLisiblePiece } from "@/lib/pieces/lecture";
 import { libelleExtracteur, titrePiece } from "@/lib/pieces/presentation";
 import { requireSession } from "@/lib/session";
 import { depotPileDrizzle } from "@/lib/pile/depot";
+import { relecturePapier } from "@/lib/pieces/depotRelecture";
+import { phraseDoutePapier } from "@/lib/pieces/secondeLecture";
 import { DechiffrementError } from "@/lib/chiffrement";
 import { oublierPieceAction } from "../actions";
 
@@ -132,6 +134,7 @@ export default async function PiecePage({ params }: { params: Promise<{ id: stri
       remarque = "(remarque illisible)";
     }
   }
+  const relu = await relecturePapier(acces.db, p.id);
   const ex = libelleExtracteur(p.extracteur);
   const titre = titrePiece(p);
   const principal = p.exemplaires.find((x) => x.principal) ?? p.exemplaires[0] ?? null;
@@ -158,6 +161,11 @@ export default async function PiecePage({ params }: { params: Promise<{ id: stri
             {p.avisMarc === "conteste"
               ? `Tu as dit que cette lecture est fausse${remarque ? ` : « ${remarque} »` : ""}. Le chat ne la présente plus comme sûre.`
               : "Tu as confirmé cette lecture."}
+          </p>
+        ) : relu ? (
+          // ADR 0026 : ce que la seconde lecture de DriveAI a dit, tant que Marc n'a rien dit.
+          <p className="hint">
+            {relu.decision === "vrai" ? "Jugé vrai par LIA : une seconde lecture de DriveAI concorde." : phraseDoutePapier(relu.champs)}
           </p>
         ) : null}
 

@@ -45,7 +45,8 @@ Mesure en production (24/10, 21:44Z) : `file.enAttente` = 0, aucun fait `propose
 (relevé du PC). Leur jugement : ADR 0026, seconde lecture par DriveAI (MemoryAI#219).
 Porte (ADR 0026) : `POST /api/pieces/relecture`, écrivain DriveAI, 50 au plus ; comparaison PURE (`lib/pieces/secondeLecture.ts`) ;
 niveau ≥ 2, canari, inactif, vide : jamais jugés seuls ; trace `relectures_pieces` (0031), empreintes seulement, 5 doutes/jour.
-**Reste** (#219) : la pile écarte les papiers « vrai » et montre les doutes en tête ; DriveAI envoie sa seconde lecture.
+La pile écarte les papiers « vrai » et met les doutes en tête (`papiersEnTete`), la carte et la fiche disent la relecture, l'onglet Apprentissage compte les vrais.
+**Reste** (#219) : DriveAI envoie sa seconde lecture (tranche de 50 d'abord, coût remesuré).
 **Reste** : mesurer la file en production (« fini » = moins de 50 faits `propose`) ; si trop de faits sont sensibles ou
 sans source lisible ici, le dire à Marc chiffres à l'appui (ADR 0025, « Ce qui reste ouvert »).
 

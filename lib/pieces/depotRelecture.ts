@@ -1,6 +1,6 @@
 // lib/pieces/depotRelecture.ts — l'accès base de la seconde lecture (ADR 0026), derrière une interface.
 
-import { and, count, eq, inArray } from "drizzle-orm";
+import { and, count, countDistinct, desc, eq, inArray, isNull } from "drizzle-orm";
 import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
 import * as schema from "../db/schema";
 import type { Perimetre, Piece } from "../db/schema";
@@ -62,4 +62,34 @@ export function depotRelectureDrizzle(db: Base): DepotRelecture {
       return rows.length > 0;
     },
   };
+}
+
+const R = schema.relecturesPieces;
+const vivante = and(eq(schema.pieces.statut, "active"), isNull(schema.pieces.supprimeLe));
+
+/** Les papiers dont la seconde lecture doute, à mettre en tête de la pile : les plus récents d'abord. */
+export async function papiersEnTete(db: Base): Promise<string[]> {
+  const rows = await db
+    .selectDistinct({ id: R.pieceId, le: R.reluLe })
+    .from(R)
+    .innerJoin(schema.pieces, eq(schema.pieces.id, R.pieceId))
+    .where(and(eq(R.enPile, true), eq(R.decision, "doute"), vivante))
+    .orderBy(desc(R.reluLe));
+  return [...new Set(rows.map((r) => r.id))];
+}
+
+/** Combien de papiers vivants sont jugés « vrai » par LIA : l'onglet Apprentissage le dit. */
+export async function papiersVraisParLia(db: Base): Promise<number> {
+  const [r] = await db
+    .select({ n: countDistinct(R.pieceId) })
+    .from(R)
+    .innerJoin(schema.pieces, eq(schema.pieces.id, R.pieceId))
+    .where(and(eq(R.decision, "vrai"), vivante));
+  return r?.n ?? 0;
+}
+
+/** La dernière seconde lecture d'UN papier : sa décision et les champs qui divergent ; `null` si jamais relu. */
+export async function relecturePapier(db: Base, pieceId: string): Promise<{ decision: "vrai" | "doute"; champs: string[] } | null> {
+  const [t] = await db.select({ decision: R.decision, divergents: R.divergents }).from(R).where(eq(R.pieceId, pieceId)).orderBy(desc(R.reluLe)).limit(1);
+  return t ? { decision: t.decision, champs: (t.divergents ?? "").split(",").filter(Boolean) } : null;
 }

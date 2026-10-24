@@ -8,7 +8,7 @@
 // ⚠️ UN AVIS NE MODIFIE RIEN D'AUTRE QUE SA TABLE. Pas une pièce, pas un fait : un verdict se
 // lit À CÔTÉ, ce qui rend « changer d'avis » gratuit et « je ne veux rien perdre » vrai.
 
-import { and, desc, eq, isNull, ne } from "drizzle-orm";
+import { and, desc, eq, isNull, ne, notExists } from "drizzle-orm";
 import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
 import * as schema from "../db/schema";
 import { chiffrer, dechiffrer, type Cle } from "../chiffrement";
@@ -53,6 +53,13 @@ export function depotPileDrizzle(db: Base): DepotPile {
             eq(schema.pieces.statut, "active"),
             // Un papier de l'INVENTAIRE n'a pas été lu : il n'y a rien à juger.
             ne(schema.pieces.extracteur, EXTRACTEUR_MIGRATION),
+            // ADR 0026 : un papier que la seconde lecture de DriveAI confirme est jugé « vrai par LIA ».
+            notExists(
+              db
+                .select({ un: schema.relecturesPieces.id })
+                .from(schema.relecturesPieces)
+                .where(and(eq(schema.relecturesPieces.pieceId, schema.pieces.id), eq(schema.relecturesPieces.decision, "vrai"))),
+            ),
           ),
         );
       return rows.map((r) => ({

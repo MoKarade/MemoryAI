@@ -11,6 +11,7 @@ import { depotQuestionsDrizzle } from "../depotQuestions";
 import { MAX_OUVERTES } from "../questions";
 import type { Question } from "../db/schema";
 import { doutesEnTete } from "../relectureLia";
+import { papiersEnTete } from "../pieces/depotRelecture";
 import { depotPileDrizzle } from "./depot";
 import { composerPile, restantParGenre, type AvisEnVigueur, type CandidatPiece, type GenreCarte } from "./composer";
 
@@ -26,18 +27,21 @@ export interface EntreesPile {
   avis: AvisEnVigueur[];
   /** Les doutes de LIA, en tête de la pile (ADR 0025). */
   faitsEnTete: string[];
+  /** Les papiers dont la seconde lecture doute, en tête aussi (ADR 0026). */
+  piecesEnTete: string[];
 }
 
 export async function chargerEntreesPile(db: Db): Promise<EntreesPile> {
   const pile = depotPileDrizzle(db);
-  const [candidats, deductions, questions, avis, faitsEnTete] = await Promise.all([
+  const [candidats, deductions, questions, avis, faitsEnTete, piecesEnTete] = await Promise.all([
     pile.candidatsPieces(),
     depotAdminDrizzle(db).aValider(LIMITE_DEDUCTIONS),
     depotQuestionsDrizzle(db).ouvertes(MAX_OUVERTES),
     pile.avis(),
     doutesEnTete(db),
+    papiersEnTete(db),
   ]);
-  return { candidats, deductions, questions, avis, faitsEnTete };
+  return { candidats, deductions, questions, avis, faitsEnTete, piecesEnTete };
 }
 
 /**
@@ -45,9 +49,10 @@ export async function chargerEntreesPile(db: Db): Promise<EntreesPile> {
  * jour-là. Une seule composition pour l'accueil et l'onglet Mémoire : leurs comptes ne divergent pas.
  */
 export async function resteAJuger(db: Db, aujourdhui: string): Promise<Record<GenreCarte, number>> {
-  const { candidats, deductions, questions, avis, faitsEnTete } = await chargerEntreesPile(db);
+  const { candidats, deductions, questions, avis, faitsEnTete, piecesEnTete } = await chargerEntreesPile(db);
   const ordre = composerPile({
     faitsEnTete,
+    piecesEnTete,
     pieces: candidats,
     faits: deductions.map((d) => ({ id: d.fait.id, creeLe: d.fait.creeLe })),
     questions: questions.map((q) => ({ id: q.id, creeLe: q.creeLe })),

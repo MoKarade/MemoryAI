@@ -30,6 +30,8 @@ import { lireOptions } from "@/lib/questions";
 import type { Question } from "@/lib/db/schema";
 import type { Cle } from "@/lib/chiffrement";
 import { relectureDuFait } from "@/lib/relectureLia";
+import { relecturePapier } from "@/lib/pieces/depotRelecture";
+import { phraseDoutePapier } from "@/lib/pieces/secondeLecture";
 import { requireSession } from "@/lib/session";
 import { phraseRelecture } from "@/lib/validationLia";
 import { definition } from "@/lib/vocabulaire";
@@ -91,7 +93,7 @@ function Gestes({ genre, id, vraiFaux }: { genre: CarteRef["genre"]; id: string;
 }
 
 async function CartePiece({ id, db, cle }: { id: string; db: Db; cle: Cle }) {
-  const brute = await depotPiecesLectureDrizzle(db).parId(id);
+  const [brute, relu] = await Promise.all([depotPiecesLectureDrizzle(db).parId(id), relecturePapier(db, id)]);
   let p = null;
   let illisible = false;
   try {
@@ -132,6 +134,7 @@ async function CartePiece({ id, db, cle }: { id: string; db: Db; cle: Cle }) {
           <span className={p.niveau >= 3 ? "pastille erreur" : "pastille"}>Niveau {p.niveau}</span>
           <span className="pastille">{libelleExtracteur(p.extracteur).court}</span>
         </p>
+        {relu?.decision === "doute" ? <p className="hint">{phraseDoutePapier(relu.champs)}</p> : null}
         {titulaire ? <p className={p.titulaireConfiance !== null && p.titulaireConfiance < 0.8 ? "pile-alerte" : ""}>{titulaire}</p> : null}
         {p.resume ? <p>{p.resume}</p> : null}
         <dl className="attributs">
@@ -282,9 +285,10 @@ export default async function QuestionsPage() {
     );
   }
 
-  const { candidats, deductions, questions, avis, faitsEnTete } = await chargerEntreesPile(acces.db);
+  const { candidats, deductions, questions, avis, faitsEnTete, piecesEnTete } = await chargerEntreesPile(acces.db);
   const ordre = composerPile({
     faitsEnTete,
+    piecesEnTete,
     pieces: candidats,
     faits: deductions.map((d) => ({ id: d.fait.id, creeLe: d.fait.creeLe })),
     questions: questions.map((q) => ({ id: q.id, creeLe: q.creeLe })),
