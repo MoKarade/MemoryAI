@@ -176,6 +176,13 @@
       "when": 1791072000024,
       "tag": "0024_sauvetage",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1791158400025,
+      "tag": "0025_lia_etat",
+      "breakpoints": true
     }
   ]
 }

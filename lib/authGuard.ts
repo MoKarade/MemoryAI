@@ -69,6 +69,12 @@ export const ROUTES_A_AUTH_PROPRE = [
    */
   "/api/ask",
   /**
+   * L'état PARTAGÉ de LIA, relayé par le hub (contrat `CONTRAT-etat-lia.md`). `x-hub-token`
+   * seul, en temps constant, et `x-lia-proprietaire: 1` dit par le hub. Des nombres et des
+   * verbes de LIA, jamais un fait. 503 sans `HUB_TOKEN`, 401 jeton faux, 403 sans propriétaire.
+   */
+  "/api/etat-lia",
+  /**
    * Les quatre endpoints du flux OAuth et les deux de métadonnées. Publics par nécessité :
    * claude.ai les appelle AVANT d'avoir le moindre jeton. Ce qui les garde : PKCE S256,
    * `redirect_uri` sur allowlist, et la clé d'accès de Marc sur `/api/mcp/authorize`.

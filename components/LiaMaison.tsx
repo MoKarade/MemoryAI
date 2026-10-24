@@ -10,6 +10,7 @@
 import { usePathname } from "next/navigation";
 import { Lia } from "@mokarade/lia-ui/react";
 import { rendreBlocs } from "@mokarade/lia-ui/blocs";
+import { etatHttp } from "@mokarade/lia-ui/etat-http";
 import { demanderLia } from "@/lib/lia/client";
 
 /** Ce que LIA sait faire chez elle, partagé par l'accueil et les autres pages. */
@@ -21,8 +22,17 @@ export const OPTIONS_LIA_MAISON = {
   },
 };
 
+/**
+ * Son état PARTAGÉ (envies, journal, humeur) : le même que sur le hub et dans les apps
+ * (`/api/lia/etat`, contrat `CONTRAT-etat-lia.md`). Le paquet ne le lit qu'au montage, dans le
+ * navigateur ; au rendu serveur il n'y a pas de page (`etatHttp` lit son origine) : rien.
+ */
+export function etatLiaMaison(): ReturnType<typeof etatHttp> | undefined {
+  return typeof window === "undefined" ? undefined : etatHttp("/api/lia/etat");
+}
+
 export function LiaMaison() {
   const chemin = usePathname();
   if (chemin === "/" || chemin.startsWith("/widget")) return null;
-  return <Lia {...OPTIONS_LIA_MAISON} />;
+  return <Lia {...OPTIONS_LIA_MAISON} etat={etatLiaMaison()} />;
 }

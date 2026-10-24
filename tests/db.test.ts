@@ -78,8 +78,8 @@ async function inserer(champs: Partial<typeof FAIT> & { id: string; empreinte: s
 // invente une table de jointure, un reliquat d'essai. Sept de l'ADR 0001, puis les dépenses
 // du chat, les questions, les conversations et leurs messages (ADR 0002), les liens du
 // graphe (ADR 0002 §5.3), puis les pièces et leurs exemplaires (ADR 0004 §6.2), puis le banc
-// de la refonte LIA (MemoryAI#69).
-describe("les vingt-cinq tables", () => {
+// de la refonte LIA (MemoryAI#69), puis l'état partagé de LIA.
+describe("les vingt-six tables", () => {
   it("existent, et pas une de plus", async () => {
     const r = await pg.query<{ table_name: string }>(
       `SELECT table_name FROM information_schema.tables WHERE table_schema='public' ORDER BY 1`,
@@ -101,6 +101,8 @@ describe("les vingt-cinq tables", () => {
       "faits",
       // [L35] Les lectures tentées sans résultat (migration 0016, ADR 0007).
       "lectures_tentees",
+      // [CONTRAT-etat-lia] L'état PARTAGÉ de LIA : une ligne, des nombres et des verbes (migration 0025).
+      "lia_etat",
       "liens",
       "messages",
       "oublis",
