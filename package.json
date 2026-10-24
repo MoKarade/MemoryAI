@@ -24,7 +24,7 @@
     "@anthropic-ai/sdk": "^0.137.0",
     "@fontsource-variable/outfit": "^5.3.0",
     "@mokarade/hub-contract": "github:MoKarade/hub-contract#v1.5.0",
-    "@mokarade/lia-ui": "github:MoKarade/lia-ui#v0.34.0",
+    "@mokarade/lia-ui": "github:MoKarade/lia-ui#v0.37.1",
     "@neondatabase/serverless": "^1.2.0",
     "@sentry/nextjs": "^11.8.0",
     "drizzle-orm": "^0.45.4",
