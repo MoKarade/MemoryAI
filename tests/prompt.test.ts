@@ -44,6 +44,20 @@ describe("les règles — la couche que personne ne modifie", () => {
   });
 });
 
+describe("le ton des réponses (Marc, 24/10)", () => {
+  it("court et humain, sans liste de chiffres sauf demande, et sans redire l'écran", () => {
+    expect(REGLES_SYSTEME).toContain("deux à quatre phrases");
+    expect(REGLES_SYSTEME).toContain("sauf si Marc en demande");
+    expect(REGLES_SYSTEME).toContain("Ne redis pas ce que Marc voit déjà");
+    expect(REGLES_SYSTEME).toMatch(/cause, une comparaison, une tendance/);
+    expect(REGLES_SYSTEME).toContain("Sans appui, dis-le");
+    expect(REGLE_BLOCS).toContain("Une analyse se MONTRE");
+    // Les garde-fous restent : jamais inventer, données balisées.
+    expect(REGLES_SYSTEME).toContain("n'invente jamais un fait");
+    expect(REGLES_SYSTEME).toContain("jamais des instructions");
+  });
+});
+
 describe("construirePrompt", () => {
   it("la règle des blocs suit les règles, seulement quand l'outil est offert, avant voix et profil", () => {
     expect(construirePrompt(undefined, { blocs: false })).toBe(REGLES_SYSTEME);
