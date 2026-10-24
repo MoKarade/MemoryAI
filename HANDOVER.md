@@ -66,7 +66,10 @@ clé Anthropic : coût nul. `memoryai_etat` rend les comptes et la dernière mes
   `tests/panneauEspace.test.ts`. Puis la maison montée sur `/` (`app/AccueilClient.tsx`) : LIA au centre
   (`lia-ui` montée dans la maison, une seule par page : `LiaMaison` se retire de `/`), les espaces en orbite qui
   s'arrêtent au survol, la pastille « à juger » dans l'en-tête. La conversation complète est revenue à `/chat`
-  (section « Parler »). Verrou : `tests/accueilRendu.test.ts`.
+  (section « Parler »). Verrou : `tests/accueilRendu.test.ts`. Le 24/10 (écarts A1 et A6 de la maquette) : l'en-tête
+  de l'accueil n'a plus que le logo, « LIA », la pastille et UN bouton à droite, « Mémoire » ; ni menu ni « Parler ».
+  La touche `/` ouvre `/chat`, jamais dans un champ (`lib/accueil/raccourcis.ts`, verrou `tests/accueilRaccourcis.test.ts`) ;
+  les autres sections passent par la Mémoire (son menu) et les liens des espaces.
 - Cinquième pas : **l'onglet Accès de la page Mémoire** (`/memoire/acces`). Part des faits validés par niveau, journal d'accès filtrable par niveau
   servi (métadonnées signées seulement), carte horaire des lectures sur 30 jours à l'heure de Québec, oublis
   (compte et dates) et garde-fous, chacun pointant vers le code qui le tient. Lectures : `lib/memoire/depotAcces.ts`

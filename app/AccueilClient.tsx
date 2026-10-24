@@ -9,17 +9,17 @@
 // ⚠️ Couleurs : toutes empruntées aux jetons de `globals.css` (le dessin du sol les lit au montage).
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Lia } from "@mokarade/lia-ui/react";
 import { IconeEspace } from "@/components/IconeEspace";
 import { LogoMemoire } from "@/components/LogoMemoire";
-import { MenuLia } from "@/components/MenuLia";
 import { etatLiaMaison, OPTIONS_LIA_MAISON } from "@/components/LiaMaison";
-import { SECTIONS } from "@/components/Nav";
 import { PanneauEspace } from "@/components/PanneauEspace";
 import { ESPACES, type ContenuEspace, type IdEspace } from "@/lib/accueil/espaces";
 import { peindreDecor } from "@/lib/accueil/decor";
 import { orbite, placerEspaces, VITESSE_ORBITE, zoneDeVie } from "@/lib/accueil/orbite";
+import { estRaccourciParler } from "@/lib/accueil/raccourcis";
 
 export function AccueilClient({ contenus, aJuger }: { contenus: Record<IdEspace, ContenuEspace>; aJuger: { titre: string; detail: string } | null }) {
   const [monde, setMonde] = useState<HTMLDivElement | null>(null);
@@ -96,6 +96,19 @@ export function AccueilClient({ contenus, aJuger }: { contenus: Record<IdEspace,
     return () => removeEventListener("keydown", echap);
   }, [ouvert, fermer]);
 
+  // `/` ouvre la conversation (maquette v5), sauf quand Marc écrit dans un champ.
+  const routeur = useRouter();
+  useEffect(() => {
+    const parler = (e: KeyboardEvent) => {
+      const cible = e.target instanceof Element ? e.target : null;
+      if (!estRaccourciParler(e, cible)) return;
+      e.preventDefault();
+      routeur.push("/chat");
+    };
+    addEventListener("keydown", parler);
+    return () => removeEventListener("keydown", parler);
+  }, [routeur]);
+
   const ouvrir = (id: IdEspace, depuis: HTMLElement) => {
     if (!ouvert) retour.current = depuis;
     setOuvert(id);
@@ -110,7 +123,6 @@ export function AccueilClient({ contenus, aJuger }: { contenus: Record<IdEspace,
       <div className="maison-orbite" ref={anneau} aria-hidden="true" />
 
       <header className="maison-tete">
-        <MenuLia entrees={SECTIONS} allumee="parler" />
         <LogoMemoire />
         <h1 className="maison-nom">LIA</h1>
         {aJuger && (
@@ -120,11 +132,9 @@ export function AccueilClient({ contenus, aJuger }: { contenus: Record<IdEspace,
           </Link>
         )}
       </header>
+      {/* Un seul bouton à droite, comme la maquette : les autres sections passent par la Mémoire,
+          les liens des espaces et la touche `/`. */}
       <nav className="maison-droite" aria-label="Raccourcis">
-        <Link href="/chat" className="maison-bouton" aria-label="Parler à LIA (conversation complète)">
-          <IconeEspace nom="chat" taille={18} />
-          <span className="maison-bouton-texte">Parler</span>
-        </Link>
         <Link href="/memoire" className="maison-bouton" aria-label="Ouvrir toute la mémoire">
           <IconeEspace nom="db" taille={18} />
           <span className="maison-bouton-texte">Mémoire</span>
