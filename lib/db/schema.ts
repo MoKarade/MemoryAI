@@ -22,10 +22,12 @@
 
 import { sql } from "drizzle-orm";
 import {
+  bigint,
   boolean,
   check,
   index,
   integer,
+  jsonb,
   pgTable,
   primaryKey,
   real,
@@ -834,6 +836,24 @@ export const sauvetageEtat = pgTable(
     closLe: timestamp("clos_le", { withTimezone: true }),
   },
   (t) => [check("sauvetage_etat_une_ligne", sql`${t.id} = 1`)],
+);
+
+/**
+ * L'état PARTAGÉ de LIA (migration 0025, contrat `CONTRAT-etat-lia.md`) : une seule ligne, celle
+ * du propriétaire. Aucun contenu de Marc : des nombres, des verbes de LIA, un nom d'humeur
+ * (`lib/lia/etatPartage.ts`). `version` sert au contrôle optimiste (une écriture qui ne la
+ * dépasse pas est refusée en 409).
+ */
+export const liaEtat = pgTable(
+  "lia_etat",
+  {
+    id: integer("id").primaryKey(),
+    version: integer("version").notNull(),
+    maj: bigint("maj", { mode: "number" }).notNull(),
+    etat: jsonb("etat").notNull(),
+    modifieLe: timestamp("modifie_le", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [check("lia_etat_une_ligne", sql`${t.id} = 1`)],
 );
 
 export type Fait = typeof faits.$inferSelect;

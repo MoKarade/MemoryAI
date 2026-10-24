@@ -14,7 +14,7 @@ import { Lia } from "@mokarade/lia-ui/react";
 import { IconeEspace } from "@/components/IconeEspace";
 import { LogoMemoire } from "@/components/LogoMemoire";
 import { MenuLia } from "@/components/MenuLia";
-import { OPTIONS_LIA_MAISON } from "@/components/LiaMaison";
+import { etatLiaMaison, OPTIONS_LIA_MAISON } from "@/components/LiaMaison";
 import { SECTIONS } from "@/components/Nav";
 import { PanneauEspace } from "@/components/PanneauEspace";
 import { ESPACES, type ContenuEspace, type IdEspace } from "@/lib/accueil/espaces";
@@ -162,6 +162,7 @@ export function AccueilClient({ contenus, aJuger }: { contenus: Record<IdEspace,
       {monde ? (
         <Lia
           {...OPTIONS_LIA_MAISON}
+          etat={etatLiaMaison()}
           container={monde}
           cle="lia-accueil"
           rayon={rayon}

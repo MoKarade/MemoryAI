@@ -18,8 +18,9 @@ export const EtatLia = z
     humeur: z.string().refine((v) => HUMEURS.has(v)),
     silhouette: z.string().refine((v) => SILHOUETTES.has(v)),
     regard: Regard.nullable(),
-  })
-  .strict();
+  });
+// Pas `.strict()` : un champ que lia-ui ajouterait demain au contexte est RETIRÉ (défaut de Zod),
+// pas une raison de refuser l'état entier. Seuls ces trois champs atteignent le modèle.
 export type EtatLia = z.infer<typeof EtatLia>;
 
 /** Ce que le navigateur envoie : l'état s'il est conforme, rien sinon (LIA répond quand même). */

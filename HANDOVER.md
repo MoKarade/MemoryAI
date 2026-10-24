@@ -107,6 +107,13 @@ v0.15.0, entre par les deux portes : humeur et silhouette dans les listes fermé
 `SILHOUETTES_LIA`), regard `[a-z0-9-]{1,40}` ou null, sinon 400 ; balisé `<etat_lia>` comme une
 DONNÉE sur LIA avant la question, pour qu'elle ne nie plus son humeur. Le navigateur n'envoie qu'un état conforme ;
 sinon la question part sans lui. Verrou : `tests/liaEtat.test.ts`.
+Un champ inconnu du contexte (lia-ui plus récent) est retiré, jamais refusé.
+Son état PARTAGÉ (envies, journal, humeur ; contrat `commun/assistant/CONTRAT-etat-lia.md`) vit dans `lia_etat`
+(migration 0025, une ligne, des nombres et des verbes seulement ; `lib/lia/etatPartage.ts`, `lib/lia/depotEtat.ts`).
+Deux portes : `GET|PUT /api/lia/etat` pour la maison (session, `etatHttp` du paquet, branché sur les deux montages) et
+`GET|PUT /api/etat-lia` pour le hub, qui relaie ses pages et celles des apps (`x-hub-token` + `x-lia-proprietaire: 1`).
+PUT : 200 + l'état gardé, 409 + l'état gardé si la version ne dépasse pas la sienne (écriture atomique), 400 / 413 ;
+gelée : 503. Verrou : `tests/liaEtatPartage.test.ts`. Reste : le relais du hub.
 Le hub peut joindre un `contexte` (bilan daté, ≤ 1 500 caractères, ADR 0016 § 8, oui de Marc du 23/10) : balisé
 `<contexte_hub>` comme DONNÉE avant la question, refusé en 400 s'il contient un `<` ou dépasse la limite, ignoré par
 la porte de la maison, jamais journalisé.
