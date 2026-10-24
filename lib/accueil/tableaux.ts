@@ -9,6 +9,7 @@
 import { jourQuebec, POSTES, type Poste } from "@/lib/coutChat";
 import { FUSEAU } from "@/lib/fuseau";
 import { heureQuebec, libelleLecteur } from "@/lib/memoire/acces";
+import { SOURCE_METEO, type LectureMeteo } from "@/lib/monde/meteo";
 
 /** Les noms des tracés de `components/IconeEspace.tsx` employés ici (lib ne dépend pas des composants). */
 type IconeTuile = "globe" | "eye" | "cal" | "target" | "shield" | "bulb" | "grid" | "chart" | "croix" | "tool" | "lock" | "spark" | "search" | "star" | "coin" | "clock" | "layers" | "pie" | "bell"
@@ -419,15 +420,44 @@ export function tableauIdees(aJuger: { total: number; titre: string } | null): T
   };
 }
 
-export function tableauMonde(): Tableau {
+const HEURE = new Intl.DateTimeFormat("fr-CA", { timeZone: FUSEAU, hour: "2-digit", minute: "2-digit" });
+const degres = (v: number) => `${String(v).replace(".", ",")} °C`;
+
+/** `meteo` : `null` quand la page ne l'a pas lue (sans base) ; sinon ce qu'ECCC a rendu, ou pourquoi rien. */
+export function tableauMonde(meteo: LectureMeteo | null = null): Tableau {
+  const m = meteo?.ok ? meteo.meteo : null;
+  const absente = meteo && !meteo.ok && meteo.raison === "non-reglee" ? "Pas de météo : aucune ville réglée." : meteo ? "Météo indisponible : Environnement Canada ne répond pas." : "Pas de météo : aucune source branchée.";
   return {
     question: "Ce que LIA regarde dans le monde",
     tuiles: [
-      { cle: "meteo", largeur: 6, icone: "globe", titre: "Météo", corps: [vide("Pas de météo : aucune source branchée.")] },
+      {
+        cle: "meteo",
+        largeur: 6,
+        icone: "globe",
+        titre: "Météo",
+        corps: m
+          ? [
+              {
+                genre: "chiffres",
+                chiffres: [
+                  { icone: "thermo", valeur: m.temperature === null ? "—" : degres(m.temperature), libelle: m.condition ?? "condition non dite" },
+                  { icone: "clock", valeur: HEURE.format(new Date(m.observeLe)), libelle: `observée à ${m.ville}` },
+                ],
+              },
+              ...m.alertes.map((a): Corps => ({ genre: "texte", texte: `Alerte : ${a}` })),
+            ]
+          : [vide(absente)],
+      },
       { cle: "actualite", largeur: 6, icone: "eye", titre: "Actualité", corps: [vide("Pas d'actualité : aucune source branchée.")] },
-      { cle: "sept", largeur: 12, icone: "cal", titre: "Sept jours", corps: [vide("Les sept prochains jours viendront avec la météo.")] },
+      {
+        cle: "sept",
+        largeur: 12,
+        icone: "cal",
+        titre: "Sept jours",
+        corps: m?.previsions.length ? [{ genre: "liste", elements: m.previsions.map((p) => ({ libelle: p.periode, detail: p.resume })) }] : [vide("Les sept prochains jours viendront avec la météo.")],
+      },
       { cle: "bornes", largeur: 6, icone: "target", titre: "Bornes proches", repliee: true, corps: [vide("Aucune source de bornes de recharge branchée.")] },
-      { cle: "sources", largeur: 6, icone: "shield", titre: "Sources", repliee: true, corps: [vide("Aucune source du monde n'est branchée pour l'instant.")] },
+      { cle: "sources", largeur: 6, icone: "shield", titre: "Sources", repliee: true, corps: m ? [{ genre: "texte", texte: `${SOURCE_METEO}.` }] : [vide("Aucune source du monde n'est branchée pour l'instant.")] },
     ],
   };
 }
@@ -451,12 +481,15 @@ export const LIBELLE_OUTIL: Readonly<Record<string, string>> = {
   memoryai_inventaire: "L'inventaire de ce qu'elle sait",
   memoryai_papiers_facettes: "Les sortes de papiers",
   memoryai_papiers_chercher: "Chercher dans les papiers",
+  monde_meteo: "La météo",
 };
 const libelleOutil = (o: string) => LIBELLE_OUTIL[o] ?? o;
 
 export interface EntreesOutils {
   /** Les outils de LIA (liste blanche, `OUTILS_LIA_HUB`), tous en lecture. */
   outils: readonly string[];
+  /** Les outils du monde branchés (`monde_meteo`), hors du MCP ; absents : aucun. */
+  monde?: readonly string[];
   /** Les formes de réponse (`TYPES_BLOCS`). */
   formes: readonly string[];
   /** Les lectures journalisées ce mois-ci, par outil, la plus fréquente d'abord ; `null` sans base. */
@@ -515,7 +548,13 @@ export function tableauOutils(e: EntreesOutils): Tableau {
       { cle: "idee", largeur: 6, icone: "spark", titre: "Une idée d'outil ?", corps: [vide("Lui proposer un outil arrivera avec la boîte à idées. D'ici là, elle n'en ajoute aucun seule.")] },
       { cle: "lire", largeur: 12, icone: "search", titre: `Lire · ${e.outils.length}`, corps: e.outils.length ? [{ genre: "pastilles", elements: e.outils.map(libelleOutil) }] : [vide("Aucun outil de lecture.")] },
       { cle: "agir", largeur: 12, icone: "star", titre: "Agir dans les apps · 0", corps: [vide("Elle n'agit dans aucune app : depuis ici, tout est en lecture.")] },
-      { cle: "monde", largeur: 12, icone: "globe", titre: "Le monde · 0", corps: [vide("Aucune source du monde branchée (météo, actualité).")] },
+      {
+        cle: "monde",
+        largeur: 12,
+        icone: "globe",
+        titre: `Le monde · ${e.monde?.length ?? 0}`,
+        corps: e.monde?.length ? [{ genre: "pastilles", elements: e.monde.map(libelleOutil) }] : [vide("Aucune source du monde branchée (météo, actualité).")],
+      },
       { cle: "elle", largeur: 12, icone: "bulb", titre: "Elle-même · 0", corps: [vide("Elle ne se corrige pas seule : c'est toi qui valides, corriges et oublies.")] },
       { cle: "afficher", largeur: 12, icone: "grid", titre: `Afficher · ${e.formes.length}`, corps: e.formes.length ? [{ genre: "pastilles", elements: [...e.formes] }] : [vide("Aucune forme de réponse.")] },
     ],

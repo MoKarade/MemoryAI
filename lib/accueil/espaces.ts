@@ -7,6 +7,7 @@
 
 import type { Poste } from "@/lib/coutChat";
 import { MAX_BLOCS } from "@/lib/lia/blocs";
+import type { LectureMeteo, Meteo } from "@/lib/monde/meteo";
 import { LIBELLE_OUTIL, tableauBudget, tableauFormes, tableauIdees, tableauJournee, tableauMonde, tableauOutils, tableauSante, tableauSouvenirs, type EntreesBudget, type Tableau } from "./tableaux";
 
 export const IDS_ESPACES = ["souvenirs", "sante", "journee", "idees", "monde", "budget", "outils", "formes"] as const;
@@ -69,6 +70,8 @@ export interface EntreesEspaces {
   formes: readonly string[];
   /** Les appels de ce mois par outil (journal d'accès) ; null sans base, absent : non lus. */
   appels?: readonly { outil: string; n: number }[] | null;
+  /** La météo d'ECCC (ADR 0024) ; absente : non lue, l'espace Monde reste vide. */
+  meteo?: LectureMeteo | null;
   /** Les lectures du jour (journal d'accès), la plus récente d'abord ; null sans base. */
   lectures?: readonly { ts: Date; lecteur: string; outil: string }[] | null;
 }
@@ -85,6 +88,15 @@ const PROCHE_DU_PLAFOND = 0.8;
  * avec la vraie dépense : le total, puis le poste le plus près de son plafond s'il en est proche.
  * Un plafond nul ou absent ne compte pas : on ne dit pas « dépassé » d'un plafond qui n'existe pas.
  */
+/** Le nom de l'outil de la météo (`OUTIL_METEO` de la boucle du chat, que lib/accueil n'importe pas). */
+const OUTIL_METEO_NOM = "monde_meteo";
+
+function ditMeteo(m: Meteo): string {
+  const quoi = [m.temperature === null ? null : `${String(m.temperature).replace(".", ",")} °C`, m.condition?.toLowerCase() ?? null].filter(Boolean).join(", ");
+  const alerte = m.alertes.length ? " Il y a une alerte en cours." : "";
+  return (quoi ? `À ${m.ville} : ${quoi}.` : `À ${m.ville}, rien de mesuré pour l'instant.`) + alerte;
+}
+
 function ditBudget(b: NonNullable<EntreesEspaces["budget"]>): string {
   const postes = Object.keys(LIBELLE_POSTE) as Poste[];
   const total = postes.reduce((t, p) => t + (b.depense[p] ?? 0), 0);
@@ -137,12 +149,19 @@ export function contenuEspaces(e: EntreesEspaces): Record<IdEspace, ContenuEspac
           tableau: tableauIdees(e.aJuger),
         }
       : { phrase: "Rien à juger pour l'instant.", dit: "Rien à juger pour l'instant.", vide: true, tableau: tableauIdees(null) },
-    monde: {
-      phrase: "Pas encore de source pour la météo ni l'actualité.",
-      dit: "Je n'ai encore ni météo ni actualité.",
-      vide: true,
-      tableau: tableauMonde(),
-    },
+    monde: e.meteo?.ok
+      ? {
+          phrase: "La météo d'Environnement Canada, à l'heure de son observation.",
+          dit: ditMeteo(e.meteo.meteo),
+          vide: false,
+          tableau: tableauMonde(e.meteo),
+        }
+      : {
+          phrase: "Pas encore de source pour la météo ni l'actualité.",
+          dit: "Je n'ai encore ni météo ni actualité.",
+          vide: true,
+          tableau: tableauMonde(e.meteo ?? null),
+        },
     budget: e.budget
       ? {
           phrase: "Ce qu'elle a dépensé aujourd'hui, poste par poste, et le plafond de chacun.",
@@ -167,7 +186,7 @@ export function contenuEspaces(e: EntreesEspaces): Record<IdEspace, ContenuEspac
       dit: `J'ai ${e.outils.length} outils, tous en lecture.`,
       vide: e.outils.length === 0,
       puces: e.outils.map((o) => LIBELLE_OUTIL[o] ?? o),
-      tableau: tableauOutils({ outils: e.outils, formes: e.formes, appels: e.appels ?? null }),
+      tableau: tableauOutils({ outils: e.outils, monde: e.meteo ? [OUTIL_METEO_NOM] : [], formes: e.formes, appels: e.appels ?? null }),
     },
     formes: {
       phrase: `Elle choisit la forme de sa réponse parmi ${e.formes.length} : chacune cite ses sources.`,

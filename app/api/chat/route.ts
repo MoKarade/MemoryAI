@@ -7,6 +7,7 @@
 // 200 { reponse, coutUsd, outilsAppeles }.
 
 import { depotNotesLiaDrizzle } from "@/lib/lia/notes";
+import { sourceMeteoEccc } from "@/lib/monde/meteo";
 import Anthropic from "@anthropic-ai/sdk";
 import { after } from "next/server";
 import { apprendreDeLaConversation } from "@/lib/apprentissage";
@@ -100,6 +101,7 @@ export async function POST(request: Request): Promise<Response> {
         questions: depotQuestionsDrizzle(db),
         conversations: depotConversationsDrizzle(db),
         notes: depotNotesLiaDrizzle(db, cle),
+        meteo: sourceMeteoEccc(db, process.env.MEMORYAI_METEO_VILLE),
         cle,
         env: process.env,
         lecteur: "chat",

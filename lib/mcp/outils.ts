@@ -38,6 +38,7 @@ import { cleFacette, FAMILLES_FACETTE, type FamilleFacette } from "../pieces/fac
 import { dechiffrer, DechiffrementError } from "../chiffrement";
 import { BANC_COURANT, type DepotBanc } from "../banc/passe";
 import { baliserNotes, type DepotNotesLia } from "../lia/notes";
+import type { SourceMeteo } from "../monde/meteo";
 
 export interface ContexteOutils {
   lecture: DepotLecture;
@@ -72,6 +73,11 @@ export interface ContexteOutils {
    * « non branché » et `lia_note` n'est pas offert au modèle.
    */
   notes?: DepotNotesLia;
+  /**
+   * La météo d'ECCC (ADR 0024). Facultatif : absent, `monde_meteo` n'est pas offert au modèle. Pas
+   * un outil du MCP : claude.ai a son propre accès au monde.
+   */
+  meteo?: SourceMeteo;
   cle: Cle;
   env: Record<string, string | undefined>;
   /** `claude-ai` pour le MCP ; `chat` pour le chat plein écran (lot 5). */

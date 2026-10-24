@@ -31,6 +31,14 @@ route `/api/demandes` (jeton du hub en temps constant, `x-lia-proprietaire: 1`, 
 Contrat exact dans l'ADR ; il a été envoyé au fil Refonte Hubperso (côté hub : Hubperso#450). Le `nom` est chiffré
 niveau 1 et n'entre dans aucun prompt.
 
+## ✅ 24/10/2026 : LIA lit la météo (MemoryAI#189, ADR 0024)
+
+Outil `monde_meteo` (chat et hub, hors du MCP) : Environnement Canada (`api.weather.gc.ca`, gratuit, sans clé,
+licence ouverte), pour la ville du réglage `MEMORYAI_METEO_VILLE` (identifiant ECCC ; absent : « météo non réglée »).
+Cache en base `monde_cache` (migration 0029), ECCC relu au plus toutes les 30 minutes, délai 5 s, panne = « indisponible ».
+Texte balisé `<monde>` (donnée), heure d'observation et source citées. Tuiles Météo, Sept jours et Sources de l'espace
+Monde remplies. Reste : l'actualité (Radio-Canada, usage personnel permis).
+
 ## ✅ 24/10/2026 : LIA laisse des notes au coordinateur (MemoryAI#188, ADR 0022)
 
 Outil `lia_note` (chat et hub) : une observation, un conseil ou une alerte, une ligne de 280 caractères au plus,

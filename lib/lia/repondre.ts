@@ -5,6 +5,7 @@
 // ⚠️ La question n'est JAMAIS journalisée en clair, ni dans une erreur (nom et message seulement).
 
 import { depotNotesLiaDrizzle } from "@/lib/lia/notes";
+import { sourceMeteoEccc } from "@/lib/monde/meteo";
 import Anthropic from "@anthropic-ai/sdk";
 import { tourDeChat, PlafondAtteintError } from "@/lib/chat/agent";
 import { chargerCouches } from "@/lib/chat/couches";
@@ -75,6 +76,7 @@ export async function repondreLia(demande: DemandeAsk, origine: string, lecteur:
         questions: depotQuestionsDrizzle(db),
         conversations: CONVERSATIONS_FERMEES,
         notes: depotNotesLiaDrizzle(db, cle),
+        meteo: sourceMeteoEccc(db, process.env.MEMORYAI_METEO_VILLE),
         cle,
         env: process.env,
         lecteur,

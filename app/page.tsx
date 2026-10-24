@@ -21,6 +21,7 @@ import { accesDonnees } from "@/lib/pageDonnees";
 import { bandeauAJuger, type BandeauAJuger } from "@/lib/pile/bandeau";
 import { resteAJuger } from "@/lib/pile/charger";
 import { requireSession } from "@/lib/session";
+import { sourceMeteoEccc } from "@/lib/monde/meteo";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +35,7 @@ export default async function MaisonDeLia() {
   let budget: EntreesEspaces["budget"] = null;
   let appels: EntreesEspaces["appels"] = null;
   let lectures: EntreesEspaces["lectures"] = null;
+  let meteo: EntreesEspaces["meteo"] = null;
   if (acces.ok) {
     aJuger = bandeauAJuger(await resteAJuger(acces.db, jour));
     const admin = depotAdminDrizzle(acces.db);
@@ -47,7 +49,9 @@ export default async function MaisonDeLia() {
     };
     appels = await accueil.appelsParOutilDepuis(debutDuMoisQuebec(new Date()));
     lectures = await accueil.lecturesDepuis(minuitQuebec(jour), LECTURES_DU_JOUR_MAX);
+    // Le monde (ADR 0024) : servi du cache en base, ECCC relu au plus toutes les 30 minutes.
+    meteo = await sourceMeteoEccc(acces.db, process.env.MEMORYAI_METEO_VILLE).lire(new Date());
   }
-  const contenus = contenuEspaces({ aJuger, budget, appels, lectures, outils: [...OUTILS_LIA_HUB], formes: TYPES_BLOCS });
+  const contenus = contenuEspaces({ aJuger, budget, appels, lectures, meteo, outils: [...OUTILS_LIA_HUB], formes: TYPES_BLOCS });
   return <AccueilClient contenus={contenus} aJuger={aJuger ? { titre: aJuger.titre, detail: aJuger.detail } : null} />;
 }

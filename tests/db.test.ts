@@ -111,6 +111,8 @@ describe("les trente tables", () => {
       "lia_etat",
       "liens",
       "messages",
+      // [ADR 0024] Le cache du monde : la météo déjà lue, et quand (migration 0029).
+      "monde_cache",
       // [ADR 0022] Les notes de LIA au coordinateur (migration 0028).
       "notes_lia",
       "oublis",
