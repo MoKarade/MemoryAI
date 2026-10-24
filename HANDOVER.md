@@ -39,9 +39,11 @@ contradiction ouverte, passe à `valide` seulement si sa valeur se lit TELLE QUE
 ou conversation) ET si la relecture Haiku rend `confirme`. Trace `validations_lia` (migration 0030) : raison chiffrée,
 empreintes de l'extrait et de la valeur ; un fait n'est relu qu'une fois. Doutes : cinq par jour en tête de la pile, avec la phrase de LIA
 (« LIA doute : … ») ; « Validé par LIA » sur la fiche du fait et dans l'onglet Apprentissage.
-Bornes : 400 faits, 8 par appel, 60 s, budget `apprentissage`. Ses comptes sortent dans la réponse du cron (`relecture`).
-**Reste** : mesurer la file en production (« fini » = moins de 50 faits `propose`) ; si trop de faits n'ont pas de
-source lisible ici (`sansSource`), le dire à Marc chiffres à l'appui (ADR 0025, « Ce qui reste ouvert »).
+Bornes : 400 faits, 8 par appel, 60 s, budget `apprentissage`. Ses comptes sortent dans la réponse du cron (`relecture`),
+avec `relecture.file` : les faits `propose` restants, et combien la relecture ne lira jamais (sensibles, canaris, sans provenance).
+Première passe en production (24/10, 21:11Z) : 0 candidat, d'où `file` pour savoir pourquoi.
+**Reste** : mesurer la file en production (« fini » = moins de 50 faits `propose`) ; si trop de faits sont sensibles ou
+sans source lisible ici, le dire à Marc chiffres à l'appui (ADR 0025, « Ce qui reste ouvert »).
 
 ## ✅ 24/10/2026 : LIA lit la météo et l'actualité (MemoryAI#189, ADR 0024)
 
