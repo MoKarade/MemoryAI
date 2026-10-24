@@ -20,6 +20,8 @@ seul à garder les anciennes clés dans son environnement figé. **Ne jamais le 
 - Reste avant la clôture : jeton DriveAI (`MEMORYAI_TOKEN_DRIVEAI_ECRITURE`) ; anciennes valeurs des deux clés
   encore dans le dossier Infisical `agence/prod/MemoryAI` (à retirer, sur « Autorisé » de Marc au PC).
   Après la clôture : copie des nouvelles clés (ADR 0018).
+- 24/10/2026 : `MEMORYAI_TOKEN_DRIVEAI_ECRITURE` roté sur Vercel memory-ai (autorisé par Marc, posé par le PC) ; côté
+  DriveAI, la propriété Apps Script reste à remettre.
 
 ## 🔨 EN COURS — 22/10/2026 : refonte LIA, MemoryAI devient sa maison (chantier MemoryAI#67)
 
