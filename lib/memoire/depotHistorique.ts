@@ -5,7 +5,7 @@
 // (`lib/fuseau.ts`) : un `date(cree_le)` nu compterait en UTC, et une écriture de 21 h tomberait
 // le lendemain.
 
-import { count, gte, isNull, max, sql, sum } from "drizzle-orm";
+import { and, count, desc, eq, gte, isNull, max, sql, sum } from "drizzle-orm";
 import type { PgColumn, PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
 import * as schema from "@/lib/db/schema";
 import { FUSEAU } from "@/lib/fuseau";
@@ -24,6 +24,12 @@ export interface DepotHistorique {
   faitsParJour(depuis: Date): Promise<{ jour: string; n: number }[]>;
   lecturesParJour(depuis: Date): Promise<{ jour: string; n: number }[]>;
   conversationsParSource(): Promise<SourceConversations[]>;
+  /**
+   * Les faits PÉRIMÉS (une valeur plus récente validée les a remplacés, `depotAdmin.valider`, ou
+   * ils sont dépassés), le plus récent d'abord : leur prédicat seulement. ⚠️ Pas `remplace_id` :
+   * aucun chemin ne l'écrit pour un fait, la tuile serait vide pour toujours.
+   */
+  corrections(limite: number): Promise<{ predicat: string }[]>;
 }
 
 const jourDe = (col: PgColumn) => sql<string>`to_char(${col} at time zone ${FUSEAU}, 'YYYY-MM-DD')`;
@@ -53,6 +59,15 @@ export function depotHistoriqueDrizzle(db: Base): DepotHistorique {
         .where(isNull(c.supprimeLe))
         .groupBy(c.source);
       return lignes.map((l) => ({ source: l.source, conversations: l.conversations, messages: Number(l.messages ?? 0), derniere: l.derniere }));
+    },
+    async corrections(limite) {
+      const f = schema.faits;
+      return db
+        .select({ predicat: f.predicat })
+        .from(f)
+        .where(and(eq(f.statut, "perime"), isNull(f.supprimeLe)))
+        .orderBy(desc(f.creeLe))
+        .limit(limite);
     },
   };
 }

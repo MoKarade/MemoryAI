@@ -36,6 +36,9 @@ beforeAll(async () => {
       [id, cree],
     );
   }
+  // f1 a été remplacé (périmé) ; un fait périmé puis oublié ne compte plus.
+  await pg.query(`UPDATE faits SET statut = 'perime', predicat = 'fictif.corrige' WHERE id = 'f1'`);
+  await pg.query(`UPDATE faits SET statut = 'perime', supprime_le = now() WHERE id = 'f2'`);
   await pg.query(
     `INSERT INTO acces_journal (lecteur, outil, usage, niveau_max_servi, hmac, ts) VALUES ('chat', 'fictif', 'chat', 0, 'hmac-fictif', '2026-10-24T01:30:00Z')`,
   );
@@ -56,5 +59,10 @@ describe("les comptes par jour, sur une vraie base", () => {
   it("compte les lectures au jour de Québec", async () => {
     const r = await depotHistoriqueDrizzle(db as never).lecturesParJour(new Date("2026-10-01T00:00:00Z"));
     expect(r).toEqual([{ jour: "2026-10-23", n: 1 }]);
+  });
+
+  it("liste les faits périmés, nommés par leur prédicat, sans les oubliés", async () => {
+    const r = await depotHistoriqueDrizzle(db as never).corrections(8);
+    expect(r).toEqual([{ predicat: "fictif.corrige" }]);
   });
 });

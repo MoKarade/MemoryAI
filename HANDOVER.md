@@ -107,6 +107,10 @@ clé Anthropic : coût nul. `memoryai_etat` rend les comptes et la dernière mes
   lundi en haut), lectures et dépense des 14 derniers jours, conversations par source. Des comptes seulement, au
   jour de Québec (`lib/memoire/depotHistorique.ts`) ; humeur, relances et corrections de la maquette ne sont pas
   dessinées tant qu'elles ne sont pas mesurées. Verrou : `tests/memoireHistorique.test.ts`.
+  24/10 (écart C2) : les huit tuiles de la maquette dans son ordre. Humeur et relances dessinées VIDES (règle du
+  23/10) ; Ce qu'elle a fait = les dernières lectures du journal (filtre Tout / Fait ; Plus tard et Refusé disent
+  qu'ils n'ont pas de source) ; Ses journées = lectures et dépense par jour ; Ce qu'elle a corrigé = les faits périmés
+  (remplacés par une valeur validée plus récente, prédicat seul) ; Actions par jour = l'ancien histogramme des lectures.
 - Septième pas : **l'onglet Apprentissage** (`/memoire/apprentissage`) : courbe du banc mesure après mesure (papiers
   attendus retrouvés, « je n'ai rien » justes), score par capacité de la dernière mesure, faits tirés des conversations
   par statut (`extracteur` `conversation-*`), questions par statut, et les étapes de la passe. Des nombres seulement

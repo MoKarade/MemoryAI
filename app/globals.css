@@ -2183,6 +2183,26 @@ code {
   min-width: 34rem;
   height: auto;
 }
+/* Ses journées (Historique) : une carte par jour, la plus récente à gauche, défilement horizontal. */
+.journees {
+  list-style: none;
+  margin: 0 0 0.6rem;
+  padding: 0 0 0.4rem;
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+}
+.journees li {
+  flex: 0 0 7.5rem;
+  scroll-snap-align: start;
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--rayon-petit);
+  background: var(--surface-douce);
+  border-top: 3px solid var(--repere);
+}
 .grille-ecritures {
   width: 100%;
   min-width: 30rem;
