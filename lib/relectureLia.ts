@@ -11,7 +11,7 @@
 // ⚠️ LA PASSE S'ARRÊTE SUR LE BUDGET (poste `apprentissage`, relu avant chaque appel) ET SUR LE TEMPS :
 // le planificateur coupe à 120 s, et une relecture ne doit pas faire perdre la réponse de la passe.
 
-import { and, count, desc, eq, isNotNull, isNull, lte, notExists, sql } from "drizzle-orm";
+import { and, count, desc, eq, gte, isNotNull, isNull, lte, notExists, sql, type SQL } from "drizzle-orm";
 import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
 import * as schema from "./db/schema";
 import { estCanari } from "./canari";
@@ -52,6 +52,16 @@ export interface ResultatRelecture {
   exclus: number;
   coutUsd: number;
   fin: FinRelecture;
+  /** La file de Marc APRÈS la passe, et pourquoi le reste n'est pas relu (ADR 0025 : ni sensible, ni canari). */
+  file?: FileDeMarc;
+}
+
+/** Des comptes de faits `propose` servis : ce qui reste à Marc, et ce que la relecture ne lira jamais. */
+interface FileDeMarc {
+  enAttente: number;
+  sensibles: number;
+  canaris: number;
+  sansProvenance: number;
 }
 
 interface NouvelleTrace {
@@ -76,6 +86,7 @@ export interface DepotRelecture {
   /** Le texte de la source tel que MemoryAI le détient, ou `null` quand il n'est pas lisible ici. */
   source(sourceRef: string, cle: Cle): Promise<string | null>;
   doutesEnPile(jour: string): Promise<number>;
+  file(): Promise<FileDeMarc>;
   /** Écrit la trace, PUIS valide le fait s'il le faut (et seulement s'il est encore `propose`). */
   tracer(t: NouvelleTrace, valider: boolean): Promise<void>;
 }
@@ -134,6 +145,17 @@ export function depotRelectureDrizzle(db: Base): DepotRelecture {
       const [r] = await db.select({ n: count() }).from(V).where(and(eq(V.jour, jour), eq(V.enPile, true)));
       return r?.n ?? 0;
     },
+    async file() {
+      const enAttente = and(eq(schema.faits.statut, "propose"), isNull(schema.faits.supprimeLe), isNull(schema.faits.migreEnPiece));
+      const compter = async (...c: SQL[]) => Number((await db.select({ n: count() }).from(schema.faits).where(and(enAttente, ...c)))[0]?.n ?? 0);
+      const sansProvenance = notExists(db.select({ x: sql`1` }).from(schema.provenances).where(eq(schema.provenances.faitId, schema.faits.id)));
+      return {
+        enAttente: await compter(),
+        sensibles: await compter(gte(schema.faits.niveau, 2)),
+        canaris: await compter(lte(schema.faits.niveau, 1), eq(schema.faits.canari, true)),
+        sansProvenance: await compter(lte(schema.faits.niveau, 1), eq(schema.faits.canari, false), sansProvenance),
+      };
+    },
     async tracer(t, valider) {
       await db.insert(V).values(t);
       if (valider)
@@ -188,8 +210,14 @@ interface Relu {
   ligne: FaitAvecProvenance;
 }
 
-/** La passe : par source, le signal du code d'abord, le modèle seulement pour ce qui le mérite. */
+/** La passe, puis la file de Marc telle qu'elle reste : « fini » se mesure là (moins de 50 faits). */
 export async function passeRelecture(ctx: ContexteRelecture): Promise<ResultatRelecture> {
+  const res = await relire(ctx);
+  return { ...res, file: await ctx.depot.file() };
+}
+
+/** Par source, le signal du code d'abord, le modèle seulement pour ce qui le mérite. */
+async function relire(ctx: ContexteRelecture): Promise<ResultatRelecture> {
   const chrono = ctx.chrono ?? Date.now;
   const debut = chrono();
   const jour = jourQuebec(ctx.maintenant());
