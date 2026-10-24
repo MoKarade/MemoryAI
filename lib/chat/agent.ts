@@ -25,7 +25,7 @@ import { budgetOuvert, coutUsd, jourQuebec, lireUsage, type IdModele } from "../
 import { cleJournalDepuisEnv } from "../journal";
 import { journaliserAcces } from "../journalAcces";
 import { OUTILS, type ContexteOutils } from "../mcp/outils";
-import { MAX_BLOCS, TYPES_BLOCS, trierBlocs, type Bloc } from "../lia/blocs";
+import { MAX_BLOCS, SIGNATURES_BLOCS, trierBlocs, type Bloc } from "../lia/blocs";
 import { annoterReponse, type Annotation, type FaitServi, type PieceServie } from "./liens";
 import { construirePrompt, REGLES_SYSTEME, type Couches } from "./prompt";
 
@@ -80,6 +80,8 @@ export interface ResultatTour {
   blocs: Bloc[];
   /** Ceux que le tri a rejetés : comptés, jamais avalés. */
   blocsRejetes: number;
+  /** Pourquoi : indice, forme et chemins des champs fautifs, jamais leurs valeurs. */
+  raisonsBlocs: string[];
 }
 
 /**
@@ -90,9 +92,10 @@ export interface ResultatTour {
 export const OUTIL_BLOCS = {
   name: "lia_blocs",
   description:
-    `Montre ta réponse en blocs visuels, en plus de ton texte. Formes permises : ${TYPES_BLOCS.join(", ")}. ` +
-    "Chaque bloc (sauf confirmation) porte `sources` : les id des faits ou des papiers que tes outils t'ont servis dans CE tour ; " +
-    `un bloc qui cite un autre id est rejeté. ${MAX_BLOCS} blocs au plus. N'invente aucune valeur.`,
+    "Montre ta réponse en blocs visuels, en plus de ton texte. " +
+    "Chaque bloc est un objet `{type, titre?, sources, …champs}`. `sources` (sauf confirmation) : la liste des `id` " +
+    "(uuid) des faits ou des papiers que tes outils t'ont servis dans CE tour ; un bloc qui cite un autre id est rejeté. " +
+    `${MAX_BLOCS} blocs au plus. N'invente aucune valeur. Champs de chaque forme (\`?\` = facultatif) :\n${SIGNATURES_BLOCS}`,
   input_schema: {
     type: "object",
     properties: { blocs: { type: "array", items: { type: "object" }, description: "Les blocs, chacun avec son `type`." } },
@@ -170,6 +173,7 @@ export async function tourDeChat(params: {
     annotation: annoterReponse("", []),
     blocs: [],
     blocsRejetes: 0,
+    raisonsBlocs: [],
   };
 
   for (let tour = 0; tour <= MAX_TOURS_OUTILS; tour++) {
@@ -215,6 +219,7 @@ export async function tourDeChat(params: {
         const place = MAX_BLOCS - resultat.blocs.length;
         resultat.blocs.push(...t.blocs.slice(0, place));
         resultat.blocsRejetes += t.rejetes.length + Math.max(0, t.blocs.length - place);
+        resultat.raisonsBlocs.push(...t.rejetes.map((r) => `#${r.indice} ${r.raison}`));
         resultat.outilsAppeles.push(OUTIL_BLOCS.name);
         texte =
           `${Math.min(t.blocs.length, place)} bloc(s) accepté(s)` +
