@@ -10,14 +10,14 @@ import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
 import * as schema from "@/lib/db/schema";
 import { conditionServis } from "@/lib/depotLecture";
 import type { Niveau } from "@/lib/vocabulaire";
-import { compterIds, type LigneJournal } from "./acces";
+import { compterIds, LECTEUR_TOI, type FiltreJournal, type LigneJournal } from "./acces";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Base = PgDatabase<PgQueryResultHKT, any>;
 
 export interface DepotAcces {
   faitsParNiveau(): Promise<Partial<Record<Niveau, number>>>;
-  journal(limite: number, niveau: Niveau | null): Promise<LigneJournal[]>;
+  journal(limite: number, filtre: FiltreJournal): Promise<LigneJournal[]>;
   lecturesDepuis(depuis: Date, limite: number): Promise<{ ts: Date; lecteur: string }[]>;
   oublis(limite: number): Promise<{ total: number; derniers: Date[] }>;
 }
@@ -33,11 +33,11 @@ export function depotAccesDrizzle(db: Base): DepotAcces {
         .groupBy(schema.faits.niveau);
       return Object.fromEntries(lignes.map((l) => [l.niveau, l.n]));
     },
-    async journal(limite, niveau) {
+    async journal(limite, filtre) {
       const lignes = await db
         .select({ id: j.id, ts: j.ts, lecteur: j.lecteur, outil: j.outil, niveauMaxServi: j.niveauMaxServi, idsFaits: j.idsFaits, idsPieces: j.idsPieces })
         .from(j)
-        .where(niveau === null ? undefined : eq(j.niveauMaxServi, niveau))
+        .where(filtre === null ? undefined : filtre === "toi" ? eq(j.lecteur, LECTEUR_TOI) : eq(j.niveauMaxServi, filtre))
         .orderBy(desc(j.id))
         .limit(limite);
       return lignes.map(({ idsFaits, idsPieces, ...l }) => ({ ...l, nFaits: compterIds(idsFaits), nPieces: compterIds(idsPieces) }));

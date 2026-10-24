@@ -2261,6 +2261,42 @@ code {
   font-weight: 600;
   color: var(--repere);
 }
+/* Outils et niveaux : qui peut lire quel niveau. Plein = toujours, anneau = sur demande, petit point = jamais. */
+.matrice-niveaux {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0.4rem;
+  margin-bottom: 0.4rem;
+}
+.matrice-niveaux th {
+  font-weight: 600;
+  text-align: left;
+}
+.matrice-niveaux thead th {
+  color: var(--teinte);
+  text-align: center;
+}
+.matrice-niveaux td {
+  text-align: center;
+  height: 44px;
+}
+.matrice-niveaux td i {
+  display: inline-block;
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: var(--bordure-champ);
+}
+.matrice-niveaux td[data-permis="oui"] i,
+.matrice-niveaux td[data-permis="sur-demande"] i {
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 2px solid var(--teinte);
+  background: var(--teinte);
+}
+.matrice-niveaux td[data-permis="sur-demande"] i {
+  background: transparent;
+}
 .garde-fous {
   list-style: none;
   margin: 0;
