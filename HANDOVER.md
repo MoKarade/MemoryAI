@@ -31,6 +31,18 @@ route `/api/demandes` (jeton du hub en temps constant, `x-lia-proprietaire: 1`, 
 Contrat exact dans l'ADR ; il a été envoyé au fil Refonte Hubperso (côté hub : Hubperso#450). Le `nom` est chiffré
 niveau 1 et n'entre dans aucun prompt.
 
+## 🟨 24/10/2026 : LIA valide seule ce que deux signaux confirment (MemoryAI#184, ADR 0025), à mesurer en production
+
+`lib/validationLia.ts` (PURE) décide ; `lib/relectureLia.ts` lit et écrit, en fin de passe d'apprentissage
+(`/api/cron/apprentissage`, toutes les 3 h par `apprentissage.yml`). Un fait `propose`, niveau ≤ 1, non canari, hors
+contradiction ouverte, passe à `valide` seulement si sa valeur se lit TELLE QUELLE dans sa source (papier par le `fileId`,
+ou conversation) ET si la relecture Haiku rend `confirme`. Trace `validations_lia` (migration 0030) : raison chiffrée,
+empreintes de l'extrait et de la valeur ; un fait n'est relu qu'une fois. Doutes : cinq par jour marqués `en_pile` (la pile les
+mettra en tête dans la PR suivante, avec « Validé par LIA » à l'écran).
+Bornes : 400 faits, 8 par appel, 60 s, budget `apprentissage`. Ses comptes sortent dans la réponse du cron (`relecture`).
+**Reste** : mesurer la file en production (« fini » = moins de 50 faits `propose`) ; si trop de faits n'ont pas de
+source lisible ici (`sansSource`), le dire à Marc chiffres à l'appui (ADR 0025, « Ce qui reste ouvert »).
+
 ## ✅ 24/10/2026 : LIA lit la météo et l'actualité (MemoryAI#189, ADR 0024)
 
 Outil `monde_meteo` (chat et hub, hors du MCP) : Environnement Canada (`api.weather.gc.ca`, gratuit, sans clé,
