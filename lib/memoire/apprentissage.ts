@@ -4,13 +4,15 @@
 // `lib/memoire/depotApprentissage.ts`.
 //
 // ⚠️ NO FAKE DATA : la maquette dessine une courbe d'entraînement, une porte de qualité, des
-// versions de réseau, des habitudes en pourcentage et des exemples par type. Aucun réseau n'est
-// entraîné aujourd'hui : ces blocs n'existent pas ici, au lieu d'exister faux. Ce qui se mesure
-// vraiment, c'est le banc (`lib/banc/banc.ts`) et la passe d'apprentissage (`lib/apprentissage.ts`).
+// versions de réseau et des exemples par type. Aucun réseau n'est entraîné aujourd'hui : ces
+// tuiles sont dessinées VIDES à leur place (règle de Marc du 23/10), jamais remplies au jugé. Ce
+// qui se mesure vraiment, c'est le banc (`lib/banc/banc.ts`), la passe d'apprentissage
+// (`lib/apprentissage.ts`), les lectures par heure et le chemin d'un oubli.
 
 import { z } from "zod";
 import { CAPACITES, type Mesure } from "@/lib/banc/banc";
 import { STATUTS, STATUTS_QUESTION } from "@/lib/db/schema";
+import { heureQuebec } from "./acces";
 
 type Capacite = (typeof CAPACITES)[number];
 
@@ -100,4 +102,25 @@ export const ETAPES: readonly { texte: string; ou: string }[] = [
   { texte: "Tu valides ou tu rejettes dans « À valider ».", ou: "app/a-valider/page.tsx" },
   { texte: "Elle te demande ce qui manque encore, ou ce qui se contredit.", ou: "lib/questions/producteur.ts" },
   { texte: "Le banc mesure chaque jour ce qu'elle retrouve, sur les mêmes questions.", ou: "lib/banc/passe.ts" },
+];
+
+/** Ton rythme habituel : combien de lectures de la mémoire à chaque heure de Québec (0 à 23). */
+export function rythmeHoraire(lectures: readonly { ts: Date }[]): number[] {
+  const heures = Array.from({ length: 24 }, () => 0);
+  for (const l of lectures) {
+    const h = heureQuebec(l.ts);
+    heures[h] = (heures[h] ?? 0) + 1;
+  }
+  return heures;
+}
+
+/**
+ * Le vrai chemin d'un oubli, chaque étape tenue par le code qu'elle nomme (`depotAdmin.oublier`).
+ * ⚠️ Une étape ajoutée ici est une affirmation : elle doit pointer vers le fichier qui la fait.
+ */
+export const ETAPES_OUBLI: readonly { texte: string; ou: string }[] = [
+  { texte: "Tu oublies un fait : il cesse d'être servi.", ou: "lib/depotAdmin.ts" },
+  { texte: "Son empreinte entre dans les oublis, jamais sa valeur.", ou: "lib/db/schema.ts" },
+  { texte: "Chaque écriture consulte les oublis : il ne revient pas.", ou: "lib/depotFaits.ts" },
+  { texte: "Sa copie de sauvetage est effacée.", ou: "lib/sauvetage/porte.ts" },
 ];

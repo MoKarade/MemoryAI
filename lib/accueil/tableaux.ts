@@ -303,6 +303,11 @@ export const LECTURES_DU_JOUR_MAX = 2000;
 const LIGNES_JOURNAL = 8;
 const HEURE_MINUTE = new Intl.DateTimeFormat("fr-CA", { timeZone: FUSEAU, hour: "numeric", minute: "2-digit", hourCycle: "h23" });
 
+/** Une lecture du journal en une ligne : « 9 h 05 · Chercher un fait », et qui a lu. */
+export function ligneLecture(l: { ts: Date; lecteur: string; outil: string }): { libelle: string; detail: string } {
+  return { libelle: `${HEURE_MINUTE.format(l.ts).replace(":", " h ")} · ${libelleOutil(l.outil)}`, detail: libelleLecteur(l.lecteur) };
+}
+
 /**
  * Sa journée : ses lectures du jour (journal d'accès, le plus récent d'abord ; `null` sans base).
  * Le reste (son temps, ses relances, ton agenda, ce qu'elle surveille) n'a pas encore de source.
@@ -336,7 +341,7 @@ export function tableauJournee(lectures: readonly { ts: Date; lecteur: string; o
           lectures === null
             ? [panne]
             : lectures.length
-              ? [{ genre: "liste", elements: lectures.slice(0, LIGNES_JOURNAL).map((l) => ({ libelle: `${HEURE_MINUTE.format(l.ts).replace(":", " h ")} · ${libelleOutil(l.outil)}`, detail: libelleLecteur(l.lecteur) })) }]
+              ? [{ genre: "liste", elements: lectures.slice(0, LIGNES_JOURNAL).map(ligneLecture) }]
               : [rien],
       },
       { cle: "temps", largeur: 12, icone: "globe", titre: "Son temps", repliee: true, corps: [attend] },

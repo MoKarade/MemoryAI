@@ -107,12 +107,20 @@ clé Anthropic : coût nul. `memoryai_etat` rend les comptes et la dernière mes
   lundi en haut), lectures et dépense des 14 derniers jours, conversations par source. Des comptes seulement, au
   jour de Québec (`lib/memoire/depotHistorique.ts`) ; humeur, relances et corrections de la maquette ne sont pas
   dessinées tant qu'elles ne sont pas mesurées. Verrou : `tests/memoireHistorique.test.ts`.
+  24/10 (écart C2) : les huit tuiles de la maquette dans son ordre. Humeur et relances dessinées VIDES (règle du
+  23/10) ; Ce qu'elle a fait = les dernières lectures du journal (filtre Tout / Fait ; Plus tard et Refusé disent
+  qu'ils n'ont pas de source) ; Ses journées = lectures et dépense par jour ; Ce qu'elle a corrigé = les faits périmés
+  (remplacés par une valeur validée plus récente, prédicat seul) ; Actions par jour = l'ancien histogramme des lectures.
 - Septième pas : **l'onglet Apprentissage** (`/memoire/apprentissage`) : courbe du banc mesure après mesure (papiers
   attendus retrouvés, « je n'ai rien » justes), score par capacité de la dernière mesure, faits tirés des conversations
   par statut (`extracteur` `conversation-*`), questions par statut, et les étapes de la passe. Des nombres seulement
   (`lib/memoire/depotApprentissage.ts`) ; une mesure illisible est écartée et comptée, jamais lue comme 0. La courbe
   d'entraînement, les versions et les habitudes de la maquette n'existent pas : aucun réseau n'est entraîné. Verrou :
   `tests/memoireApprentissage.test.ts`.
+  24/10 (écart C2) : les sept tuiles de la maquette dans son ordre. La courbe = le banc ; Porte de qualité, Les
+  exemples et Versions dessinées VIDES (aucun réseau entraîné) ; Ce qu'elle a appris de toi = faits tirés des
+  conversations ; Ton rythme habituel = lectures par heure sur 30 jours ; Oubli réel = le vrai chemin d'un oubli
+  (`ETAPES_OUBLI`) et le compte. Par capacité, Ce qu'elle te demande et Comment elle apprend restent, repliés.
 - Huitième pas : **la coque de la Mémoire, comme la maquette** (Marc, 23/10 : « exactement comme les maquettes »).
   `components/CoqueMemoire.tsx` : vue plein écran SANS le menu de l'app, retour vers LIA, logo, et les CINQ onglets
   segmentés à icônes de la maquette. `components/Tuile.tsx` : la tuile repliable (`<details>`) à filet violet, sur un
