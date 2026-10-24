@@ -11,7 +11,7 @@ import { drizzle } from "drizzle-orm/pglite";
 import { eq } from "drizzle-orm";
 import * as schema from "../lib/db/schema";
 import { deriverCle } from "../lib/chiffrement";
-import { PlafondAtteintError, PROMPT_SYSTEME, tourDeChat, type ClientModele, type ReponseModele } from "../lib/chat/agent";
+import { OUTIL_BLOCS, PlafondAtteintError, PROMPT_SYSTEME, tourDeChat, type ClientModele, type ReponseModele } from "../lib/chat/agent";
 import { depotAdminDrizzle } from "../lib/depotAdmin";
 import { depotDrizzle } from "../lib/depotFaits";
 import { depotQuestionsDrizzle } from "../lib/depotQuestions";
@@ -174,6 +174,18 @@ describe("tourDeChat", () => {
     const r2 = await tourDeChat({ ...base, client: sans.client });
     expect(r2.blocs).toEqual([]);
     expect(r2.outilsAppeles).toEqual([]);
+    // Le bilan du hub compte comme servi seulement si l'appelant le dit (question avec bilan),
+    // et la description de l'outil le NOMME en clair (pas un gabarit resté littéral).
+    expect(OUTIL_BLOCS.description).toContain("`hub/bilan`");
+    expect(OUTIL_BLOCS.description).not.toContain("${");
+    const bilan = { type: "chiffre", libelle: "Apps en ligne", valeur: 6, sources: ["hub/bilan"] };
+    const hub = faux([appel("lia_blocs", { blocs: [bilan] }), texte("ok")]);
+    const r3 = await tourDeChat({ ...base, client: hub.client, blocs: true, sourcesServies: new Set(["hub/bilan"]) });
+    expect(r3.blocs).toEqual([bilan]);
+    const nu = faux([appel("lia_blocs", { blocs: [bilan] }), texte("ok")]);
+    const r4 = await tourDeChat({ ...base, client: nu.client, blocs: true });
+    expect(r4.blocs).toEqual([]);
+    expect(r4.raisonsBlocs[0]).toContain("non servie");
   });
 
   it("le plafond ferme la porte AVANT l'appel, y compris entre deux tours d'outils", async () => {

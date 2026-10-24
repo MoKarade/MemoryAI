@@ -1,7 +1,7 @@
 // tests/liaBlocs.test.ts — le catalogue FERMÉ des blocs de réponse (lot 5). Données fictives.
 
 import { describe, expect, it } from "vitest";
-import { MAX_BLOCS, SIGNATURES_BLOCS, TYPES_BLOCS, trierBlocs } from "../lib/lia/blocs";
+import { MAX_BLOCS, SIGNATURES_BLOCS, SOURCE_BILAN_HUB, TYPES_BLOCS, trierBlocs } from "../lib/lia/blocs";
 
 const F1 = "0f0e0d0c-0b0a-4908-8706-050403020100";
 const F2 = "1f1e1d1c-1b1a-4918-8716-151413121110";
@@ -80,6 +80,17 @@ describe("trierBlocs", () => {
     expect(r.blocs).toHaveLength(1);
     expect(r.blocs[0]!.type === "chiffre" && r.blocs[0]!.sources).toEqual([F1]);
     expect(r.rejetes.map((x) => x.indice)).toEqual([1]);
+  });
+
+  it("le bilan du hub est une source seulement quand il a été servi ; aucune autre adresse /hub/", () => {
+    const bilan = (s: string) => ({ ...EXEMPLES.chiffre, sources: [s] });
+    const avec = trierBlocs([bilan(SOURCE_BILAN_HUB), bilan(`/${SOURCE_BILAN_HUB}`), bilan("hub/couts")], new Set([...SERVIS, SOURCE_BILAN_HUB]));
+    expect(avec.blocs.map((b) => b.type === "chiffre" && b.sources)).toEqual([[SOURCE_BILAN_HUB], [SOURCE_BILAN_HUB]]);
+    expect(avec.rejetes.map((x) => x.indice)).toEqual([2]);
+    // Sans bilan joint à la question, la même source est inventée.
+    const sans = trierBlocs([bilan(SOURCE_BILAN_HUB)], SERVIS);
+    expect(sans.blocs).toEqual([]);
+    expect(sans.rejetes[0]!.raison).toContain("non servie");
   });
 
   it("un bloc de données sans source est rejeté ; la confirmation n'en a pas besoin", () => {
