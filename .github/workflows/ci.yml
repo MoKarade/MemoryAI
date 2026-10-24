@@ -74,7 +74,7 @@ jobs:
           node .github/ci/verifier-longueur.mjs CLAUDE.md
           node .github/ci/generer-index.mjs --verifier
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         if: steps.voie.outputs.rapide != 'true'
         with:
           node-version-file: .nvmrc
@@ -152,7 +152,7 @@ jobs:
           DOCS_LUES_PAR_LES_TESTS: docs/adr/0004-tout-entre-et-tout-se-retrouve.md
         run: node .github/ci/voie-rapide.mjs
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         if: steps.voie.outputs.rapide != 'true'
         with:
           node-version-file: .nvmrc
@@ -196,7 +196,7 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           DOCS_LUES_PAR_LES_TESTS: docs/adr/0004-tout-entre-et-tout-se-retrouve.md
         run: node .github/ci/voie-rapide.mjs
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         if: steps.voie.outputs.rapide != 'true'
         with:
           node-version-file: .nvmrc
@@ -209,7 +209,7 @@ jobs:
         run: node qualite/portes.mjs
       - name: Rapport
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: rapport-qualite
           path: qualite/rapport.json

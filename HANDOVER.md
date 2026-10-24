@@ -40,6 +40,15 @@ clé Anthropic : coût nul. `memoryai_etat` rend les comptes et la dernière mes
   `banc_questions`, chaque passe échouait au déchiffrement. Ses lignes restent en base, jamais réécrites.
 - Verrou : `tests/banc.test.ts` (papiers fictifs).
 
+**Lot 1, les messages Messenger (MemoryAI#70, ADR 0020), premier pas : la porte d'entrée.** `lib/evenements/messenger.ts`
+(pur) lit un export HTML Facebook, forme relevée le 24/10 sur deux vrais exports : une `<section>` par message, auteur,
+texte, date dans le fuseau de Marc ; une date illisible écarte le message et se compte. `lib/evenements/depot.ts` écrit
+`evenements` (texte et fil chiffrés niveau 2, idempotent par `(source_ref, position)`) et `personnes` + `personne_alias`
+(clé keyée, nom chiffré), migration 0026 additive. `POST /api/evenements` : jeton d'écrivain de DriveAI seulement,
+réponse en nombres. Un papier oublié emporte ses messages et bloque leur retour.
+- Reste : l'envoi des exports par DriveAI (son dépôt), le banc `messages-v1` figé avant la recherche, puis la recherche
+  par personne et date. Verrous : `tests/evenementsMessenger.test.ts`, `tests/evenementsImport.test.ts` (exports fictifs).
+
 **Lot 5, l'interface de la maquette v5 (MemoryAI#74), avancé avant les lots 1 à 4** (Marc valide la maquette le 22/10,
 « peaufine et ship » ; accord des fils MemoryAI et Assistant). Maquette : https://claude.ai/artifact/Qkp5DzqqPnmkFUVZCT1aE6.
 États vides honnêtes tant que les lots 1 à 4 n'ont pas rempli les données. LIA vivante viendra du paquet partagé `lia-ui`
