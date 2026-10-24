@@ -55,7 +55,27 @@ function Anneau({ c }: { c: Extract<Corps, { genre: "anneau" }> }) {
   );
 }
 
-function CorpsTuile({ c }: { c: Corps }) {
+const TEINTES_BULLES = ["repere", "info", "succes", "budget", "accent", "alerte"] as const;
+
+/**
+ * Les bulles : l'aire suit la valeur, chacune à sa teinte, son nom et son compte dedans. En HTML
+ * plutôt qu'en SVG : le texte garde sa taille réelle sur téléphone (leçon de `Histogramme.tsx`).
+ */
+function Bulles({ c }: { c: Extract<Corps, { genre: "bulles" }> }) {
+  const max = Math.max(...c.bulles.map((b) => b.valeur), 1);
+  return (
+    <ul className="tab-bulles" aria-label={c.resume}>
+      {c.bulles.map((b, i) => (
+        <li key={b.libelle} className={`teinte-${TEINTES_BULLES[i % TEINTES_BULLES.length]}`} style={{ "--diametre": `${Math.round(72 + 88 * Math.sqrt(b.valeur / max))}px` } as React.CSSProperties}>
+          <span>{b.libelle}</span>
+          <small>{b.valeur.toLocaleString("fr-CA")}</small>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+export function CorpsTuile({ c }: { c: Corps }) {
   switch (c.genre) {
     case "vide":
       return <Vide>{c.texte}</Vide>;
@@ -98,6 +118,8 @@ function CorpsTuile({ c }: { c: Corps }) {
       );
     case "anneau":
       return <Anneau c={c} />;
+    case "bulles":
+      return <Bulles c={c} />;
     case "jauges":
       return (
         <ul className="tab-jauges">
