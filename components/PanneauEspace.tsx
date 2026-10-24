@@ -4,11 +4,13 @@
 //
 // ⚠️ Toujours dans la page, même fermé (`aria-hidden`, rien dedans) : il glisse au lieu d'apparaître.
 // Il porte aussi « Parler » (`parler`, écart A7) : titre « LIA », la conversation pour corps.
+// Un espace qui a ses tuiles (`contenu.tableau`, écart B) les montre à la place de sa phrase.
 
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { ESPACES, type ContenuEspace, type Espace, type IdEspace } from "@/lib/accueil/espaces";
 import { IconeEspace } from "./IconeEspace";
+import { TableauEspace } from "./TableauEspace";
 
 export function PanneauEspace({ espace, contenu, choisir, fermer, parler = null }: { espace: Espace | null; contenu: ContenuEspace | null; choisir: (id: IdEspace | "parler") => void; fermer: () => void; parler?: ReactNode }) {
   const titre = parler !== null ? "LIA" : espace?.titre;
@@ -33,7 +35,12 @@ export function PanneauEspace({ espace, contenu, choisir, fermer, parler = null 
             </button>
           </div>
           {parler !== null ? <div className="maison-panneau-corps parler-corps">{parler}</div> : null}
-          {parler === null && espace && contenu ? (
+          {parler === null && espace && contenu?.tableau ? (
+            <div className={`maison-panneau-corps teinte-${espace.teinte}`}>
+              <TableauEspace tableau={contenu.tableau} />
+            </div>
+          ) : null}
+          {parler === null && espace && contenu && !contenu.tableau ? (
           <div className={`maison-panneau-corps teinte-${espace.teinte}`}>
             <p className={contenu.vide ? "maison-vide" : "maison-phrase"}>{contenu.phrase}</p>
             {contenu.lignes ? (

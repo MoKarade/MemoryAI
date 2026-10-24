@@ -77,6 +77,8 @@ clé Anthropic : coût nul. `memoryai_etat` rend les comptes et la dernière mes
   Écart A7 : toucher LIA (`surToucher`, lia-ui v0.33.0) ou `/` ouvre le panneau « Parler » de la maison : accueil, fil,
   huit suggestions vraies, saisie ; même route que la bulle, échec fermé (`lib/accueil/conversation.ts`,
   `components/ConversationMaison.tsx`, verrou `tests/conversationMaison.test.ts`) ; `/chat` reste la conversation complète.
+  Écart B (tuiles des panneaux) : Monde et Idées ont les tuiles de la maquette, vides tant qu'aucune source ne les
+  remplit (`lib/accueil/tableaux.ts`, `components/TableauEspace.tsx`, verrou `tests/tableauxMaison.test.ts`).
 - Cinquième pas : **l'onglet Accès de la page Mémoire** (`/memoire/acces`). Part des faits validés par niveau, journal d'accès filtrable par niveau
   servi (métadonnées signées seulement), carte horaire des lectures sur 30 jours à l'heure de Québec, oublis
   (compte et dates) et garde-fous, chacun pointant vers le code qui le tient. Lectures : `lib/memoire/depotAcces.ts`
