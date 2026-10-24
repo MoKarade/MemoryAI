@@ -11,7 +11,7 @@ import { depotQuestionsDrizzle } from "../depotQuestions";
 import { MAX_OUVERTES } from "../questions";
 import type { Question } from "../db/schema";
 import { depotPileDrizzle } from "./depot";
-import type { AvisEnVigueur, CandidatPiece } from "./composer";
+import { composerPile, restantParGenre, type AvisEnVigueur, type CandidatPiece, type GenreCarte } from "./composer";
 
 /** Au plus autant de faits proposés lus pour composer la pile — il y en a un aujourd'hui. */
 export const LIMITE_DEDUCTIONS = 100;
@@ -34,4 +34,20 @@ export async function chargerEntreesPile(db: Db): Promise<EntreesPile> {
     pile.avis(),
   ]);
   return { candidats, deductions, questions, avis };
+}
+
+/**
+ * Combien de cartes restent à juger, par genre, comme la pile de `/questions` les montrerait ce
+ * jour-là. Une seule composition pour l'accueil et l'onglet Mémoire : leurs comptes ne divergent pas.
+ */
+export async function resteAJuger(db: Db, aujourdhui: string): Promise<Record<GenreCarte, number>> {
+  const { candidats, deductions, questions, avis } = await chargerEntreesPile(db);
+  const ordre = composerPile({
+    pieces: candidats,
+    faits: deductions.map((d) => ({ id: d.fait.id, creeLe: d.fait.creeLe })),
+    questions: questions.map((q) => ({ id: q.id, creeLe: q.creeLe })),
+    avis,
+    aujourdhui,
+  });
+  return restantParGenre(ordre, avis);
 }
