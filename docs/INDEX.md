@@ -2,7 +2,7 @@
 
 <!-- GÉNÉRÉ par `node .github/ci/generer-index.mjs` : ne pas modifier à la main (`--verifier` échoue si ce fichier est périmé). -->
 
-34 document(s). Ancien titre -> nouveau chemin : [correspondance.md](correspondance.md).
+38 document(s). Ancien titre -> nouveau chemin : [correspondance.md](correspondance.md).
 
 ## docs/
 
@@ -30,6 +30,9 @@
 - [ADR 0012 — La pile « vrai / faux » : Marc juge ce que la mémoire a lu et déduit](adr/0012-la-pile-vrai-faux.md) — `docs/adr/0012-la-pile-vrai-faux.md`
 - [ADR 0014 — Le journal d'accès dit aussi les PAPIERS lus, et le bon niveau pour un sommaire](adr/0014-le-journal-dit-aussi-les-papiers.md) — `docs/adr/0014-le-journal-dit-aussi-les-papiers.md`
 - [ADR 0015 — Le jeton dit QUI écrit : papiers réservés, lignée et quarantaine par app, refus uniforme (INC-31)](adr/0015-le-jeton-dit-qui-ecrit.md) — `docs/adr/0015-le-jeton-dit-qui-ecrit.md`
+- [ADR 0016 — LIA répond au hub, et par lui à toutes les apps](adr/0016-lia-repond-au-hub.md) — `docs/adr/0016-lia-repond-au-hub.md`
+- [ADR 0017 — LIA vit dans MemoryAI, le hub exécute](adr/0017-lia-vit-dans-memoryai.md) — `docs/adr/0017-lia-vit-dans-memoryai.md`
+- [ADR 0019 — Sauver la mémoire par re-chiffrement, l'ancien déploiement servant d'oracle](adr/0019-sauvetage-par-rechiffrement.md) — `docs/adr/0019-sauvetage-par-rechiffrement.md`
 - [Registre des numéros d'ADR](adr/NUMEROS.md) — `docs/adr/NUMEROS.md`
 
 ## docs/claude/
@@ -45,4 +48,5 @@
 - [8. Documentation (où vit quoi)](claude/08-documentation.md) — `docs/claude/08-documentation.md`
 - [10. Style et compte-rendu](claude/10-style-compte-rendu.md) — `docs/claude/10-style-compte-rendu.md`
 - [11. Protocole (toute modification de la frontière des données)](claude/11-protocole.md) — `docs/claude/11-protocole.md`
+- [12 — Graphe de code local (graphifyy) : hooks, wiki et MCP](claude/12-graphe-code.md) — `docs/claude/12-graphe-code.md`
 - [9. Leçons apprises](claude/lecons.md) — `docs/claude/lecons.md`

@@ -8,6 +8,7 @@ import { resolve } from "node:path";
 import { randomBytes } from "node:crypto";
 import { PGlite } from "@electric-sql/pglite";
 import { drizzle } from "drizzle-orm/pglite";
+import { eq } from "drizzle-orm";
 import * as schema from "../lib/db/schema";
 import { deriverCle } from "../lib/chiffrement";
 import { PlafondAtteintError, PROMPT_SYSTEME, tourDeChat, type ClientModele, type ReponseModele } from "../lib/chat/agent";
@@ -119,6 +120,59 @@ describe("tourDeChat", () => {
     const second = faux([appel("memoryai_contexte", { inclure_n2: false }), texte("ok")]);
     await tourDeChat({ client: second.client, modele: "claude-haiku-4-5", messages: [{ role: "user", content: "tout" }], inclureN2: true, inclureN3: false, outils: outils({ MEMORYAI_N2_CHAT: "1" }), admin: depotAdminDrizzle(db) });
     expect(dernier(second.recus[1]!)).toContain("Arachides");
+  });
+
+  // ADR 0016 : la liste blanche tient aux DEUX bouts — décrire et exécuter.
+  it("outilsPermis : seuls ces outils sont décrits, et un autre nommé quand même n'est pas exécuté", async () => {
+    const outilsVus: string[][] = [];
+    const reponses = [appel("memoryai_proposer", { predicat: "x", valeur: "y" }), texte("ok")];
+    const client: ClientModele = {
+      async create(p) {
+        outilsVus.push(p.tools.map((t) => t.name));
+        return reponses.shift()!;
+      },
+    };
+    const r = await tourDeChat({
+      client,
+      modele: "claude-haiku-4-5",
+      messages: [{ role: "user", content: "retiens ça" }],
+      inclureN2: false,
+      inclureN3: false,
+      outils: outils(),
+      admin: depotAdminDrizzle(db),
+      outilsPermis: new Set(["memoryai_chercher"]),
+    });
+    expect(outilsVus[0]).toEqual(["memoryai_chercher"]);
+    expect(r.outilsAppeles).toEqual([]);
+  });
+
+  // Lot 5 : LIA montre en blocs, et un bloc ne cite que ce qui a été servi DANS CE tour.
+  it("lia_blocs : offert seulement sur demande, accepte une source servie, rejette une source inventée", async () => {
+    const [bon] = await db.select({ id: schema.faits.id }).from(schema.faits).where(eq(schema.faits.predicat, BON.predicat));
+    const inventee = "2f2e2d2c-2b2a-4928-8726-252423222120";
+    const chiffre = (source: string) => ({ type: "chiffre", libelle: "Employeur connu", valeur: 1, sources: [source] });
+    const outilsVus: string[][] = [];
+    const reponses = [
+      appel("memoryai_contexte", {}),
+      appel("lia_blocs", { blocs: [chiffre(bon!.id), chiffre(inventee)] }),
+      texte("Voilà."),
+    ];
+    const client: ClientModele = {
+      async create(p) {
+        outilsVus.push(p.tools.map((t) => t.name));
+        return reponses.shift()!;
+      },
+    };
+    const base = { modele: "claude-haiku-4-5" as const, messages: [{ role: "user" as const, content: "montre" }], inclureN2: false, inclureN3: false, outils: outils(), admin: depotAdminDrizzle(db) };
+    const r = await tourDeChat({ ...base, client, blocs: true });
+    expect(outilsVus[0]).toContain("lia_blocs");
+    expect(r.blocs).toEqual([chiffre(bon!.id)]);
+    expect(r.blocsRejetes).toBe(1);
+    // Sans `blocs`, l'outil n'est pas offert, et un appel qui le nomme n'est pas exécuté.
+    const sans = faux([appel("lia_blocs", { blocs: [chiffre(bon!.id)] }), texte("ok")]);
+    const r2 = await tourDeChat({ ...base, client: sans.client });
+    expect(r2.blocs).toEqual([]);
+    expect(r2.outilsAppeles).toEqual([]);
   });
 
   it("le plafond ferme la porte AVANT l'appel, y compris entre deux tours d'outils", async () => {

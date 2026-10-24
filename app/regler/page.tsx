@@ -83,6 +83,7 @@ import { appsConnues } from "@/lib/jetons";
 import { n2Autorise } from "@/lib/lecture";
 import { lireEnvMcp } from "@/lib/mcp/oauth";
 import { accesDonnees, MESSAGES_MANQUE } from "@/lib/pageDonnees";
+import { depotSauvetageDrizzle } from "@/lib/sauvetage/depot";
 import { depotPerimetresDrizzle } from "@/lib/depotPerimetres";
 import { depotPiecesLectureDrizzle } from "@/lib/pieces/depotLecture";
 import { totalInformations, phraseInformations, type PostesInformations } from "@/lib/totalInformations";
@@ -116,6 +117,18 @@ export default async function ReglerPage({ searchParams }: { searchParams: Promi
   const chatConfigure = Boolean(process.env.ANTHROPIC_API_KEY?.trim());
   const tousDomaines = domainesDuVocabulaire();
 
+  // ADR 0019 : tant que le sauvetage n'est pas clos, la page le dit en premier.
+  // Une lecture qui échoue (table absente, base en panne) ne cache pas la page : l'état est dit
+  // inconnu, jamais « pas de sauvetage » par défaut (revue du 23/10).
+  let sauvetage: "ouvert" | "clos" | "inconnu" = "clos";
+  if (acces.ok) {
+    try {
+      sauvetage = (await depotSauvetageDrizzle(acces.db).ecrituresFermees()) ? "ouvert" : "clos";
+    } catch (e) {
+      console.error("[regler] état du sauvetage illisible :", e instanceof Error ? e.name : "erreur");
+      sauvetage = "inconnu";
+    }
+  }
   const comptes = acces.ok ? await depotLectureDrizzle(acces.db).comptes() : null;
   const parDomaine = acces.ok ? await comptesParDomaine(acces.db) : {};
   const conversations = acces.ok ? await depotConversationsDrizzle(acces.db).mesure() : null;
@@ -163,6 +176,18 @@ export default async function ReglerPage({ searchParams }: { searchParams: Promi
           </p>
         )}
         {!acces.ok && <p className="alerte bandeau">{MESSAGES_MANQUE[acces.manque]}</p>}
+        {sauvetage === "ouvert" && (
+          <p className="alerte bandeau">
+            Sauvetage en cours : les apps ne peuvent pas écrire dans la mémoire tant qu’il n’est pas clos.{" "}
+            <Link href="/regler/sauvetage">Ouvrir le sauvetage</Link>
+          </p>
+        )}
+        {sauvetage === "inconnu" && (
+          <p className="alerte bandeau">
+            État du sauvetage illisible : les écritures restent fermées tant qu’il n’est pas relu.{" "}
+            <Link href="/regler/sauvetage">Ouvrir le sauvetage</Link>
+          </p>
+        )}
 
         {/* ⚠️ Le total ne s'affiche JAMAIS sans sa décomposition : un fait (une phrase que Marc
             a confirmée) et un papier (un document dont on sait qu'il existe) ne sont pas la même

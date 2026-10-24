@@ -24,6 +24,7 @@ import { estGele, reponseGelee } from "@/lib/gel";
 import { cleJournalDepuisEnv, ClefJournalAbsenteError } from "@/lib/journal";
 import { assurerMigrations } from "@/lib/migrations";
 import { NonAutorise, requireSession } from "@/lib/session";
+import { depotBancDrizzle } from "@/lib/banc/passe";
 import { depotPiecesLectureDrizzle } from "@/lib/pieces/depotLecture";
 
 export const dynamic = "force-dynamic";
@@ -94,6 +95,7 @@ export async function POST(request: Request): Promise<Response> {
         lecture: depotLectureDrizzle(db),
         ecriture: depotDrizzle(db),
         pieces: depotPiecesLectureDrizzle(db),
+        banc: depotBancDrizzle(db),
         questions: depotQuestionsDrizzle(db),
         conversations: depotConversationsDrizzle(db),
         cle,

@@ -17,6 +17,7 @@ import type { FaitAvecProvenance } from "./depotLecture";
 import { nettoyerVoix } from "./chat/voix";
 import { empreinteOubli } from "./ecrireFaits";
 import { definition } from "./vocabulaire";
+import { effacerTraceSauvetage } from "./sauvetage/porte";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Base = PgDatabase<PgQueryResultHKT, any>;
@@ -221,6 +222,9 @@ export function depotAdminDrizzle(db: Base): DepotAdmin {
           .onConflictDoNothing();
       }
       await db.update(schema.faits).set({ supprimeLe: maintenant, statut: "rejete" }).where(eq(schema.faits.id, id));
+      // ADR 0019 : l'archive du sauvetage garde l'ancien scellé de ce fait ; un fait oublié n'y
+      // reste pas (revue du 23/10).
+      await effacerTraceSauvetage(db, "faits", id);
       return "ok";
     },
     async predicatsEnQuarantaine(limite) {
@@ -274,6 +278,10 @@ export function depotAdminDrizzle(db: Base): DepotAdmin {
       if (ids.length) {
         await db.delete(schema.provenances).where(inArray(schema.provenances.faitId, ids));
         await db.delete(schema.faits).where(inArray(schema.faits.id, ids));
+        // ADR 0019 : l'archive du sauvetage garde les anciens scellés des faits. Une purge
+        // « totale » qui la laisserait ne le serait pas (revue du 23/10).
+        await db.delete(schema.chiffreV1Archive).where(eq(schema.chiffreV1Archive.tableNom, "faits"));
+        await db.delete(schema.sauvetageEchecs).where(eq(schema.sauvetageEchecs.tableNom, "faits"));
       }
       return { faits: ids.length };
     },

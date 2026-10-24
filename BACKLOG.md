@@ -15,6 +15,11 @@ l'état de chaque lot et ce qui a été découvert en chemin.
 | 5 | UI `/moi` `/a-valider` `/fait/[id]` + chat + `/hub/summary` + PR hub | ✅ (PR hub #59) |
 | 6 | Seed 80-150 faits depuis la session, validés en lot par Marc | ✅ 105 faits envoyés le 15/09 à 20:44 (3 lots, 0 refusé), 98 validés par Marc, 7 rejetés |
 
+## Refonte LIA (Marc, 22/10/2026) 🔨
+
+Le suivi vit dans les issues : chantier MemoryAI#67, lots #69 (banc) à #77. Elle remplace la suite de la refonte
+d'interface ci-dessous à partir de R3 (#11 à #15 fermées, reprises par le lot 5, #74).
+
 ## Refonte de l'interface (Marc, 25/09/2026) ⬜
 
 Brief, cadrage et plan : [`docs/REFONTE-INTERFACE.md`](docs/REFONTE-INTERFACE.md). Porte de plan :
@@ -24,8 +29,9 @@ maquettes → choix de Marc → plan court → OK.
   le 15/10/2026 (MemoryAI#90). Le bandeau de `app/page.tsx` compte maintenant la pile elle-même
   (`composerPile` + `restantParGenre`, via `lib/pile/charger.ts` et `lib/pile/bandeau.ts`) : « N à
   juger » dès qu'il reste une carte non jugée et non passée, rien quand la pile est vide.
-- [ ] **[R0] Maquettes** — A « Carnet » en brouillon, B « Nuit » et C « Bento » à dessiner.
-- [ ] **[R1…R7]** — le plan de `docs/REFONTE-INTERFACE.md` §6, lot par lot.
+- [x] **[R0] Maquettes** — A « Carnet », B « Nuit » et C « Bento » sont sur la toile (B et C dessinées le
+  22/10/2026, MemoryAI#7) ; Marc a choisi B « Nuit » le 22/10/2026 (MemoryAI#8).
+- [ ] **[R1…R7]** — le plan de `docs/REFONTE-INTERFACE.md` §6, lot par lot. **[R1] fait le 22/10 (MemoryAI#9)** : socle Nuit + menu ; **[R2] fait le 22/10 (MemoryAI#10)** : écran de Lia ; reste R3–R7.
 
 ## [L3] La pile « vrai / faux » (ADR 0012, 24/09/2026) 🟦
 

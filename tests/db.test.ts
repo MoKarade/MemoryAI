@@ -77,8 +77,9 @@ async function inserer(champs: Partial<typeof FAIT> & { id: string; empreinte: s
 // que quelqu'un l'ait voulue : une migration générée à l'aveugle, un `drizzle-kit` qui
 // invente une table de jointure, un reliquat d'essai. Sept de l'ADR 0001, puis les dépenses
 // du chat, les questions, les conversations et leurs messages (ADR 0002), les liens du
-// graphe (ADR 0002 §5.3), puis les pièces et leurs exemplaires (ADR 0004 §6.2).
-describe("les vingt tables", () => {
+// graphe (ADR 0002 §5.3), puis les pièces et leurs exemplaires (ADR 0004 §6.2), puis le banc
+// de la refonte LIA (MemoryAI#69), puis l'état partagé de LIA.
+describe("les vingt-six tables", () => {
   it("existent, et pas une de plus", async () => {
     const r = await pg.query<{ table_name: string }>(
       `SELECT table_name FROM information_schema.tables WHERE table_schema='public' ORDER BY 1`,
@@ -89,11 +90,19 @@ describe("les vingt tables", () => {
       "avancement_sources",
       // [ADR 0012] Les avis de Marc sur la pile « vrai / faux », en ajout seul (migration 0018).
       "avis_pile",
+      // [MemoryAI#69] Le banc de la refonte LIA : ses mesures (des nombres) et ses questions
+      // (chiffrées) (migration 0023).
+      "banc_mesures",
+      "banc_questions",
+      // [ADR 0019] Le sauvetage du 23/10 : l'archive de l'ancien chiffré (migration 0024).
+      "chiffre_v1_archive",
       "conversations",
       "depenses_chat",
       "faits",
       // [L35] Les lectures tentées sans résultat (migration 0016, ADR 0007).
       "lectures_tentees",
+      // [CONTRAT-etat-lia] L'état PARTAGÉ de LIA : une ligne, des nombres et des verbes (migration 0025).
+      "lia_etat",
       "liens",
       "messages",
       "oublis",
@@ -107,6 +116,9 @@ describe("les vingt tables", () => {
       "predicats_refuses",
       "provenances",
       "questions",
+      // [ADR 0019] Les échecs du sauvetage (des raisons, jamais une valeur) et son état.
+      "sauvetage_echecs",
+      "sauvetage_etat",
       "sujets",
       // [L27] La voix de Lia, écrite par Marc dans Régler : UNE ligne, `id = 1` (migration 0022).
       "voix_lia",

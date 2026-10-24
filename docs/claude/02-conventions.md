@@ -11,15 +11,15 @@
   horloge.
 - **Une seule définition par règle.** Deux implémentations d'une même règle, c'est une règle
   et demie.
-- Ne pas imposer le dark mode : `prefers-color-scheme` décide. Direction bento du hub, mobile
+- Sombre seul (Marc, 22/10/2026, refonte LIA) : le style du hub, plus de thème clair. Mobile
   ET PC.
 - **Socle visuel commun** (app-template#39, appliqué ici par MemoryAI#126). Les couleurs vivent
   dans `app/globals.css`, en variables hexadécimales (`--fond`, `--texte`, `--accent`,
-  `--repere`, `--succes-*`, `--alerte-*`, `--erreur-*`…), clair ET sombre, et nulle part ailleurs.
+  `--repere`, `--succes-*`, `--alerte-*`, `--erreur-*`…), sombre seul depuis le 22/10/2026 (style du hub, police Outfit auto-hébergée), et nulle part ailleurs.
   Vocabulaire : `.carte` `.bouton` (+ `-principal` `-second` `-danger`) `.champ` `.pastille`
   `.bandeau` `.surtitre` `.doux` et les états `.succes` `.alerte` `.erreur`. `--accent` ne sert
   qu'à l'action principale ; `--repere` : navigation active, surtitre, catégorie, jamais un état.
-  Cibles ≥ 44 px, champs à 16 px, aucune ombre, aucune police téléchargée. Verrous :
+  Cibles ≥ 44 px, champs à 16 px, aucune ombre, aucune police externe (Outfit est servie par l'app, `@fontsource`). Verrous :
   `tests/theme.test.ts` (jetons, classes définies, contrastes WCAG, `.champ` sur chaque saisie),
   `tests/couleurs.test.ts` (aucune couleur hors du CSS), `tests/contraste.test.ts` (graphes).
   Une page ou un composant neuf emprunte ce vocabulaire ; il n'invente ni classe ni couleur.

@@ -54,8 +54,18 @@ Toile : <https://claude.ai/artifact/BUpBxx4n5n2YwUtiWuYZDe> (privée, à Marc).
 
 - **A — Carnet** *(brouillon posé, interactif)* : papier chaud, titres en serif (Fraunces),
   texte en Source Sans 3, un seul accent terre cuite. Trois écrans : Lia · menu · pile.
-- **B — Nuit** *(à dessiner)* : sombre et calme, un accent clair, pour le soir.
-- **C — Bento** *(à dessiner)* : tuiles arrondies, la même famille que le hub.
+- **B — Nuit** *(dessinée le 22/10/2026, interactive)* : fond bleu-nuit, texte en Albert Sans léger, un accent
+  doré clair (réglable). Pas de cartes : les réponses de Lia s'écrivent à même le fond, le menu est une
+  liste de lignes séparées par des filets. Trois écrans : Lia · menu · pile.
+- **C — Bento** *(dessinée le 22/10/2026, interactive)* : tuiles plates à bordure fine et coins de 16 px,
+  Outfit, mêmes jetons que le hub (`#07090D` / `#0E1014` / `#15181E`) ; l'accent est l'orange de MemoryAI
+  (réglable). Le menu est une grille de tuiles de tailles différentes. Trois écrans : Lia · menu · pile.
+
+Les trois sont sur la même toile, côte à côte, lisibles à 390 px, en données fictives.
+
+**Choix de Marc (22/10/2026, 8 h 20 Québec, MemoryAI#8) : la direction B « Nuit », sans mélange.** Les
+lots R1 et suivants (§6) prennent ses jetons : fond bleu-nuit, Albert Sans léger, accent doré clair. La
+direction C (tuiles) n'est pas retenue ; A reste le brouillon d'origine.
 
 Les trois partagent la même STRUCTURE (celle de la §4), pour que Marc choisisse un style et non
 une architecture. Les valeurs entre [CROCHETS] sont des emplacements, jamais des chiffres
@@ -88,7 +98,7 @@ que s'il y a des cartes. En bas : deux ou trois suggestions et la saisie. Pas de
 - `app/rafraichirCompteurs.ts` : source UNIQUE des `revalidatePath` (leçon n° 20) — à
   refaire suivre si des pages fusionnent.
 - `tests/couleurs.test.ts` : aucune couleur en dur, tout token employé est déclaré, contrastes
-  mesurés (leçons n° 16 et 32). Les deux thèmes suivent `prefers-color-scheme`.
+  mesurés (leçons n° 16 et 32). Depuis le 22/10/2026 : sombre seul, style du hub (refonte LIA, MemoryAI#74).
 - Une LISTE ne déchiffre jamais le contenu N3/N2 de cent papiers (leçon n° 41, ADR 0012 §2.5).
 - Un `<details>` replié EXPÉDIE quand même son contenu (leçon n° 21) : pas de contenu
   sensible « caché » dans un dépli d'une page de liste.
@@ -97,12 +107,12 @@ que s'il y a des cartes. En bas : deux ou trois suggestions et la saisie. Pas de
 
 ## 6. Le plan proposé (un lot = une PR, en ligne avant le suivant)
 
-0. **Maquettes** : finir A, dessiner B et C ; Marc choisit (et peut mélanger).
+0. **Maquettes** : A, B et C dessinées ; Marc a choisi B « Nuit » le 22/10/2026 (§3).
 1. **R0 — `[L3-acces]`** *(avant tout, petit)* : la pile atteignable (pastille « à juger »
    comptée sur TOUTES les cartes de la pile). C'est un défaut du lot 3, pas de la refonte.
-2. **R1 — le socle** : tokens (couleurs, typo, espacements) de la direction choisie, gabarit
+2. **R1 — le socle** *(livré le 22/10, MemoryAI#9)* : tokens (couleurs, typo, espacements) de la direction choisie, gabarit
    d'écran, menu ; la barre d'onglets disparaît.
-3. **R2 — Lia** : l'écran de conversation redessiné (bulles, sources, suggestions, saisie).
+3. **R2 — Lia** *(livré le 22/10, MemoryAI#10)* : l'écran de conversation redessiné (bulles, sources, suggestions, saisie).
 4. **R3 — Vrai ou faux** : la pile + `/a-valider` fusionnés.
 5. **R4 — Ce qu'elle sait** : recherche + fiches.
 6. **R5 — Lecture et Dépenses** : un écran court chacun, le détail derrière « ? ».

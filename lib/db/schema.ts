@@ -22,10 +22,12 @@
 
 import { sql } from "drizzle-orm";
 import {
+  bigint,
   boolean,
   check,
   index,
   integer,
+  jsonb,
   pgTable,
   primaryKey,
   real,
@@ -755,6 +757,103 @@ export const avisPile = pgTable(
     check("avis_pile_verdict", sql`${t.verdict} IN ('vrai', 'faux', 'passe')`),
     check("avis_pile_remarque_seulement_faux", sql`${t.remarque} IS NULL OR ${t.verdict} = 'faux'`),
   ],
+);
+
+/**
+ * Le BANC de questions de la refonte LIA (MemoryAI#69, migration 0023). Tiré UNE fois par banc
+ * (`banc` = son nom : `papiers-v1` d'abord, illisible depuis l'incident du 23/10, puis
+ * `papiers-v2`), jamais réécrit : un banc qu'on retouche ne mesure plus rien.
+ *
+ * ⚠️ `contenu` est CHIFFRÉ (AAD `banc|<id>`, niveau 2) : la question nomme un émetteur ou un
+ * type de papier de Marc. `capacite` reste en clair : elle ne dit rien sur lui, et c'est elle
+ * que les comptes de `memoryai_etat` regroupent.
+ */
+export const bancQuestions = pgTable(
+  "banc_questions",
+  {
+    id: text("id").primaryKey(),
+    banc: text("banc").notNull(),
+    rang: integer("rang").notNull(),
+    capacite: text("capacite").notNull(),
+    contenu: text("contenu").notNull(),
+    creeLe: timestamp("cree_le", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("banc_questions_rang").on(t.banc, t.rang)],
+);
+
+/**
+ * Une MESURE du banc : des NOMBRES seulement (`lib/banc/banc.ts#Mesure` en JSON), jamais une
+ * question ni un identifiant de papier. En ajout seul : la suite des mesures EST l'historique.
+ */
+export const bancMesures = pgTable(
+  "banc_mesures",
+  {
+    id: serial("id").primaryKey(),
+    banc: text("banc").notNull(),
+    /** Ce qui a cherché : `recherche-plein-texte` au lot 0, LIA ensuite. */
+    chercheur: text("chercheur").notNull(),
+    resultat: text("resultat").notNull(),
+    mesureLe: timestamp("mesure_le", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("banc_mesures_banc").on(t.banc, t.mesureLe)],
+);
+
+/**
+ * Le sauvetage du 23/10/2026 (ADR 0019, migration 0024). `ancien` est le JSON de ce que la ligne
+ * portait avant d'être sauvée (scellés `v1`, empreintes) : écrit dans la même instruction que la
+ * ligne, jamais modifié ensuite.
+ */
+export const chiffreV1Archive = pgTable(
+  "chiffre_v1_archive",
+  {
+    tableNom: text("table_nom").notNull(),
+    ligneId: text("ligne_id").notNull(),
+    ancien: text("ancien").notNull(),
+    sauveLe: timestamp("sauve_le", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ name: "chiffre_v1_archive_pk", columns: [t.tableNom, t.ligneId] })],
+);
+
+/** Les lignes que le sauvetage n'a pas pu sauver. `raisons` : des codes fermés, jamais une valeur. */
+export const sauvetageEchecs = pgTable(
+  "sauvetage_echecs",
+  {
+    tableNom: text("table_nom").notNull(),
+    ligneId: text("ligne_id").notNull(),
+    raisons: text("raisons").notNull(),
+    essais: integer("essais").notNull().default(1),
+    majLe: timestamp("maj_le", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ name: "sauvetage_echecs_pk", columns: [t.tableNom, t.ligneId] })],
+);
+
+/** Une seule ligne, posée par la migration si la base avait déjà des données. `closLe` vide ⇒ écritures des apps fermées. */
+export const sauvetageEtat = pgTable(
+  "sauvetage_etat",
+  {
+    id: integer("id").primaryKey(),
+    ouvertLe: timestamp("ouvert_le", { withTimezone: true }).notNull().defaultNow(),
+    closLe: timestamp("clos_le", { withTimezone: true }),
+  },
+  (t) => [check("sauvetage_etat_une_ligne", sql`${t.id} = 1`)],
+);
+
+/**
+ * L'état PARTAGÉ de LIA (migration 0025, contrat `CONTRAT-etat-lia.md`) : une seule ligne, celle
+ * du propriétaire. Aucun contenu de Marc : des nombres, des verbes de LIA, un nom d'humeur
+ * (`lib/lia/etatPartage.ts`). `version` sert au contrôle optimiste (une écriture qui ne la
+ * dépasse pas est refusée en 409).
+ */
+export const liaEtat = pgTable(
+  "lia_etat",
+  {
+    id: integer("id").primaryKey(),
+    version: integer("version").notNull(),
+    maj: bigint("maj", { mode: "number" }).notNull(),
+    etat: jsonb("etat").notNull(),
+    modifieLe: timestamp("modifie_le", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [check("lia_etat_une_ligne", sql`${t.id} = 1`)],
 );
 
 export type Fait = typeof faits.$inferSelect;

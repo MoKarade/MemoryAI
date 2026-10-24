@@ -7,89 +7,75 @@
 
    Règles, verrouillées par tests/theme.test.ts et tests/couleurs.test.ts :
    - Les couleurs vivent ICI, en variables hexadécimales, et nulle part ailleurs.
-   - Chaque couleur est définie en clair ET en sombre (le thème suit le système).
-   - Les couples texte/fond passent le WCAG, dans les deux thèmes.
+   - Sombre seul (Marc, 22/10/2026) : chaque couleur est définie UNE fois, dans `:root`.
+   - Les couples texte/fond passent le WCAG.
    - Cibles tactiles ≥ 44 px, champs à 16 px (en dessous, iOS zoome tout seul).
    - `--accent` ne sert QU'À l'action principale. `--repere` : surtitre, navigation active,
      catégorie — jamais un état.
    ───────────────────────────────────────────────────────────────────────────── */
 
+/* ⚠️ SOMBRE SEUL (Marc, 22/10/2026, refonte LIA, MemoryAI#74) : le style du hub, un seul jeu
+   de jetons, plus de bascule selon le système. Valeurs = celles de Hubperso et de la maquette
+   validée (encre #07090D, surfaces #0E1014 / #15181E). Les NOMS restent ceux du socle commun :
+   les pages existantes ne changent pas de vocabulaire, elles changent de couleurs. */
 :root {
-  color-scheme: light dark;
+  color-scheme: dark;
 
   /* Fonds et surfaces. */
-  --fond: #f6f7f9;
-  --surface: #ffffff;
-  --surface-douce: #eef0f4;
-  --bordure: #dde1e8;
+  --fond: #07090d;
+  --surface: #0e1014;
+  --surface-douce: #15181e;
+  --bordure: #23262c;
   /* Contour de champ, de case et de bouton secondaire : ≥ 3:1 (WCAG 1.4.11). */
-  --bordure-champ: #6b7585;
+  --bordure-champ: #687387;
+  /* Le contour « fort » de la maquette v5 : onglets segmentés, bouton de retour. */
+  --bordure-forte: rgb(255 255 255 / 0.16);
 
   /* Textes. */
-  --texte: #0f172a;
-  --texte-doux: #4b5565;
+  --texte: #e2e8f0;
+  --texte-doux: #a3afc2;
+  /* Le plus discret : petits titres des tuiles de la Mémoire (maquette v5, `--text-faint`). */
+  --texte-pale: #8896a8;
 
-  /* L'accent ne sert QU'À l'action principale. */
-  --accent: #1e293b;
-  --accent-fonce: #0f172a;
-  --sur-accent: #f8fafc;
+  /* L'accent (indigo du hub) ne sert QU'À LIA et à l'action principale. */
+  --accent: #93a0ff;
+  --accent-fonce: #7f8df7;
+  --sur-accent: #07090d;
 
-  /* Le repère : surtitre, navigation active, catégorie. Jamais un état. */
-  --repere: #c2410c;
-  --repere-doux: #ffedd5;
+  /* Le repère : le violet de MemoryAI, en filet, surtitre, navigation active. Jamais un état. */
+  --repere: #a78bfa;
+  --repere-doux: #1d1830;
 
   /* Sémantique : « ça va », « attention », « erreur » — déclarées UNE fois. */
-  --succes-fond: #dcfce7;
-  --succes-texte: #166534;
-  --alerte-fond: #fef3c7;
-  --alerte-texte: #92400e;
-  --erreur-fond: #fee2e2;
-  --erreur-texte: #991b1b;
+  --succes-fond: #0c2620;
+  --succes-texte: #34d399;
+  --alerte-fond: #2a210c;
+  --alerte-texte: #fbbf24;
+  --erreur-fond: #2c1416;
+  --erreur-texte: #f87171;
+  /* Teintes des espaces de la maison de LIA (maquette v5) : une icône, jamais un état. */
+  --info: #60a5fa;
+  --budget: #fb923c;
 
   /* ⚠️ LE MÊME FOND, EN HEX, POUR LE SYSTÈME. Le manifeste et la barre d'état de l'app
      installée sont lus par Android AVANT toute feuille de style : une variable CSS n'y
-     arrive jamais. Ces deux valeurs sont donc les SEULES couleurs écrites deux fois dans le
-     dépôt — la valeur de `--fond` dans chaque thème, et `tests/couleurs.test.ts` tient les
-     trois sites ensemble (il lit ces deux lignes, il ne les recopie pas). Une valeur oubliée
-     ici fait un flash au lancement, que personne ne voit parce que personne ne relit un
-     manifeste (leçon JobAI). */
-  --bg-systeme-clair: #f6f7f9;
-  --bg-systeme-sombre: #07090d;
+     arrive jamais. Cette valeur est donc la SEULE couleur écrite plusieurs fois dans le
+     dépôt (`--fond`, le manifeste, la barre système), et `tests/couleurs.test.ts` tient les
+     trois sites ensemble. */
+  --bg-systeme: #07090d;
+
+  /* Titres pleins, réponse de Lia légère : le contraste de poids du style du hub. */
+  --poids-titre: 600;
+  --poids-lia: 300;
 
   --rayon: 16px;
   --rayon-petit: 12px;
-  --police: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* Outfit, police commune du hub, auto-hébergée (@fontsource) : aucune requête externe. */
+  --police: "Outfit Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --police-code: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
 
   /* Espacement de la mise en page (propre à MemoryAI). */
   --gap: clamp(0.8rem, 0.5rem + 1vw, 1.3rem);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --fond: #07090d;
-    --surface: #0e1014;
-    --surface-douce: #15181e;
-    --bordure: #262a33;
-    --bordure-champ: #6f7b8e;
-
-    --texte: #f8fafc;
-    --texte-doux: #94a3b8;
-
-    --accent: #e6eaf2;
-    --accent-fonce: #c3cad8;
-    --sur-accent: #07090d;
-
-    --repere: #fb923c;
-    --repere-doux: #2a1b14;
-
-    --succes-fond: #0f2a24;
-    --succes-texte: #6ee7b7;
-    --alerte-fond: #2c2410;
-    --alerte-texte: #fbbf24;
-    --erreur-fond: #331618;
-    --erreur-texte: #f87171;
-  }
 }
 
 *,
@@ -121,11 +107,11 @@ h3 {
 }
 h1 {
   font-size: clamp(1.75rem, 1.4rem + 1.6vw, 2.25rem);
-  font-weight: 800;
+  font-weight: var(--poids-titre);
 }
 h2 {
   font-size: 1.25rem;
-  font-weight: 700;
+  font-weight: var(--poids-titre);
 }
 
 a {
@@ -344,58 +330,104 @@ code {
   clip: rect(0 0 0 0);
   white-space: nowrap;
 }
+/* ── En-tête et menu (R1 de la refonte, MemoryAI#9) : plus de barre d'onglets. Un bouton ouvre
+   le menu ; il tient dans un <dialog> modal, donc le navigateur fournit le piège du focus,
+   Échap et le retour du focus au bouton. Plein écran sur téléphone, tiroir à gauche dès 48rem. ── */
 .nav {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.75rem clamp(1rem, 4vw, 2rem);
-  border-bottom: 1px solid var(--bordure);
-  background-color: var(--surface);
+  gap: 0.5rem;
+  padding: 0.5rem clamp(0.75rem, 4vw, 1.5rem);
+  background-color: var(--fond);
   position: sticky;
   top: 0;
   z-index: 2;
 }
-.nav nav {
-  display: flex;
-  gap: 0.25rem;
-}
 .nav-marque {
-  font-weight: 800;
-  letter-spacing: -0.02em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+  font-size: 1.375rem;
+  font-weight: var(--poids-titre);
+  letter-spacing: 0.08em;
   text-decoration: none;
   color: var(--texte);
 }
-.nav-lien {
-  display: inline-flex;
+.menu-bouton,
+.menu-fermer {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 22px;
+  background-color: transparent;
+  color: var(--texte);
+  cursor: pointer;
+}
+.menu {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background-color: var(--fond);
+  color: var(--texte);
+}
+.menu::backdrop {
+  background-color: rgb(0 0 0 / 0.55);
+}
+.menu[open] {
+  display: block;
+}
+.menu-corps {
+  height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem 1rem 1.5rem;
+}
+.menu-tete {
+  display: flex;
   align-items: center;
-  min-height: 44px;
-  padding: 0 0.9rem;
-  border-radius: 999px;
+  justify-content: space-between;
+  padding-bottom: 1rem;
+}
+.menu-liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-bottom: 1px solid var(--bordure);
+}
+.menu-lien {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 72px;
+  padding: 0 0.25rem;
+  border-top: 1px solid var(--bordure);
+  font-size: 1.3125rem;
   text-decoration: none;
-  color: var(--texte-doux);
-  font-weight: 600;
+  color: var(--texte);
 }
-/* ⚠️ [ADR 0009] SOUS 40rem, LA BARRE PASSE À LA LIGNE. Mesuré le 23/09 dans Chromium : à
-   390 px, la barre faisait 674 px de large — la page entière défilait de côté. Le défaut était là
-   dès quatre onglets (~530 px) ; le cinquième l'a rendu impossible à ignorer. Même seuil que les
-   tuiles (`40rem`) : deux seuils différents ouvriraient une fenêtre où l'un a basculé et pas
-   l'autre. La cible reste à 44 px de haut. */
-@media (max-width: 40rem) {
-  .nav {
-    flex-wrap: wrap;
-    row-gap: 0.25rem;
-  }
-  .nav nav {
-    flex-wrap: wrap;
-  }
-  .nav-lien {
-    padding: 0 0.7rem;
-  }
+.menu-lien[aria-current="page"]::after {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 5px;
+  background-color: var(--repere);
 }
-.nav-lien.actif {
-  background: var(--repere-doux);
-  color: var(--repere);
+@media (min-width: 48rem) {
+  .menu {
+    width: 22rem;
+    max-width: 90vw;
+    border-right: 1px solid var(--bordure);
+  }
 }
 .page {
   max-width: 64rem;
@@ -453,6 +485,12 @@ code {
 }
 .zone-rouge {
   border-color: var(--erreur-texte);
+}
+/* ADR 0019 : le bouton du sauvetage, puis ce qu'il a fait. */
+.sauvetage-direct {
+  display: grid;
+  gap: 0.5rem;
+  justify-items: start;
 }
 .liste-faits {
   display: grid;
@@ -547,35 +585,75 @@ code {
   padding: 0.4rem 0.3rem;
   border-bottom: 1px solid var(--bordure);
 }
-/* Chat */
-/* [L2, ADR 0011] L'historique à GAUCHE sur un écran large ; replié au-dessus sur un téléphone,
-   pour que la conversation garde tout l'écran. Aucune couleur neuve : les tokens existants. */
-.chat-cadre {
-  display: grid;
-  grid-template-columns: minmax(14rem, 18rem) minmax(0, 1fr);
-  gap: 0;
-  max-width: 72rem;
+/* ── Chat : l'écran de Lia (R2 de la refonte, MemoryAI#10). Une colonne calme : la réponse de Lia
+   est du TEXTE sur le fond, sans bulle ; seul Marc a sa bulle. Les réglages et l'historique sont
+   repliés dans un `<details>` natif (clavier et lecteur d'écran gratuits). Aucune couleur neuve. ── */
+.chat {
+  max-width: 44rem;
   margin: 0 auto;
-}
-.chat-historique {
-  border-right: 1px solid var(--bordure);
-  padding: clamp(0.75rem, 3vw, 1.25rem) 0.75rem;
-  display: grid;
-  align-content: start;
+  padding: 0 clamp(1rem, 4vw, 1.5rem);
+  display: flex;
+  flex-direction: column;
   gap: 0.75rem;
-  max-height: calc(100dvh - 4.5rem);
-  position: sticky;
-  top: 0;
+  /* Sous l'en-tête (44 px + marges) : la saisie reste en bas même quand le fil est court. */
+  min-height: calc(100dvh - 3.75rem);
+}
+.chat-outils {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.75rem;
+}
+/* La bascule se lit comme une phrase, pas comme un bouton : l'action de la page est ailleurs. */
+.chat-bascule {
+  flex: 1 1 auto;
+  min-height: 2.75rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--texte-doux);
+  font: inherit;
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+}
+/* « Nouvelle » : même registre calme que la bascule — la pastille de l'en-tête reste le seul
+   bouton cerclé du haut de l'écran. */
+.chat-nouvelle {
+  flex: none;
+  padding: 0 0.25rem;
+  color: var(--texte);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+.chat-nouvelle:disabled {
+  color: var(--texte-doux);
+  text-decoration: none;
+  cursor: not-allowed;
+}
+.chat-bascule:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--rayon-petit);
+}
+.chat-options-corps {
+  flex: 0 0 100%;
+  display: grid;
+  gap: 1rem;
+  padding: 0.9rem;
+  background-color: var(--surface);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+  max-height: 60dvh;
   overflow-y: auto;
 }
-.chat-historique-tete {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-/* La bascule n'a de sens que sur un écran étroit : sur un écran large la liste est toujours là. */
-.chat-historique-bascule {
+/* ⚠️ `hidden` perd contre un `display` de classe : sans cette ligne le panneau serait toujours ouvert. */
+.chat-options-corps[hidden] {
   display: none;
+}
+.chat-reglages {
+  display: grid;
+  gap: 0.6rem;
 }
 .chat-historique-liste ul {
   list-style: none;
@@ -600,7 +678,7 @@ code {
 }
 .chat-historique-item:hover,
 .chat-historique-item:focus-visible {
-  background: var(--surface);
+  background: var(--surface-douce);
   border-color: var(--bordure);
 }
 /* Revue #71 : au clavier, le focus doit se distinguer du survol — même anneau qu'ailleurs. */
@@ -616,84 +694,86 @@ code {
   overflow-wrap: anywhere;
   font-size: 0.92rem;
 }
-@media (max-width: 760px) {
-  .chat-cadre {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .chat-historique {
-    border-right: 0;
-    border-bottom: 1px solid var(--bordure);
-    position: static;
-    max-height: none;
-    padding-bottom: 0.75rem;
-  }
-  .chat-historique-bascule {
-    display: inline-flex;
-    align-items: center;
-  }
-  .chat-historique:not(.ouvert) .chat-historique-liste {
-    display: none;
-  }
-  .chat-historique.ouvert .chat-historique-liste {
-    max-height: 50dvh;
-    overflow-y: auto;
-  }
-}
-.chat {
-  max-width: 48rem;
-  margin: 0 auto;
-  padding: clamp(0.75rem, 3vw, 1.5rem);
-  display: grid;
-  grid-template-rows: auto auto 1fr auto;
-  gap: 0.75rem;
-  min-height: calc(100dvh - 4.5rem);
-}
-.chat-barre {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem 1rem;
-  align-items: center;
-  font-size: 0.9rem;
-}
 .chat-fil {
-  display: grid;
-  gap: 0.6rem;
-  align-content: start;
-  overflow-y: auto;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  padding: 1rem 0;
 }
 .chat-vide {
-  padding: 2rem 0;
-  text-align: center;
+  padding-top: 2rem;
+  font-size: clamp(1.2rem, 1rem + 1vw, 1.45rem);
+  font-weight: var(--poids-lia);
+  line-height: 1.5;
+}
+.chat-attente {
+  margin: 0;
 }
 .bulle {
-  max-width: 85%;
-  padding: 0.7rem 1rem;
-  border-radius: var(--rayon);
-  background: var(--surface);
-  border: 1px solid var(--bordure);
+  max-width: 100%;
 }
 .bulle.user {
-  justify-self: end;
-  background: var(--surface-douce);
+  align-self: flex-end;
+  max-width: 80%;
+  padding: 0.75rem 1.125rem;
+  border-radius: 20px;
+  background: var(--surface);
+  border: 1px solid var(--bordure);
 }
 .bulle-texte {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+/* La réponse de Lia : grande, légère en sombre, sans cadre. Le seul mouvement de l'écran est son
+   arrivée (un fondu) ; il répond à l'envoi d'une question, et s'éteint si on l'a demandé. */
+.bulle.assistant .bulle-texte {
+  font-size: clamp(1.2rem, 1rem + 1vw, 1.45rem);
+  font-weight: var(--poids-lia);
+  line-height: 1.5;
+}
+@keyframes arrivee-lia {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.chat-fil > .bulle.assistant:last-of-type .bulle-texte {
+  animation: arrivee-lia 320ms ease-out backwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .chat-fil > .bulle.assistant:last-of-type .bulle-texte {
+    animation: none;
+  }
+}
 /* [L25] Le lien vers la fiche d'un fait cité, et la marque qui dit ce que la valeur vaut.
    Épuré par intention (Marc, 17/09) : le lien est DISCRET mais cliquable, la marque est plus
-   calme que le texte sans disparaître. Aucune couleur neuve — les tokens existants et
-   `prefers-color-scheme` suffisent (ADR 0005 §4 B2 : le CSS se reprend, il ne se remplace pas). */
+   calme que le texte sans disparaître. Une pastille ronde, dont la zone de toucher déborde
+   jusqu'à 44 px (`::after`) sans changer la hauteur de la ligne. */
 .lien-fait {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.75rem;
+  height: 1.75rem;
+  margin: 0 0.15rem;
+  border: 1px solid var(--bordure-champ);
+  border-radius: 999px;
   color: var(--texte);
-  text-decoration: underline;
-  text-underline-offset: 0.15em;
+  font-size: 0.9rem;
   font-weight: 600;
-  /* Cible tactile : un lien d'un seul caractère n'est pas atteignable au doigt sans ça. */
-  display: inline-block;
-  min-width: 1.5rem;
-  text-align: center;
-  border-radius: 0.25rem;
+  line-height: 1;
+  text-decoration: none;
+  vertical-align: middle;
+}
+.lien-fait::after,
+.lien-doc::after {
+  content: "";
+  position: absolute;
+  inset: -0.5rem;
 }
 .lien-fait:hover,
 .lien-fait:focus-visible {
@@ -735,26 +815,28 @@ code {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
-.repli-accueil {
-  margin: 0.8rem auto;
-  max-width: 48rem;
-}
 
 /* [L25c] Le lien vers le PAPIER. Distinct du lien vers la fiche : ce ne sont pas les mêmes
    questions. Libellé en MOT (« papier »), pas en icône — « où est mon avis de cotisation »
-   attend un document, et un mot le dit sans qu'on devine. */
+   attend un document, et un mot le dit sans qu'on devine. Une pastille, comme une source. */
 .lien-doc {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.875rem;
+  padding: 0 0.75rem;
+  margin: 0 0.15rem;
+  border: 1px solid var(--bordure);
+  border-radius: 999px;
   color: var(--texte);
-  font-size: 0.85em;
-  text-decoration: underline;
-  text-decoration-style: dotted;
-  padding: 0 0.15rem;
-  border-radius: 0.2rem;
+  font-size: 0.875rem;
+  line-height: 1;
+  text-decoration: none;
+  vertical-align: middle;
 }
 .lien-doc:hover,
 .lien-doc:focus-visible {
   background: var(--surface-douce);
-  text-decoration-style: solid;
 }
 .marque-fait {
   color: var(--texte-doux);
@@ -777,18 +859,116 @@ code {
   gap: 0.25rem;
   font-size: 0.85rem;
 }
-.chat-saisie {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 0.5rem;
-  align-items: end;
+/* Le bas de l'écran : suggestions puis saisie, collés au bas, marges de sécurité comprises. */
+.chat-bas {
   position: sticky;
   bottom: 0;
   background: var(--fond);
-  padding-bottom: env(safe-area-inset-bottom);
+  padding-top: 0.5rem;
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+.chat-suggestions {
+  list-style: none;
+  margin: 0 0 0.5rem;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.suggestion {
+  min-height: 44px;
+  padding: 0 0.875rem;
+  border: 1px solid var(--bordure-champ);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--texte);
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+.suggestion:hover {
+  background: var(--surface-douce);
+}
+.suggestion:focus-visible,
+.chat-envoyer:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.chat-saisie {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  padding: 0.25rem 0.25rem 0.25rem 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--bordure-champ);
+  border-radius: 28px;
+}
+.chat-saisie:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 .chat-saisie textarea {
-  resize: vertical;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 44px;
+  max-height: 8rem;
+  padding: 0.65rem 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--texte);
+  font: inherit;
+  font-size: 1rem; /* 16 px : en dessous, iOS zoome tout seul à la mise au point. */
+  line-height: 1.4;
+  resize: none;
+  field-sizing: content;
+}
+.chat-saisie textarea::placeholder {
+  color: var(--texte-doux);
+}
+.chat-envoyer {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 22px;
+  background-color: var(--accent);
+  color: var(--sur-accent);
+  cursor: pointer;
+}
+.chat-envoyer:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* « N à juger » : la pastille de l'en-tête de l'accueil, qui mène à la pile. */
+.nav-droite {
+  margin-left: auto;
+}
+.pastille-juger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0 1rem;
+  border: 1px solid var(--bordure-champ);
+  border-radius: 999px;
+  color: var(--texte);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+.pastille-juger:hover {
+  background: var(--surface-douce);
+}
+.pastille-point {
+  width: 8px;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--accent);
 }
 
 /* Une option de QCM : la valeur en bouton, sa provenance dessous (page /questions).
@@ -900,4 +1080,1276 @@ code {
   .pile-gestes .bouton {
     flex: 1 1 100%;
   }
+}
+
+/* ── Graphe 3D (page Mémoire, réseau de LIA ; MemoryAI#74) ─────────────────────────────── */
+.graphe3d {
+  display: block;
+  width: 100%;
+  border-radius: var(--rayon);
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  touch-action: none;
+  cursor: grab;
+}
+.graphe3d:focus-visible {
+  outline: 3px solid var(--texte);
+  outline-offset: 2px;
+}
+
+/* ── Page Mémoire (MemoryAI#74) : chiffres, filtres de niveau, scène et fiche du point choisi. */
+.memoire-chiffres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1rem;
+  color: var(--texte-doux);
+}
+.memoire-chiffres b {
+  color: var(--texte);
+  font-size: 1.35rem;
+  font-weight: var(--poids-titre);
+  margin-right: 0.3rem;
+}
+.memoire-filtres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.memoire-niveaux {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.memoire-niveau {
+  /* La teinte du niveau, posée par la page (`JETON_NIVEAU`) ; défaut neutre. */
+  --teinte: var(--texte-doux);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 44px;
+  padding: 0 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--bordure);
+  background: var(--surface);
+  color: var(--texte);
+  font: inherit;
+  cursor: pointer;
+}
+.memoire-niveau i {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  background: var(--teinte);
+}
+.memoire-niveau[aria-pressed="false"] {
+  color: var(--texte-doux);
+  border-style: dashed;
+}
+.memoire-niveau[aria-pressed="false"] i {
+  background: transparent;
+  box-shadow: inset 0 0 0 2px var(--teinte);
+}
+.memoire-niveau:focus-visible {
+  outline: 3px solid var(--texte);
+  outline-offset: 2px;
+}
+.memoire-recherche {
+  flex: 1 1 14rem;
+}
+.memoire-scene {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: 900px) {
+  .memoire-scene {
+    grid-template-columns: minmax(0, 1fr) 18rem;
+    align-items: start;
+  }
+}
+.memoire-fiche h2 {
+  margin: 0.2rem 0 0.6rem;
+  overflow-wrap: anywhere;
+}
+.memoire-niveau-pastille {
+  --teinte: var(--texte-doux);
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--teinte);
+  color: var(--teinte);
+}
+
+/* ── La maison de LIA (accueil, MemoryAI#74, maquette v5) : elle au centre, ses espaces en
+   orbite. Plein écran, sans défilement ; un espace s'ouvre en panneau. ── */
+.maison {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: radial-gradient(120% 90% at 50% 105%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 60%), var(--fond);
+}
+.maison-sol {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+}
+.maison-orbite {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  border: 1px dashed color-mix(in srgb, var(--texte) 8%, transparent);
+  pointer-events: none;
+  transition: opacity 0.35s;
+}
+.maison-tete {
+  position: absolute;
+  z-index: 5;
+  left: max(12px, env(safe-area-inset-left, 0px));
+  top: max(10px, env(safe-area-inset-top, 0px));
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  max-width: calc(100% - 140px);
+}
+.maison-logo {
+  width: 40px;
+  height: 40px;
+  padding: 6px;
+  border-radius: var(--rayon-petit);
+  background: var(--fond);
+  border: 1px solid var(--bordure-champ);
+  overflow: visible;
+}
+.maison-logo-corps {
+  fill: none;
+  stroke: var(--repere);
+  stroke-width: 3.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.maison-logo-masse {
+  fill: var(--repere);
+  fill-opacity: 0.2;
+}
+.maison-logo-ia {
+  fill: var(--texte);
+  stroke: var(--fond);
+  stroke-width: 2.6;
+  paint-order: stroke;
+  stroke-linejoin: round;
+}
+.maison-nom {
+  font-size: 1.25rem;
+  font-weight: var(--poids-titre);
+  letter-spacing: -0.02em;
+  line-height: 1;
+  margin: 0;
+}
+.maison-droite {
+  position: absolute;
+  z-index: 5;
+  right: max(12px, env(safe-area-inset-right, 0px));
+  top: max(10px, env(safe-area-inset-top, 0px));
+  display: flex;
+  gap: 0.5rem;
+}
+.maison-bouton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--bordure-champ);
+  background: var(--surface);
+  color: var(--texte);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+.maison-bouton:hover {
+  border-color: var(--accent);
+}
+@media (max-width: 560px) {
+  .maison-bouton {
+    padding: 0;
+  }
+  .maison-bouton-texte {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
+.maison-espace {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 3;
+  display: grid;
+  justify-items: center;
+  gap: 0.35rem;
+  width: 84px;
+  margin-left: -42px;
+  margin-top: -30px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  color: var(--texte-doux);
+  font: inherit;
+  transition: opacity 0.35s, color 0.2s;
+  will-change: transform;
+}
+.maison-rond {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--surface);
+  border: 1px solid var(--bordure-champ);
+  color: var(--teinte);
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+.maison-espace:hover,
+.maison-espace:focus-visible {
+  color: var(--texte);
+  outline: none;
+}
+.maison-espace:hover .maison-rond,
+.maison-espace:focus-visible .maison-rond {
+  border-color: var(--accent);
+  background: var(--surface-douce);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 14%, transparent);
+}
+.maison-espace:focus-visible .maison-rond {
+  outline: 2px solid var(--texte);
+  outline-offset: 3px;
+}
+.maison-etiquette {
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+.maison-compte {
+  position: absolute;
+  right: -3px;
+  top: -3px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font: 600 0.72rem/1 var(--police);
+  font-style: normal;
+  color: var(--sur-accent);
+  background: var(--teinte);
+  border: 2px solid var(--fond);
+}
+.teinte-repere { --teinte: var(--repere); }
+.teinte-alerte { --teinte: var(--alerte-texte); }
+.teinte-accent { --teinte: var(--accent); }
+.teinte-succes { --teinte: var(--succes-texte); }
+.teinte-info { --teinte: var(--info); }
+.teinte-budget { --teinte: var(--budget); }
+.maison-aide {
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  right: 0;
+  bottom: max(14px, env(safe-area-inset-bottom, 0px));
+  margin: 0;
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--texte-doux);
+  pointer-events: none;
+}
+.maison--ouverte .maison-espace,
+.maison--ouverte .maison-orbite,
+.maison--ouverte .maison-aide {
+  opacity: 0;
+  pointer-events: none;
+}
+.maison-panneau {
+  position: absolute;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--bordure-champ);
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+  transition: opacity 0.3s, transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0.35s;
+}
+.maison-panneau[data-ouvert] {
+  opacity: 1;
+  pointer-events: auto;
+  visibility: visible;
+  transform: none;
+}
+@media (min-width: 900px) {
+  .maison-panneau {
+    right: 14px;
+    top: 14px;
+    bottom: 14px;
+    width: min(640px, 56vw);
+    border-radius: 20px;
+    transform: translateX(30px);
+  }
+}
+@media (max-width: 899px) {
+  .maison-panneau {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: 32%;
+    border-radius: 22px 22px 0 0;
+    transform: translateY(30px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}
+.maison-panneau-tete {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.6rem 0.8rem;
+  border-bottom: 1px solid var(--bordure);
+  flex-wrap: wrap;
+}
+.maison-panneau-tete h2 {
+  font-size: 1.05rem;
+  font-weight: 500;
+  margin: 0 auto 0 0.2rem;
+}
+.maison-mini {
+  display: flex;
+  flex-wrap: wrap;
+}
+.maison-mini button,
+.maison-fermer {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: none;
+  border: 1px solid transparent;
+  color: var(--texte-doux);
+  cursor: pointer;
+}
+.maison-mini button:hover,
+.maison-fermer:hover {
+  color: var(--texte);
+}
+.maison-mini button[aria-current="true"] {
+  color: var(--accent);
+  border-color: var(--bordure-champ);
+  background: var(--surface-douce);
+}
+@media (max-width: 899px) {
+  .maison-fermer {
+    order: 2;
+  }
+  .maison-mini {
+    order: 3;
+    width: 100%;
+    justify-content: space-between;
+    /* Neuf icônes de 44 px (Parler compris) dépassent un téléphone de 390 px : une seule ligne
+       qui défile, plutôt que deux rangées ou des cibles plus petites (la maquette les met à 36 px). */
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .maison-mini::-webkit-scrollbar {
+    display: none;
+  }
+  .maison-mini button {
+    flex: none;
+  }
+}
+.maison-panneau-corps {
+  overflow: auto;
+  padding: 1.1rem 1.1rem 1.4rem;
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+}
+.maison-phrase {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: var(--poids-lia);
+  line-height: 1.4;
+}
+.maison-vide {
+  margin: 0;
+  padding: 1rem;
+  border: 1px dashed var(--bordure-champ);
+  border-radius: var(--rayon-petit);
+  color: var(--texte-doux);
+}
+.maison-lignes {
+  margin: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+.maison-lignes div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-petit);
+  background: var(--surface);
+}
+.maison-lignes dt {
+  color: var(--texte-doux);
+}
+.maison-lignes dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+.maison-puces {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.maison-puces li {
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--teinte) 45%, transparent);
+  color: var(--texte);
+  background: color-mix(in srgb, var(--teinte) 10%, transparent);
+  font-size: 0.88rem;
+}
+.maison-liens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* Les tuiles d'un panneau de la maison (maquette v5, écart B, `components/TableauEspace.tsx`) :
+   la question à côté du rond de LIA, puis le tableau de tuiles de la page Mémoire. */
+.tab-question {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.tab-question p {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 300;
+  line-height: 1.3;
+}
+.tab-lia {
+  flex: none;
+  fill: var(--repere);
+}
+.tab-texte {
+  margin: 0;
+  color: var(--texte-doux);
+}
+.tab-lien {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--texte);
+}
+.tab-valeur {
+  font-variant-numeric: tabular-nums;
+  color: var(--texte);
+}
+.tab-chiffres,
+.tab-barres {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+}
+.tab-chiffres {
+  grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
+  gap: 0.6rem;
+}
+.tab-chiffres li {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-petit);
+  color: var(--texte-doux);
+}
+.tab-chiffres b {
+  font-size: 1.5rem;
+  font-weight: 300;
+  font-variant-numeric: tabular-nums;
+  color: var(--texte);
+}
+.tab-barres {
+  gap: 0.55rem;
+}
+.tab-barres li {
+  display: grid;
+  grid-template-columns: minmax(0, 9rem) 1fr auto;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.88rem;
+}
+.tab-barres-libelle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--texte-doux);
+}
+.tab-barre {
+  display: block;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--surface-douce);
+  overflow: hidden;
+}
+.tab-barre i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--teinte, var(--repere));
+}
+.tab-barre--alerte i {
+  background: var(--alerte-texte);
+}
+.tab-jauges,
+.tab-liste,
+.tab-legende {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.tab-jauges,
+.tab-liste {
+  display: grid;
+  gap: 0.6rem;
+}
+.tab-jauges li {
+  display: grid;
+  gap: 0.3rem;
+}
+.tab-jauges li > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  color: var(--texte-doux);
+  font-size: 0.9rem;
+}
+.tab-liste li {
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.55rem 0.75rem;
+  border-left: 3px solid var(--teinte, var(--repere));
+  background: var(--surface-douce);
+  border-radius: 0 var(--rayon-petit) var(--rayon-petit) 0;
+}
+.tab-liste small {
+  color: var(--texte-doux);
+}
+.tab-anneau {
+  display: grid;
+  justify-items: center;
+  gap: 0.6rem;
+}
+.tab-anneau svg {
+  width: min(100%, 200px);
+  height: auto;
+}
+.tab-anneau-piste,
+.tab-anneau-part {
+  fill: none;
+  stroke-width: 14;
+}
+.tab-anneau-piste {
+  stroke: var(--surface-douce);
+}
+.tab-anneau-part {
+  stroke: var(--teinte);
+}
+.tab-anneau-centre {
+  fill: var(--texte);
+  font-size: 20px;
+  font-weight: 200;
+}
+.tab-anneau-sous {
+  fill: var(--texte-doux);
+  font-size: 10px;
+}
+.tab-legende {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem 1rem;
+  font-size: 0.85rem;
+  color: var(--texte-doux);
+}
+.tab-legende li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.tab-bulles {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.6rem;
+}
+.tab-bulles li {
+  --diametre: 72px; /* la taille réelle vient de l'aire de la bulle (TableauEspace) */
+  width: var(--diametre);
+  height: var(--diametre);
+  border-radius: 50%;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  padding: 0.4rem;
+  background: color-mix(in srgb, var(--teinte) 14%, transparent);
+  border: 1.5px solid var(--teinte);
+  overflow-wrap: anywhere;
+  font-size: 0.9rem;
+}
+.tab-bulles small {
+  color: var(--texte-doux);
+}
+.tab-legende i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--teinte);
+}
+
+/* « Parler » dans la maison (maquette v5, écart A7, `components/ConversationMaison.tsx`) : le fil
+   défile seul, la saisie reste en bas ; suggestions et bouton à 44 px, champ à 16 px. */
+.maison-panneau-corps.parler-corps,
+.parler {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+}
+.parler-fil {
+  flex: 1;
+  overflow: auto;
+  padding: 0.9rem 1.1rem;
+  display: grid;
+  gap: 0.9rem;
+  align-content: start;
+}
+.parler-bienvenue {
+  display: grid;
+  justify-items: center;
+  gap: 0.6rem;
+  padding: 2rem 0;
+  text-align: center;
+}
+.parler-tour,
+.parler-lia {
+  display: grid;
+  gap: 0.6rem;
+  min-width: 0;
+}
+.parler-moi {
+  justify-self: end;
+  max-width: 85%;
+  margin: 0;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid var(--accent);
+  border-radius: 18px 18px 6px 18px;
+  background: color-mix(in srgb, var(--accent) 18%, var(--surface-douce));
+  overflow-wrap: anywhere;
+}
+.parler-lia > p {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: var(--poids-lia);
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.parler-saisie {
+  border-top: 1px solid var(--bordure);
+  padding: 0.6rem 0.8rem calc(0.8rem + env(safe-area-inset-bottom, 0px));
+  display: grid;
+  gap: 0.5rem;
+}
+.parler-suggestions {
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.parler-suggestions button {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 44px;
+  padding: 0 0.85rem;
+  border-radius: 999px;
+  border: 1px solid var(--bordure-forte);
+  background: none;
+  color: var(--texte-doux);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.parler-suggestions button:hover:not(:disabled) {
+  color: var(--texte);
+  background: var(--surface-douce);
+}
+.parler-saisie button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.parler-ligne {
+  display: flex;
+  gap: 0.5rem;
+}
+.parler-ligne .champ {
+  flex: 1;
+  min-width: 0;
+  border-radius: 999px;
+  background: var(--surface-douce);
+}
+.parler-ligne button {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--accent);
+  color: var(--sur-accent);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.parler-complet {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 0.85rem;
+}
+@media (prefers-reduced-motion: reduce) {
+  .maison-panneau,
+  .maison-espace,
+  .maison-orbite {
+    transition: none;
+  }
+}
+
+/* ── La page Mémoire (maquette v5, `.vue`) : coque plein écran, onglets segmentés à icônes,
+   tableau de 12 colonnes et tuiles repliables à filet (`components/CoqueMemoire.tsx`, `Tuile.tsx`). ── */
+.coque-memoire {
+  min-height: 100dvh;
+  background: var(--fond);
+  font-size: 13px;
+}
+.coque-memoire-tete {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+  padding: max(0.7rem, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 0.7rem
+    max(16px, env(safe-area-inset-left, 0px));
+  background: color-mix(in srgb, var(--fond) 92%, transparent);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--bordure);
+}
+.coque-memoire-tete h1 {
+  margin: 0 auto 0 0;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 1.2rem;
+  font-weight: var(--poids-titre);
+  letter-spacing: -0.02em;
+}
+.coque-memoire-tete .maison-logo {
+  flex: none;
+  border-color: var(--bordure-forte);
+}
+.bouton-rond {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--bordure-forte);
+  color: var(--texte);
+  text-decoration: none;
+}
+.bouton-rond:hover {
+  background: var(--surface-douce);
+}
+.onglets-seg {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--bordure-forte);
+  border-radius: 999px;
+  background: var(--surface);
+}
+.onglets-seg a {
+  min-height: 44px;
+  /* À 390 px l'onglet n'a plus que son icône : sans plancher, il tombait à 42 px de large. */
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0 0.9rem;
+  border-radius: 999px;
+  color: var(--texte-doux);
+  font-size: 0.84rem;
+  text-decoration: none;
+}
+.onglets-seg a:hover {
+  color: var(--texte);
+}
+.onglets-seg a[aria-current="page"] {
+  color: var(--texte);
+  background: var(--surface-douce);
+  box-shadow: inset 0 0 0 1px var(--bordure-forte);
+}
+@media (max-width: 620px) {
+  .onglets-seg a {
+    padding: 0 0.8rem;
+  }
+  .onglets-seg a span {
+    display: none;
+  }
+}
+.coque-memoire-corps {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem max(16px, env(safe-area-inset-right, 0px)) 3rem max(16px, env(safe-area-inset-left, 0px));
+  display: grid;
+  gap: 1rem;
+}
+.tableau {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+}
+.tuile-m--4 {
+  grid-column: span 4;
+}
+.tuile-m--5 {
+  grid-column: span 5;
+}
+.tuile-m--6 {
+  grid-column: span 6;
+}
+.tuile-m--7 {
+  grid-column: span 7;
+}
+.tuile-m--8 {
+  grid-column: span 8;
+}
+.tuile-m--12 {
+  grid-column: 1 / -1;
+}
+@media (max-width: 900px) {
+  .tableau > * {
+    grid-column: 1 / -1;
+  }
+}
+.tuile-m {
+  position: relative;
+  display: block;
+  min-width: 0;
+  padding: 0.7rem 0.8rem 0.8rem;
+  background: linear-gradient(180deg, color-mix(in oklch, var(--repere) 6%, var(--surface)), var(--surface) 45%);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+}
+.tuile-m::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 2px;
+  background: var(--repere);
+  border-radius: var(--rayon) var(--rayon) 0 0;
+}
+.tuile-m:not([open]) {
+  grid-column: 1 / -1;
+  padding-block: 0.35rem;
+}
+.tuile-m > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 44px;
+  margin-block: -0.4rem;
+  font-size: 0.75rem;
+  color: var(--texte-pale);
+}
+.tuile-m > summary::-webkit-details-marker {
+  display: none;
+}
+.tuile-m[open] > summary {
+  margin-bottom: 0.2rem;
+}
+.tuile-m:not([open]) > summary,
+.tuile-m > summary:hover {
+  color: var(--texte-doux);
+}
+.tuile-m > summary:focus-visible {
+  outline: 3px solid var(--texte);
+  outline-offset: 2px;
+  border-radius: var(--rayon-petit);
+}
+.tuile-m > summary h2 {
+  margin: 0;
+  font: inherit;
+  color: inherit;
+}
+.tuile-m-chevron {
+  margin-left: auto;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  transition: transform 0.2s;
+}
+.tuile-m[open] .tuile-m-chevron {
+  transform: rotate(180deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .tuile-m-chevron {
+    transition: none;
+  }
+}
+.tuile-m-corps {
+  display: grid;
+  gap: 0.6rem;
+  min-width: 0;
+}
+.tuile-m-corps > .bouton {
+  justify-self: start;
+}
+/* L'état vide honnête d'une tuile de la maquette sans donnée : même place, même taille. */
+.tuile-vide {
+  margin: 0;
+  padding: 0.9rem 1rem;
+  border: 1px dashed var(--bordure-forte);
+  border-radius: var(--rayon-petit);
+  color: var(--texte-doux);
+  font-size: 0.9rem;
+}
+.tuile-vide--haute {
+  min-height: 300px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+.onglets-seg a:focus-visible,
+.bouton-rond:focus-visible,
+.puces-filtre a:focus-visible {
+  outline: 3px solid var(--texte);
+  outline-offset: 2px;
+}
+.tuile h2 {
+  margin: 0 0 0.4rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+.empile {
+  display: flex;
+  height: 14px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--surface-douce);
+}
+.empile i {
+  background: var(--teinte);
+}
+.regles {
+  list-style: none;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+}
+.regles li {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--rayon-petit);
+  border: 1px solid var(--bordure);
+  border-left: 3px solid var(--teinte);
+}
+.regles b {
+  color: var(--teinte);
+}
+.puces-filtre {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.puces-filtre a {
+  --teinte: var(--texte-doux);
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--bordure-champ);
+  color: var(--teinte);
+  text-decoration: none;
+}
+.puces-filtre a[aria-current="true"] {
+  background: var(--surface-douce);
+  border-color: var(--teinte);
+}
+.journal-acces {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+}
+.journal-acces li {
+  display: grid;
+  grid-template-columns: 7.5rem minmax(0, 1fr) auto auto;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--bordure);
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 40rem) {
+  .journal-acces li {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .journal-acces time,
+  .journal-acces li > :nth-child(3) {
+    grid-column: 1 / -1;
+    color: var(--texte-doux);
+  }
+  .journal-acces li > :nth-child(3) {
+    order: 3;
+  }
+}
+.journal-acces .memoire-niveau-pastille {
+  justify-self: end;
+}
+/* Sur téléphone la carte défile plutôt que de rapetisser ses étiquettes sous la taille lisible. */
+.defile-heures {
+  overflow-x: auto;
+}
+.carte-heures {
+  width: 100%;
+  min-width: 34rem;
+  height: auto;
+}
+/* Ses journées (Historique) : une carte par jour, la plus récente à gauche, défilement horizontal. */
+.journees {
+  list-style: none;
+  margin: 0 0 0.6rem;
+  padding: 0 0 0.4rem;
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+}
+.journees li {
+  flex: 0 0 7.5rem;
+  scroll-snap-align: start;
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--rayon-petit);
+  background: var(--surface-douce);
+  border-top: 3px solid var(--repere);
+}
+.grille-ecritures {
+  width: 100%;
+  min-width: 30rem;
+  height: auto;
+}
+.carte-heures text {
+  font-size: 8px;
+  fill: var(--texte-doux);
+}
+/* Pas de défilement ici : le dernier point, le plus utile, serait hors de l'écran du téléphone. */
+.courbe-banc {
+  width: 100%;
+  height: auto;
+}
+.courbe-banc text {
+  font-size: 12px;
+  fill: var(--texte-doux);
+}
+.legende-courbe {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.2rem;
+  color: var(--texte-doux);
+}
+.legende-courbe li::before {
+  content: "";
+  display: inline-block;
+  width: 0.9rem;
+  height: 3px;
+  margin-right: 0.45rem;
+  vertical-align: middle;
+  border-radius: 2px;
+  background: var(--teinte);
+}
+.capacites {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.7rem;
+}
+.capacites li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.3rem 0.75rem;
+  align-items: baseline;
+  font-variant-numeric: tabular-nums;
+}
+.capacites small {
+  display: block;
+}
+.capacites li > svg {
+  grid-column: 1 / -1;
+}
+/* Ton rythme habituel (Apprentissage) : le cadran des 24 heures. */
+.rose-heures {
+  display: block;
+  width: 100%;
+  max-width: 15rem;
+  margin: 0 auto 0.5rem;
+}
+.rose-heures text {
+  fill: var(--texte-doux);
+  font-size: 10px;
+}
+.etapes-apprentissage {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: etape;
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+}
+.etapes-apprentissage li {
+  counter-increment: etape;
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--rayon-petit);
+  background: var(--surface-douce);
+}
+.etapes-apprentissage li::before {
+  content: counter(etape);
+  display: block;
+  font-weight: 600;
+  color: var(--repere);
+}
+/* Outils et niveaux : qui peut lire quel niveau. Plein = toujours, anneau = sur demande, petit point = jamais. */
+.matrice-niveaux {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0.4rem;
+  margin-bottom: 0.4rem;
+}
+.matrice-niveaux th {
+  font-weight: 600;
+  text-align: left;
+}
+.matrice-niveaux thead th {
+  color: var(--teinte);
+  text-align: center;
+}
+.matrice-niveaux td {
+  text-align: center;
+  height: 44px;
+}
+.matrice-niveaux td i {
+  display: inline-block;
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: var(--bordure-champ);
+}
+.matrice-niveaux td[data-permis="oui"] i,
+.matrice-niveaux td[data-permis="sur-demande"] i {
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 2px solid var(--teinte);
+  background: var(--teinte);
+}
+.matrice-niveaux td[data-permis="sur-demande"] i {
+  background: transparent;
+}
+.garde-fous {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+}
+.garde-fous li {
+  padding: 0.6rem 0.75rem 0.6rem 2rem;
+  border-radius: var(--rayon-petit);
+  background: var(--surface-douce);
+  position: relative;
+}
+.garde-fous li::before {
+  content: "";
+  position: absolute;
+  left: 0.8rem;
+  top: 50%;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--succes-texte);
+  transform: translateY(-50%);
 }

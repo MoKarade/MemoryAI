@@ -61,26 +61,18 @@ function parLigne(fichier: string, motif: RegExp): string[] {
 
 const CSS = lire("app/globals.css");
 
-/** Corps du premier bloc `:root { … }` (thème clair) et de celui du bloc sombre. */
-function blocs(): { clair: string; sombre: string } {
-  const corps = (source: string, debut: number): string => {
-    const ouvre = source.indexOf("{", debut);
-    let profondeur = 0;
-    for (let i = ouvre; i < source.length; i++) {
-      if (source[i] === "{") profondeur++;
-      if (source[i] === "}" && --profondeur === 0) return source.slice(ouvre + 1, i);
-    }
-    throw new Error("accolade non fermée dans globals.css");
-  };
-  const clair = corps(CSS, CSS.indexOf(":root"));
-  const media = CSS.indexOf("@media (prefers-color-scheme: dark)");
-  expect(media, "globals.css doit porter un bloc @media (prefers-color-scheme: dark)").toBeGreaterThan(-1);
-  const interieur = corps(CSS, media);
-  const sombre = corps(interieur, interieur.indexOf(":root"));
-  return { clair, sombre };
+/** Corps du bloc `:root { … }` : sombre seul (Marc, 22/10/2026), un seul jeu de jetons. */
+function racine(): string {
+  const ouvre = CSS.indexOf("{", CSS.indexOf(":root"));
+  let profondeur = 0;
+  for (let i = ouvre; i < CSS.length; i++) {
+    if (CSS[i] === "{") profondeur++;
+    if (CSS[i] === "}" && --profondeur === 0) return CSS.slice(ouvre + 1, i);
+  }
+  throw new Error("accolade non fermée dans globals.css");
 }
 
-const { clair, sombre } = blocs();
+const sombre = racine();
 
 /** `--nom: #rrggbb;` — les couleurs sont en hexadécimal, ce qui les rend mesurables. */
 function couleurs(source: string): [string, string][] {
@@ -172,43 +164,39 @@ describe("socle visuel — aucune couleur hors des jetons", () => {
   });
 });
 
-describe("socle visuel — clair ET sombre", () => {
-  it("suit le système : color-scheme `light dark`", () => {
-    expect(clair).toMatch(/color-scheme:\s*light\s+dark\s*;/);
+describe("socle visuel — sombre seul", () => {
+  it("impose le sombre : color-scheme `dark`, plus aucun bloc selon le système", () => {
+    // Décision de Marc (22/10/2026, refonte LIA) : le style du hub, sombre seul. Un bloc
+    // `prefers-color-scheme` qui revient, c'est un second thème que plus rien ne vérifie.
+    expect(sombre).toMatch(/color-scheme:\s*dark\s*;/);
+    expect(CSS).not.toMatch(/prefers-color-scheme/);
   });
 
-  it("chaque couleur est définie une seule fois par thème", () => {
-    for (const [nom, bloc] of [["clair", clair], ["sombre", sombre]] as const) {
-      const noms = couleurs(bloc).map(([n]) => n);
-      expect(noms.length, `thème ${nom} : trop peu de jetons lus, le garde serait vide`).toBeGreaterThan(15);
-      const doublons = noms.filter((n, i) => noms.indexOf(n) !== i);
-      expect(doublons, `thème ${nom} : jetons définis deux fois`).toEqual([]);
-    }
+  it("chaque couleur est définie une seule fois", () => {
+    const noms = couleurs(sombre).map(([n]) => n);
+    expect(noms.length, "trop peu de jetons lus, le garde serait vide").toBeGreaterThan(15);
+    const doublons = noms.filter((n, i) => noms.indexOf(n) !== i);
+    expect(doublons, "jetons définis deux fois").toEqual([]);
   });
 
-  it("chaque couleur du thème clair est redéfinie en sombre, et inversement", () => {
-    // C'est le défaut du 14/08 : une couleur oubliée en sombre garde sa valeur claire.
-    // Exception NOMMÉE : les deux fonds « système » (manifeste, barre d'état) sont une paire
-    // clair/sombre écrite d'un seul bloc ; ce ne sont pas des couleurs de l'interface.
-    const SYSTEME = ["--bg-systeme-clair", "--bg-systeme-sombre"];
-    const c = couleurs(clair).map(([n]) => n).filter((n) => !SYSTEME.includes(n));
-    const s = couleurs(sombre).map(([n]) => n);
-    expect(c.filter((n) => !s.includes(n)), "absentes du thème sombre").toEqual([]);
-    expect(s.filter((n) => !c.includes(n)), "absentes du thème clair").toEqual([]);
+  it("aucune couleur n'est redéfinie hors de `:root`", () => {
+    // C'est le défaut du 14/08 sous une autre forme : une redéfinition locale d'un jeton garde
+    // sa propre valeur quand `:root` change, et personne ne la voit.
+    const hors = CSS.replace(sombre, "");
+    expect(couleurs(hors), "jetons de couleur définis hors de :root").toEqual([]);
   });
 
-  it("les fonds « système » de l'app installée sont ceux de `--fond`, dans chaque thème", () => {
-    // `tests/couleurs.test.ts` vérifie que le manifeste et la barre d'état reprennent ces deux
-    // valeurs ; ce cas vérifie que ces deux valeurs reprennent le fond de l'app. Sans lui, un
-    // changement de `--fond` laisserait un flash de l'ancienne couleur au lancement.
-    const c = Object.fromEntries(couleurs(clair)) as Record<string, string>;
-    const s = Object.fromEntries(couleurs(sombre)) as Record<string, string>;
-    expect(c["--bg-systeme-clair"]).toBe(c["--fond"]);
-    expect(c["--bg-systeme-sombre"]).toBe(s["--fond"]);
+  it("le fond « système » de l'app installée est celui de `--fond`", () => {
+    // `tests/couleurs.test.ts` vérifie que le manifeste et la barre d'état reprennent cette
+    // valeur ; ce cas vérifie qu'elle reprend le fond de l'app. Sans lui, un changement de
+    // `--fond` laisserait un flash de l'ancienne couleur au lancement.
+    const v = Object.fromEntries(couleurs(sombre)) as Record<string, string>;
+    expect(v["--bg-systeme"]).toBeTruthy();
+    expect(v["--bg-systeme"]).toBe(v["--fond"]);
   });
 
   it("porte le vocabulaire commun (un renommage casserait les forks en silence)", () => {
-    const noms = couleurs(clair).map(([n]) => n);
+    const noms = couleurs(sombre).map(([n]) => n);
     for (const requis of [
       "--fond", "--surface", "--surface-douce", "--bordure", "--bordure-champ",
       "--texte", "--texte-doux", "--accent", "--accent-fonce", "--sur-accent",
@@ -227,7 +215,7 @@ describe("socle visuel — clair ET sombre", () => {
     }
   });
 
-  it("les couples texte/fond passent le WCAG dans les DEUX thèmes (texte 4,5:1 ; contour 3:1)", () => {
+  it("les couples texte/fond passent le WCAG (texte 4,5:1 ; contour 3:1)", () => {
     const lin = (c: number): number => {
       const x = c / 255;
       return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4;
@@ -260,20 +248,21 @@ describe("socle visuel — clair ET sombre", () => {
       ["--bordure-champ", "--surface", 3],
       ["--bordure-champ", "--fond", 3],
       ["--accent", "--fond", 3],
+      // Les icônes des espaces de la maison de LIA, sur leur rond.
+      ["--info", "--surface", 4.5],
+      ["--budget", "--surface", 4.5],
     ];
     const tropBas: string[] = [];
-    for (const [nom, bloc] of [["clair", clair], ["sombre", sombre]] as const) {
-      const v = Object.fromEntries(couleurs(bloc)) as Record<string, string>;
-      for (const [a, b, min] of couples) {
-        const fa = v[a];
-        const fb = v[b];
-        if (!fa || !fb) {
-          tropBas.push(`${nom} : ${a} / ${b} : jeton introuvable`);
-          continue;
-        }
-        const r = ratio(fa, fb);
-        if (r < min) tropBas.push(`${nom} : ${a} ${fa} / ${b} ${fb} : ${r.toFixed(2)}:1 < ${min}:1`);
+    const v = Object.fromEntries(couleurs(sombre)) as Record<string, string>;
+    for (const [a, b, min] of couples) {
+      const fa = v[a];
+      const fb = v[b];
+      if (!fa || !fb) {
+        tropBas.push(`${a} / ${b} : jeton introuvable`);
+        continue;
       }
+      const r = ratio(fa, fb);
+      if (r < min) tropBas.push(`${a} ${fa} / ${b} ${fb} : ${r.toFixed(2)}:1 < ${min}:1`);
     }
     expect(tropBas, `Contrastes insuffisants :\n${tropBas.join("\n")}`).toEqual([]);
   });
@@ -306,6 +295,19 @@ describe("socle visuel — cibles tactiles et champs", () => {
       const m = regle(classe).match(/min-height:\s*([\d.]+)rem/);
       expect(m, `.${classe} : min-height en rem attendu`).not.toBeNull();
       expect(Number(m?.[1]) * 16, `.${classe} : hauteur minimale en px`).toBeGreaterThanOrEqual(44);
+    }
+  });
+
+  // Audit du 24/10 (axe et mesure à 390 px) : le logo faisait 36 px de large, les onglets de la
+  // Mémoire 42 px une fois réduits à leur icône. Une cible se mesure dans LES DEUX sens.
+  it("le logo de la barre et les onglets de la Mémoire font au moins 44 × 44 px", () => {
+    for (const classe of ["nav-marque", "onglets-seg a"]) {
+      const corps = regle(classe);
+      for (const cote of ["min-height", "min-width"]) {
+        const m = corps.match(new RegExp(`${cote}:\\s*(\\d+)px`));
+        expect(m, `.${classe} : ${cote} en px attendu`).not.toBeNull();
+        expect(Number(m?.[1]), `.${classe} : ${cote}`).toBeGreaterThanOrEqual(44);
+      }
     }
   });
 

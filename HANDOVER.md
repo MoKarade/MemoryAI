@@ -3,6 +3,197 @@
 > L'état RÉEL, à lire en premier. Ce qui est décidé vit dans `docs/adr/0001-…`, ce qui reste
 > à faire dans `BACKLOG.md`. Ce fichier dit où on en est, et ce qui attend un geste de Marc.
 
+## 🚨 INCIDENT — 23/10/2026 : clés de chiffrement effacées, mémoire sauvée (ADR 0019), clôture à faire
+
+Une synchro Infisical → Vercel a vidé les variables de `memory-ai`, dont `MEMORYAI_CHIFFREMENT` et
+`MEMORYAI_JOURNAL_CLE` (503 dès 13:09Z). Le déploiement de 12:37Z (`dpl_6rALo2S7biASr7gytWCoLPGcMA4C`) est le
+seul à garder les anciennes clés dans son environnement figé. **Ne jamais le supprimer ni le « Redeploy ».**
+- Marc a choisi le sauvetage par re-chiffrement (« option 2 », 23/10 14:54Z) : `docs/adr/0019-sauvetage-par-rechiffrement.md`.
+- Nouvelles clés posées par le PC à 19:57Z (Vercel Production sensible + Infisical, projet `memoryai-cles`).
+  Elles ne vont JAMAIS dans un Key Schema ni dans une synchro.
+- PR #117 fusionnée et en prod (20:40Z) ; sauvetage lancé par Marc : 6 085 lignes rescellées, 0 échec ;
+  lecture vérifiée par Marc. Les écritures de faits et de papiers restent fermées (503 `sauvetage_en_cours`)
+  jusqu'à la clôture (mot CLORE dans Régler → Sauvetage).
+- Variables remises : `HUB_TOKEN` (aligné sur `HUB_TOKEN_MEMORYAI` du hub à 20:58Z), `CRON_SECRET` ;
+  `MCP_SIGNING_KEY` et `MCP_ACCESS_KEY` NOUVELLES (21:31Z, PC) : claude.ai doit se reconnecter au connecteur
+  MemoryAI avec la nouvelle `MCP_ACCESS_KEY` (lue dans Infisical `memoryai-cles`).
+- Reste avant la clôture : jeton DriveAI (`MEMORYAI_TOKEN_DRIVEAI_ECRITURE`) ; anciennes valeurs des deux clés
+  encore dans le dossier Infisical `agence/prod/MemoryAI` (à retirer, sur « Autorisé » de Marc au PC).
+  Après la clôture : copie des nouvelles clés (ADR 0018).
+
+## 🔨 EN COURS — 22/10/2026 : refonte LIA, MemoryAI devient sa maison (chantier MemoryAI#67)
+
+Go de Marc le 22/10 sur les 11 décisions (plan : https://claude.ai/artifact/FjSqJYh6apLY8CPbwrRivY ; décisions
+communes : https://claude.ai/artifact/GYPmaFBG46skpc86zAV2Si). Neuf lots enchaînés, fonctions d'abord (#69 à #77) ;
+les anciennes tâches d'écran R3 à R7 (#11 à #15) et #56 sont remplacées par le lot 5.
+
+**Lot 0, le banc de questions (MemoryAI#69).** `lib/banc/banc.ts` (pur) tire 40 questions d'un parc de papiers N0 à N2 :
+huit par capacité (extraction, multi-sources, temporel, mise à jour, abstention, soit 20 % d'abstention), les note
+(rappel@20, abstention correcte = rien rendu). `lib/banc/passe.ts` fige le banc `papiers-v2` UNE fois, chiffré
+(`banc_questions`, AAD `banc|<id>`, migration 0023), puis le mesure au plus une fois par jour avec la recherche plein
+texte nourrie des mots-clés (`banc_mesures`, des nombres seulement). Elle tourne au réveil de l'apprentissage, avant la
+clé Anthropic : coût nul. `memoryai_etat` rend les comptes et la dernière mesure, jamais une question.
+- Le dépôt est public : seuls les gabarits sont versionnés, les questions réelles ne vivent qu'en base, chiffrées.
+- Le N3 (identité, santé) n'est pas dans ce banc ; il aura le sien avec le lot 6. Un banc neuf prend un nom neuf
+  (`messages-v1`…), jamais celui-ci : les lots suivants se comparent à la mesure de base de `papiers-v2`.
+- `papiers-v1` (figé sous la clé retirée le 23/10, ADR 0019) est illisible : le sauvetage n'a pas rescellé
+  `banc_questions`, chaque passe échouait au déchiffrement. Ses lignes restent en base, jamais réécrites.
+- Verrou : `tests/banc.test.ts` (papiers fictifs).
+
+**Lot 5, l'interface de la maquette v5 (MemoryAI#74), avancé avant les lots 1 à 4** (Marc valide la maquette le 22/10,
+« peaufine et ship » ; accord des fils MemoryAI et Assistant). Maquette : https://claude.ai/artifact/Qkp5DzqqPnmkFUVZCT1aE6.
+États vides honnêtes tant que les lots 1 à 4 n'ont pas rempli les données. LIA vivante viendra du paquet partagé `lia-ui`
+(construit par le fil Assistant, tag épinglé).
+- Premier pas : le socle passe **sombre seul**, style du hub (`app/globals.css`, un seul `:root`, police Outfit
+  auto-hébergée par `@fontsource-variable/outfit`). Les noms des jetons ne changent pas : `--accent` = indigo du hub
+  (LIA et action principale), `--repere` = violet de MemoryAI. Verrous : `tests/theme.test.ts` (sombre seul, WCAG),
+  `tests/couleurs.test.ts` (manifeste et barre système = `--bg-systeme`).
+- Deuxième pas : le **moteur 3D** du réseau (`lib/graphe3d/`, sans bibliothèque, tout pur) : placement déterministe
+  (`disposer.ts`, graine fixe : même mémoire, même nuage), caméra en perspective (`camera.ts`), scène et gestes
+  (`scene.ts` : opacités, étiquettes, bascule, élan, clavier) et peinture sur un `Pinceau` (`peindre.ts`, les couleurs
+  arrivent des jetons, la transparence par `globalAlpha`). Verrous : `tests/graphe3d*.test.ts`.
+- Troisième pas : la **page Mémoire** (`/memoire`, entrée « Mémoire » du menu juste après Lia). Un point par fait
+  validé, un centre par domaine, les liens ENREGISTRÉS (`depotLiens.tous`) ; filtres de niveau et recherche, fiche du
+  point choisi qui renvoie à `/fait/[id]`. ⚠️ Le réseau ne porte que des prédicats : aucune valeur n'est déchiffrée
+  pour le dessiner (`lib/memoire/reseau.ts`, verrou `tests/memoireReseau.test.ts`). Borné à `MAX_NOEUDS_3D`, les
+  plus reliés d'abord, le reste compté et dit. Les autres onglets de la maquette (réseau de LIA, apprentissage,
+  historique, accès) viennent avec les lots qui produisent leurs données.
+  24/10 (écart C) : en tête, les quatre chiffres de la maquette (faits affichés, liens, épisodes « — » tant que les
+  messages ne sont pas lus, papiers) ; tuiles Thèmes (bulles par domaine) et Sources (faits validés par type de source,
+  depuis quand) : `lib/memoire/tuilesMemoire.ts`, `lib/memoire/depotMemoire.ts`, verrous `tests/tuilesMemoire.test.ts`,
+  `tests/depotMemoire.test.ts`.
+  Puis Croissance (faits validés tenus à la fin de chacun des douze derniers mois, Québec) et Les plus reliés (les
+  huit faits aux plus de liens, nommés par leur prédicat).
+  Puis À valider (ce que la pile « vrai / faux » attend, par genre, lien vers `/questions` ; le compte vient de
+  `resteAJuger`, `lib/pile/charger.ts`, partagé avec l'accueil) et Papiers, repliée (papiers gardés par dossier
+  DriveAI, `domaine` en clair, rien de déchiffré).
+- Quatrième pas, en deux PR : **l'accueil devient la maison de LIA** (maquette v5). D'abord ses fondations, pures
+  et testées, encore montées nulle part : l'orbite (`lib/accueil/orbite.ts`), le décor, sol en perspective et tapis
+  des heures (`lib/accueil/decor.ts`), ce que montre chaque espace (`contenuEspaces`, `lib/accueil/espaces.ts` :
+  Budget, Outils, Formes, Idées et Souvenirs ont une source, Santé, Sa journée et Monde le disent vides) et le
+  panneau d'un espace ouvert (`components/PanneauEspace.tsx`). Verrous : `tests/accueil.test.ts`,
+  `tests/panneauEspace.test.ts`. Puis la maison montée sur `/` (`app/AccueilClient.tsx`) : LIA au centre
+  (`lia-ui` montée dans la maison, une seule par page : `LiaMaison` se retire de `/`), les espaces en orbite qui
+  s'arrêtent au survol, la pastille « à juger » dans l'en-tête. La conversation complète est revenue à `/chat`
+  (section « Parler »). Verrou : `tests/accueilRendu.test.ts`. Le 24/10 (écarts A1 et A6 de la maquette) : l'en-tête
+  de l'accueil n'a plus que le logo, « LIA », la pastille et UN bouton à droite, « Mémoire » ; ni menu ni « Parler ».
+  La touche `/` ouvre « Parler », jamais dans un champ (`lib/accueil/raccourcis.ts`, verrou `tests/accueilRaccourcis.test.ts`) ;
+  les autres sections passent par la Mémoire (son menu) et les liens des espaces.
+  Écart A3 : LIA salue selon l'heure de Québec à l'arrivée (les quatre saluts de la maquette) et dit seule ce que les
+  espaces disent de vrai (« N à juger », dépense du jour et plafonds), à tour de rôle ; rien d'autre
+  (`lib/accueil/paroles.ts`). Chaque espace porte `data-lia-cible`, `data-lia-dit` (sa phrase, `ContenuEspace.dit`) et
+  `data-lia-activite` (le geste de la maquette) : elle va le voir et le dit. Verrou : `tests/accueilParoles.test.ts`.
+  Écart A7 : toucher LIA (`surToucher`, lia-ui v0.33.0) ou `/` ouvre le panneau « Parler » de la maison : accueil, fil,
+  huit suggestions vraies, saisie ; même route que la bulle, échec fermé (`lib/accueil/conversation.ts`,
+  `components/ConversationMaison.tsx`, verrou `tests/conversationMaison.test.ts`) ; `/chat` reste la conversation complète.
+  Écart B (tuiles des panneaux) : Monde et Idées ont les tuiles de la maquette, vides tant qu'aucune source ne les
+  remplit (`lib/accueil/tableaux.ts`, `components/TableauEspace.tsx`, verrou `tests/tableauxMaison.test.ts`).
+  Outils aussi : vrais comptes (outils, appels du mois de Québec par outil, `lib/accueil/depotAccueil.ts`), un tiret
+  pour « refusés à tort » que rien ne mesure, familles vides honnêtes hors Lire et Afficher.
+  Budget aussi : anneau du jour par poste, rythme face aux plafonds, trente jours, part par modèle, fin du mois au
+  rythme des sept derniers jours (rien avant trois jours de dépense dans le mois), garde-fous repliés.
+  Souvenirs, Santé et Sa journée aussi : la recherche mène à ce qui existe, « Quand consulter » rappelle le 811 et le
+  911, « 24 h » et « Journal » montrent ses vraies lectures du jour ; le reste est vide honnête. Formes : une tuile par
+  forme du catalogue fermé (`TYPES_BLOCS`), nommée pour Marc, sans dessin d'exemple pour l'instant.
+- Cinquième pas : **l'onglet Accès de la page Mémoire** (`/memoire/acces`). Part des faits validés par niveau, journal d'accès filtrable par niveau
+  servi (métadonnées signées seulement), carte horaire des lectures sur 30 jours à l'heure de Québec, oublis
+  (compte et dates) et garde-fous, chacun pointant vers le code qui le tient. Lectures : `lib/memoire/depotAcces.ts`
+  (rien de déchiffré) ; calculs purs : `lib/memoire/acces.ts`. Verrous : `tests/memoireAcces*.test.ts`.
+  24/10 (écart C2) : disposition de la maquette, plus À confirmer (questions ouvertes, lien pour répondre), Outils
+  et niveaux (qui lit quel niveau, calculé depuis la politique réelle : `matriceNiveaux`) et le filtre « Toi » (les
+  lectures de ta conversation `/chat` seule ; Claude passe par un jeton, LIA lit pour toi). Verrou PGlite :
+  `tests/depotAcces.test.ts`.
+- Sixième pas : **l'onglet Historique** (`/memoire/historique`) : faits écrits par jour sur 26 semaines (grille,
+  lundi en haut), lectures et dépense des 14 derniers jours, conversations par source. Des comptes seulement, au
+  jour de Québec (`lib/memoire/depotHistorique.ts`) ; humeur, relances et corrections de la maquette ne sont pas
+  dessinées tant qu'elles ne sont pas mesurées. Verrou : `tests/memoireHistorique.test.ts`.
+  24/10 (écart C2) : les huit tuiles de la maquette dans son ordre. Humeur et relances dessinées VIDES (règle du
+  23/10) ; Ce qu'elle a fait = les dernières lectures du journal (filtre Tout / Fait ; Plus tard et Refusé disent
+  qu'ils n'ont pas de source) ; Ses journées = lectures et dépense par jour ; Ce qu'elle a corrigé = les faits périmés
+  (remplacés par une valeur validée plus récente, prédicat seul) ; Actions par jour = l'ancien histogramme des lectures.
+- Septième pas : **l'onglet Apprentissage** (`/memoire/apprentissage`) : courbe du banc mesure après mesure (papiers
+  attendus retrouvés, « je n'ai rien » justes), score par capacité de la dernière mesure, faits tirés des conversations
+  par statut (`extracteur` `conversation-*`), questions par statut, et les étapes de la passe. Des nombres seulement
+  (`lib/memoire/depotApprentissage.ts`) ; une mesure illisible est écartée et comptée, jamais lue comme 0. La courbe
+  d'entraînement, les versions et les habitudes de la maquette n'existent pas : aucun réseau n'est entraîné. Verrou :
+  `tests/memoireApprentissage.test.ts`.
+  24/10 (écart C2) : les sept tuiles de la maquette dans son ordre. La courbe = le banc ; Porte de qualité, Les
+  exemples et Versions dessinées VIDES (aucun réseau entraîné) ; Ce qu'elle a appris de toi = faits tirés des
+  conversations ; Ton rythme habituel = lectures par heure sur 30 jours ; Oubli réel = le vrai chemin d'un oubli
+  (`ETAPES_OUBLI`) et le compte. Par capacité, Ce qu'elle te demande et Comment elle apprend restent, repliés.
+- Huitième pas : **la coque de la Mémoire, comme la maquette** (Marc, 23/10 : « exactement comme les maquettes »).
+  `components/CoqueMemoire.tsx` : vue plein écran SANS le menu de l'app, retour vers LIA, logo, et les CINQ onglets
+  segmentés à icônes de la maquette. `components/Tuile.tsx` : la tuile repliable (`<details>`) à filet violet, sur un
+  tableau de 12 colonnes, et `Vide`, l'état vide honnête. Règle : une tuile de la maquette sans donnée est dessinée
+  quand même, à sa place, avec ce qui la remplira ; jamais retirée, jamais remplie d'un chiffre inventé. L'onglet
+  **Réseau** (`/memoire/reseau`) est donc là, ses quatre tuiles vides : aucun réseau n'existe encore. Écart restant,
+  écran par écran, dans le dossier partagé du projet : `memoryai/design/ECART-MAQUETTE-MEMORYAI.md`. Verrou :
+  `tests/coqueMemoire.test.ts`.
+
+**LIA répond au hub (MemoryAI#91, ADR 0016)**, avant la suite du lot 5 : Marc veut LIA publiée dans toutes les apps
+(22/10 21:22Z). `POST /api/ask` (`app/api/ask/route.ts`, logique pure dans `lib/lia/ask.ts`) : `x-hub-token` seul,
+propriétaire seul (`proprietaire: true` dit par le hub, sinon 403), niveaux 0 et 1, outils en lecture seule
+(`OUTILS_LIA_HUB`, tenus aux deux bouts par `outilsPermis` dans `tourDeChat`), lecteur `lia-hub`, question jamais
+journalisée, conversation non consignée en v1. Verrous : `tests/liaAsk.test.ts`, `tests/chat.test.ts` (« outilsPermis »).
+Depuis MemoryAI#74 (étape blocs), la réponse est `{ text, blocks? }` : catalogue FERMÉ de 22 formes dans
+`lib/lia/blocs.ts` (copie lisible : `commun/assistant/BLOCS-lia.md`), offert par l'outil `lia_blocs` à la route ask
+seule ; un bloc ne cite que des faits servis pendant le tour, sinon il est rejeté (ADR 0016 § 6).
+LIA vit aussi CHEZ ELLE (ADR 0016 § 7) : `components/LiaMaison.tsx` monte `@mokarade/lia-ui#v0.33.0` sur toutes les
+pages connectées (pas `/login`, pas `/widget`), ses blocs dessinés par `rendreBlocs` ; elle demande à
+`POST /api/lia/ask` (session, `source` et `proprietaire` imposés, lecteur `lia-maison`). Les deux portes partagent
+`lib/lia/repondre.ts`. Re-pinner le tag pour chaque nouvelle version de lia-ui (suivi au scroll, vie de la maquette).
+Depuis le 23/10 (v0.13.0) : une seule LIA, identique au hub ; sa pastille d'humeur est dessinée par le paquet, l'accueil
+n'en a plus d'autre.
+L'état de LIA (`etat_lia` : humeur, silhouette, regard ; `lib/lia/etat.ts`), 3e argument de `ask` à partir de lia-ui
+v0.15.0, entre par les deux portes : humeur et silhouette dans les listes fermées du paquet (`HUMEURS_DETAILLEES`,
+`SILHOUETTES_LIA`), regard `[a-z0-9-]{1,40}` ou null, sinon 400 ; balisé `<etat_lia>` comme une
+DONNÉE sur LIA avant la question, pour qu'elle ne nie plus son humeur. Le navigateur n'envoie qu'un état conforme ;
+sinon la question part sans lui. Verrou : `tests/liaEtat.test.ts`.
+Un champ inconnu du contexte (lia-ui plus récent) est retiré, jamais refusé.
+Son état PARTAGÉ (envies, journal, humeur ; contrat `commun/assistant/CONTRAT-etat-lia.md`) vit dans `lia_etat`
+(migration 0025, une ligne, des nombres et des verbes seulement ; bornes = `validerEtat` du paquet, jamais recopiées ;
+`lib/lia/etatPartage.ts`, `lib/lia/depotEtat.ts`).
+Deux portes : `GET|PUT /api/lia/etat` pour la maison (session, `etatHttp` du paquet, branché sur les deux montages) et
+`GET|PUT /api/etat-lia` pour le hub, qui relaie ses pages et celles des apps (`x-hub-token` + `x-lia-proprietaire: 1`).
+PUT : 200 + l'état gardé, 409 + l'état gardé si la version ne dépasse pas la sienne (écriture atomique), 400 / 413 ;
+gelée : 503. Verrou : `tests/liaEtatPartage.test.ts`. Reste : le relais du hub.
+Le hub peut joindre un `contexte` (bilan daté, ≤ 1 500 caractères, ADR 0016 § 8, oui de Marc du 23/10) : balisé
+`<contexte_hub>` comme DONNÉE avant la question, refusé en 400 s'il contient un `<` ou dépasse la limite, ignoré par
+la porte de la maison, jamais journalisé.
+⚠️ Au 22/10 22:09Z, la clé `ANTHROPIC_API_KEY` de production est refusée (401 `invalid x-api-key`) : la route rend
+503 « indisponible » tant que Marc ne l'a pas remplacée dans Vercel.
+
+## ✅ FAIT — 22/10/2026 : Lia est l'écran principal, redessiné (MemoryAI#10, [R2])
+
+`app/chat/ChatClient.tsx` et `app/globals.css` : la réponse de Lia est du texte sur le fond, grand et léger en sombre
+(`--poids-lia`), sans bulle ; seul Marc a sa bulle. Les liens de fiche (`→`) et de papier (« papier ») deviennent des
+pastilles, zone de toucher portée à 44 px. En bas, trois suggestions (« Quand finit mon bail ? »…) puis la saisie
+arrondie avec un bouton d'envoi rond. La réponse arrive en fondu (éteint par `prefers-reduced-motion`).
+- **Une suggestion préremplit le champ, elle n'envoie pas** : un appel payant ne part jamais d'un simple clic. Elles
+  disparaissent quand on écrit ou qu'une réponse est en cours.
+- **« N à juger » passe dans l'en-tête** (`Nav` accepte une prop `droite`) ; l'ancien `<details>` sous l'en-tête est retiré.
+  Toujours absente quand il n'y a rien à juger.
+- **Modèle, niveaux 2 et 3, coût et historique** sont repliés derrière « Options et historique (N) ». L'historique
+  n'est plus une colonne fixe sur PC : un seul écran, une colonne. Ouvrir une conversation ou en commencer une referme le panneau.
+- Verrou : `tests/ecranLia.test.ts`. Les verrous des citations (`liensPapiers`, `liensCites`) sont inchangés et verts.
+- Reste hors de ce lot : le fil n'est pas encore en flux (réponse entière), les entrées du menu n'ont pas leur phrase d'état.
+
+## ✅ FAIT — 22/10/2026 : icône d'écran d'accueil iPhone en logo série A (MemoryAI#60, mission .github#467)
+
+`app/apple-icon.png` (180 x 180, strates sur tuile `#0B0D12`, même dessin que `app/icon.svg`) est publié par Next.js en `apple-touch-icon` ; avant, iOS faisait une capture de la page. iOS ne rafraîchit pas une icône déjà posée : retirer l'app de l'écran d'accueil puis la rajouter. La marque du menu (« Lia ») est du texte, rien à changer.
+
+## ✅ FAIT — 22/10/2026 : le socle visuel « Nuit » est posé, la barre d'onglets est remplacée par un menu (MemoryAI#9, [R1])
+
+Direction B « Nuit » (choix de Marc, 22/10) : en thème sombre, fond bleu-nuit `#10141c`, accent doré clair `#e6ce94`,
+titres légers (`--poids-titre: 300`) ; tous les tokens restent dans `app/globals.css`. La barre d'onglets disparaît :
+`components/Nav.tsx` rend un en-tête (bouton menu + « Lia ») et `components/MenuLia.tsx` un `<dialog>` natif
+(plein écran sur téléphone, tiroir de 22 rem sur PC ; Échap ferme, le focus revient au bouton). Sept entrées
+(`SECTIONS`), la première reste `/` : le `start_url` du manifeste continue d'en être dérivé. Verrou : `tests/menuLia.test.ts`.
+- **Thème clair inchangé** (jetons clairs d'avant) : le passer en sombre seul est une décision de Marc.
+- **Pas de police téléchargée** (convention du dépôt, CSP `font-src 'self'`) : Albert Sans de la maquette n'est pas livrée ;
+  la servir depuis le dépôt (fontsource) demanderait une exception écrite.
+- Les entrées du menu n'ont pas encore leur phrase d'état : R2 et R3.
+
 ## ✅ FAIT — 16/10/2026 : les erreurs du serveur peuvent partir à Sentry, sans texte d'erreur (MemoryAI#127)
 
 `instrumentation.ts` branche `@sentry/nextjs` côté SERVEUR, réglé par `lib/sentryConfig.ts`. **Éteint tant que
@@ -114,7 +305,8 @@ Marc, 25/09 : « lis tout tout tout, ensuite refonte de l'interface en entier »
 - **Cadrage (Marc, 25/09)** : MemoryAI seule · tout gêne (on s'y perd, trop de texte, pas beau,
   mal fait sur téléphone) · **Lia au centre** · **maquettes d'abord**.
 - **Maquettes** : <https://claude.ai/artifact/BUpBxx4n5n2YwUtiWuYZDe> — direction A « Carnet »
-  en brouillon ; B « Nuit » et C « Bento » à dessiner ; Marc choisit, puis plan court, puis OK.
+  en brouillon, B « Nuit » et C « Bento » dessinées le 22/10/2026 (MemoryAI#7), côte à côte sur la
+  même toile ; **Marc a choisi B « Nuit » le 22/10/2026 (MemoryAI#8)**, puis plan court, puis OK.
 - ✅ **`[L3-acces]` corrigé le 15/10/2026 (MemoryAI#90)** : le bandeau de l'accueil compte la pile
   (papiers lus, déductions, questions non jugés), plus seulement les questions ouvertes.
 - **La lecture de tous les papiers tourne** (DriveAI C49-32, #421, 25/09) : plus de limite de

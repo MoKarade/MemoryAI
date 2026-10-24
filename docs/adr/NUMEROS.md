@@ -20,3 +20,7 @@
 | 0013 | La mémoire de l'agence | proposé | PR #79 |
 | 0014 | Le journal d'accès dit aussi les papiers lus, et le bon niveau pour un sommaire | accepté | PR du journal (branche `agence/memoryai-code/journal-adr0014`) |
 | 0015 | Le jeton dit qui écrit (INC-31) | proposé | branche `agence/memoryai-securite/cloisonnement-croise` |
+| 0016 | LIA répond au hub, et par lui à toutes les apps | accepté | MemoryAI#91 |
+| 0017 | LIA vit dans MemoryAI, le hub exécute | accepté (décision 5 de Marc, 22/10) | MemoryAI#96 |
+| 0018 | Les deux clés irremplaçables ont une copie, faite par le serveur | accepté (carte de Marc, 23/10 12:58Z) ; à reprendre après 0019 | branche `cles-infisical` |
+| 0019 | Sauver la mémoire par re-chiffrement, l'ancien déploiement servant d'oracle | proposé (voie choisie par Marc, 23/10 14:54Z) | MemoryAI, sauvetage |

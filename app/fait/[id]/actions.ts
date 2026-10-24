@@ -30,6 +30,7 @@ import { depotAdminDrizzle } from "@/lib/depotAdmin";
 import { depotDrizzle } from "@/lib/depotFaits";
 import { accesDonnees } from "@/lib/pageDonnees";
 import { requireSession } from "@/lib/session";
+import { SauvetageEnCoursError } from "@/lib/sauvetage/porte";
 
 export async function corrigerAction(fd: FormData): Promise<void> {
   await requireSession();
@@ -40,11 +41,18 @@ export async function corrigerAction(fd: FormData): Promise<void> {
   const acces = await accesDonnees();
   if (!acces.ok) throw new Error(acces.manque === "base" ? "base absente" : "clé absente");
 
-  const r = await corrigerFait(ancienId, typeof brut === "string" ? brut : "", {
-    admin: depotAdminDrizzle(acces.db),
-    faits: depotDrizzle(acces.db),
-    cle: acces.cle,
-  });
+  let r: Awaited<ReturnType<typeof corrigerFait>>;
+  try {
+    r = await corrigerFait(ancienId, typeof brut === "string" ? brut : "", {
+      admin: depotAdminDrizzle(acces.db),
+      faits: depotDrizzle(acces.db),
+      cle: acces.cle,
+    });
+  } catch (err) {
+    // ADR 0019 : pendant le sauvetage, rien ne s'écrit ; la page le DIT au lieu d'une erreur.
+    if (err instanceof SauvetageEnCoursError) redirect(`/fait/${ancienId}?correction=sauvetage_en_cours`);
+    throw err;
+  }
 
   // ⚠️ La CAUSE part dans l'URL pour que la page la DISE. Un refus silencieux ferait repartir
   // Marc en croyant sa mémoire à jour, ce qui est pire que l'échec lui-même.

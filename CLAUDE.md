@@ -32,11 +32,11 @@
 ## Pour aller plus loin (à lire seulement si nécessaire)
 - Index généré : `docs/INDEX.md` ; anciens titres -> chemins : `docs/correspondance.md`.
 - Sections de l'ancien fichier : `docs/claude/` (`01-principes`, `02-conventions`, `03-workflow-git`, `04-commandes`, `05-verifications`, `06-deploiement`,
-  `07-hub`, `08-documentation`, `10-style-compte-rendu`, `11-protocole`). Leçons apprises : `docs/claude/lecons.md`.
+  `07-hub`, `08-documentation`, `10-style-compte-rendu`, `11-protocole`, `12-graphe-code` : graphe de code, hooks et MCP `graphify` posés, 0 jeton, noms de symboles seulement ; `scripts/graphe.sh query|affected|path|explain` avant de grepper). Leçons apprises : `docs/claude/lecons.md`.
 - Coûts (minutes Actions, quota, appels IA) : `docs/couts.md`. Rattachement : `docs/rattachement.md`.
 
 ## CI (dépôt privé)
-Les jobs déclenchés par une PR choisissent leur machine selon la visibilité du dépôt : privé, robot de tests du PC de Marc (`[self-hosted, pc-marc]`) ; public, machines GitHub (gratuites). Un robot du PC ne doit jamais servir une PR d'un dépôt public. `apprentissage.yml` (planifié) reste sur le PC.
+Les jobs déclenchés par une PR choisissent leur machine selon la visibilité du dépôt : privé, robot de tests du PC de Marc (`[self-hosted, pc-marc]`) ; public, machines GitHub (gratuites). Un robot du PC ne doit jamais servir une PR d'un dépôt public. `apprentissage.yml` (planifié) va sur le PC seulement si le dépôt est privé.
 
 ## Compte-rendu
 Règles de forme : instructions du projet « Apps ». Copie lisible à la demande dans `docs/COMPTE-RENDU.md` (non chargée à chaque session ; sa synchro reste vérifiée par la CI).

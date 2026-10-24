@@ -25,6 +25,7 @@ import { budgetOuvert, coutUsd, jourQuebec, lireUsage, type IdModele } from "../
 import { cleJournalDepuisEnv } from "../journal";
 import { journaliserAcces } from "../journalAcces";
 import { OUTILS, type ContexteOutils } from "../mcp/outils";
+import { MAX_BLOCS, TYPES_BLOCS, trierBlocs, type Bloc } from "../lia/blocs";
 import { annoterReponse, type Annotation, type FaitServi, type PieceServie } from "./liens";
 import { construirePrompt, REGLES_SYSTEME, type Couches } from "./prompt";
 
@@ -75,7 +76,29 @@ export interface ResultatTour {
   annotation: Annotation;
   /** Le plafond a-t-il coupé le tour ? */
   plafondAtteint: boolean;
+  /** Les blocs de réponse ACCEPTÉS (`lib/lia/blocs.ts`) : vide si le tour ne les offrait pas. */
+  blocs: Bloc[];
+  /** Ceux que le tri a rejetés : comptés, jamais avalés. */
+  blocsRejetes: number;
 }
+
+/**
+ * L'outil par lequel LIA MONTRE au lieu de dire (lot 5, maquette v5). Pas un outil `memoryai_` :
+ * il ne lit rien, il dépose des blocs que `trierBlocs` valide contre les faits et papiers servis AVANT lui
+ * dans le même tour. Offert seulement quand l'appelant sait les rendre (`blocs: true`).
+ */
+export const OUTIL_BLOCS = {
+  name: "lia_blocs",
+  description:
+    `Montre ta réponse en blocs visuels, en plus de ton texte. Formes permises : ${TYPES_BLOCS.join(", ")}. ` +
+    "Chaque bloc (sauf confirmation) porte `sources` : les id des faits ou des papiers que tes outils t'ont servis dans CE tour ; " +
+    `un bloc qui cite un autre id est rejeté. ${MAX_BLOCS} blocs au plus. N'invente aucune valeur.`,
+  input_schema: {
+    type: "object",
+    properties: { blocs: { type: "array", items: { type: "object" }, description: "Les blocs, chacun avec son `type`." } },
+    required: ["blocs"],
+  } as Record<string, unknown>,
+};
 
 /**
  * ⚠⚠ LE PLAFOND EST UN ARGUMENT du message, pas une constante lue au vol. Depuis [L34] Marc
@@ -107,15 +130,29 @@ export async function tourDeChat(params: {
    * route, elle, les passe toujours.
    */
   couches?: Couches;
+  /**
+   * Les SEULS outils offerts au modèle (ADR 0016). Absent, tous : c'est le chat de Marc. Une
+   * liste blanche, et tenue aux DEUX bouts : l'outil absent n'est pas décrit au modèle, et un
+   * appel qui le nommerait quand même reçoit « Outil inconnu » au lieu d'être exécuté.
+   */
+  outilsPermis?: ReadonlySet<string>;
+  /** L'appelant sait rendre des blocs : `lia_blocs` est offert (ADR 0016, route ask). */
+  blocs?: boolean;
 }): Promise<ResultatTour> {
-  const { client, modele, inclureN2, inclureN3, outils, admin } = params;
+  const { client, modele, inclureN2, inclureN3, outils, admin, outilsPermis } = params;
+  const offerts = outilsPermis ? OUTILS.filter((o) => outilsPermis.has(o.name)) : OUTILS;
   const systeme = construirePrompt(params.couches);
   const historique = params.messages.slice(-MAX_MESSAGES);
   if (historique.length === 0 || historique[historique.length - 1]!.role !== "user") {
     throw new Error("Le dernier message doit venir de Marc.");
   }
   const jour = jourQuebec(outils.maintenant());
-  const tools = OUTILS.map((o) => ({ name: o.name, description: o.description, input_schema: o.inputSchema as Record<string, unknown> }));
+  const tools: { name: string; description: string; input_schema: Record<string, unknown> }[] = offerts.map((o) => ({
+    name: o.name,
+    description: o.description,
+    input_schema: o.inputSchema as Record<string, unknown>,
+  }));
+  if (params.blocs) tools.push(OUTIL_BLOCS);
   const conversation: unknown[] = historique.map((m) => ({ role: m.role, content: m.content }));
   // ⚠️ Les faits servis s'ACCUMULENT sur tout le tour, pas sur le dernier appel d'outil.
   // Un tour agentique en fait jusqu'à 6 : ne garder que le dernier laisserait sans lien
@@ -131,6 +168,8 @@ export async function tourDeChat(params: {
     outilsAppeles: [],
     plafondAtteint: false,
     annotation: annoterReponse("", []),
+    blocs: [],
+    blocsRejetes: 0,
   };
 
   for (let tour = 0; tour <= MAX_TOURS_OUTILS; tour++) {
@@ -167,10 +206,22 @@ export async function tourDeChat(params: {
     conversation.push({ role: "assistant", content: reponse.content });
     const retours = [];
     for (const appel of appels) {
-      const outil = OUTILS.find((o) => o.name === appel.name);
+      const outil = offerts.find((o) => o.name === appel.name);
       let texte: string;
       let erreur = false;
-      if (!outil) {
+      if (params.blocs && appel.name === OUTIL_BLOCS.name) {
+        // Validés contre ce qui a été servi JUSQU'ICI : on montre ce qu'on a lu, pas l'inverse.
+        const t = trierBlocs(appel.input.blocs, new Set([...servis.keys(), ...piecesServies.keys()]));
+        const place = MAX_BLOCS - resultat.blocs.length;
+        resultat.blocs.push(...t.blocs.slice(0, place));
+        resultat.blocsRejetes += t.rejetes.length + Math.max(0, t.blocs.length - place);
+        resultat.outilsAppeles.push(OUTIL_BLOCS.name);
+        texte =
+          `${Math.min(t.blocs.length, place)} bloc(s) accepté(s)` +
+          (t.rejetes.length ? ` ; rejetés : ${t.rejetes.map((r) => `#${r.indice} ${r.raison}`).join(" ; ")}` : "") +
+          ". Termine maintenant ta réponse en texte.";
+        erreur = t.blocs.length === 0 && t.rejetes.length > 0;
+      } else if (!outil) {
         texte = `Outil inconnu : ${appel.name}`;
         erreur = true;
       } else {

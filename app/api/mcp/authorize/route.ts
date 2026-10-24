@@ -40,7 +40,8 @@ function echapperHtml(s: string): string {
 /**
  * Page autonome : elle vit hors du layout de l'app (c'est une route d'API, pas une page
  * Next) et n'a donc pas accès à `globals.css`. Les deux thèmes suivent
- * `prefers-color-scheme` — MemoryAI n'impose pas le sombre, ici comme ailleurs.
+ * `prefers-color-scheme` : page vue par claude.ai pendant le flux OAuth, hors de l'app (qui,
+ * elle, est sombre seule depuis le 22/10/2026).
  */
 function pageFormulaire(q: Record<string, string>, erreur?: string): string {
   const caches = CHAMPS_REJOUES.map(

@@ -35,6 +35,7 @@ import { cleFacette } from "./facettes";
 import { validerPiece, type CodeRefusPiece, type PieceValidee } from "./validerPiece";
 import type { DepotPieces } from "./depot";
 import { APP_INVENTAIRE, APPS_PIECES, peutRemplacer } from "./lignee";
+import { SauvetageEnCoursError } from "../sauvetage/porte";
 
 export const LOT_PIECES_MAX = 50;
 
@@ -123,6 +124,8 @@ export async function ecrireLotPieces(
   }
   const perimetre = await depot.perimetre(ecrivain.appId);
   if (perimetre && perimetre.role !== "ecriture") throw new EcriturePiecesRetireeError(ecrivain.appId);
+  // ADR 0019 : pendant le sauvetage, rien ne s'écrit (voir `lib/sauvetage/porte.ts`).
+  if (await depot.sauvetageEnCours?.()) throw new SauvetageEnCoursError();
 
   const resultat: ResultatLotPieces = {
     recus: entrees.length,
