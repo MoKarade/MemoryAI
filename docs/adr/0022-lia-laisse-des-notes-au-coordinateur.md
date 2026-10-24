@@ -2,8 +2,14 @@
 
 - **Statut** : **proposé** (24/10/2026, fil MemoryAI). Il applique la demande de Marc du 24/10/2026
   (17:32Z : « que LIA puisse te parler à toi directement avec ses conseils, observations ») et son
-  choix de l'option B (17:44Z, fil Assistant). Tâche : MemoryAI#188. Le code attend l'OK de Marc
-  (protocole, `docs/claude/11-protocole.md`).
+  choix de l'option B (17:44Z, fil Assistant). Tâche : MemoryAI#188. Code livré après le « Fais
+  tout » de Marc (24/10/2026 19:21Z, fil Assistant).
+- **Codé (24/10/2026)** : `lib/lia/notes.ts`, table `notes_lia` (migration 0028), `lia_note` dans
+  `lib/chat/agent.ts`, `memoryai_notes_lia` dans `lib/mcp/outils.ts` (MCP seul : `OUTILS_MCP_SEULS`).
+  Le journal d'accès inscrit l'outil sous le lecteur du MCP (`claude-ai`), sans lecteur neuf.
+  `lia_note` est offert dès que le dépôt des notes est branché (chat de Marc et hub), hors de
+  `OUTILS_LIA_HUB`, qui ne liste que les outils du MCP ; il n'écrit que dans `notes_lia`.
+  L'écran des notes dans Régler et le compte dans `GET /api/etat` restent à faire (point 6).
 - **Amont** : ADR 0001 (frontière, oublis), 0016 (LIA répond au hub, outils en lecture seule),
   0017 (LIA vit dans MemoryAI).
 

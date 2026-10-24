@@ -4,6 +4,7 @@
 // 1, outils en lecture seule, blocs sourcés. Seul le LECTEUR change, pour le journal.
 // ⚠️ La question n'est JAMAIS journalisée en clair, ni dans une erreur (nom et message seulement).
 
+import { depotNotesLiaDrizzle } from "@/lib/lia/notes";
 import Anthropic from "@anthropic-ai/sdk";
 import { tourDeChat, PlafondAtteintError } from "@/lib/chat/agent";
 import { chargerCouches } from "@/lib/chat/couches";
@@ -73,6 +74,7 @@ export async function repondreLia(demande: DemandeAsk, origine: string, lecteur:
         banc: depotBancDrizzle(db),
         questions: depotQuestionsDrizzle(db),
         conversations: CONVERSATIONS_FERMEES,
+        notes: depotNotesLiaDrizzle(db, cle),
         cle,
         env: process.env,
         lecteur,
