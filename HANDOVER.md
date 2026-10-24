@@ -81,6 +81,8 @@ clé Anthropic : coût nul. `memoryai_etat` rend les comptes et la dernière mes
   remplit (`lib/accueil/tableaux.ts`, `components/TableauEspace.tsx`, verrou `tests/tableauxMaison.test.ts`).
   Outils aussi : vrais comptes (outils, appels du mois de Québec par outil, `lib/accueil/depotAccueil.ts`), un tiret
   pour « refusés à tort » que rien ne mesure, familles vides honnêtes hors Lire et Afficher.
+  Budget aussi : anneau du jour par poste, rythme face aux plafonds, trente jours, part par modèle, fin du mois au
+  rythme des sept derniers jours (rien avant trois jours de dépense dans le mois), garde-fous repliés.
 - Cinquième pas : **l'onglet Accès de la page Mémoire** (`/memoire/acces`). Part des faits validés par niveau, journal d'accès filtrable par niveau
   servi (métadonnées signées seulement), carte horaire des lectures sur 30 jours à l'heure de Québec, oublis
   (compte et dates) et garde-fous, chacun pointant vers le code qui le tient. Lectures : `lib/memoire/depotAcces.ts`

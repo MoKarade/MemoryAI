@@ -1,5 +1,5 @@
 // tests/depotAccueil.test.ts — les comptes des panneaux de la maison (maquette v5, écart B), sur
-// PGlite : les appels par outil depuis un instant, le plus appelé d'abord.
+// PGlite : la dépense par modèle depuis un jour, les appels par outil depuis un instant.
 
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { readdirSync, readFileSync } from "node:fs";
@@ -41,5 +41,21 @@ describe("appelsParOutilDepuis", () => {
 
   it("rien depuis l'instant : une liste vide, pas une erreur", async () => {
     expect(await depotAccueilDrizzle(db).appelsParOutilDepuis(new Date("2027-01-01T00:00:00Z"))).toEqual([]);
+  });
+});
+
+describe("depenseParModeleDepuis", () => {
+  it("somme la dépense par modèle depuis le jour (inclus), la plus forte d'abord", async () => {
+    const ligne = (jour: string, modele: string, coutUsd: number) => ({ jour, modele, coutUsd, poste: "chat" as const });
+    await db.insert(schema.depensesChat).values([
+      ligne("2026-09-24", "claude-sonnet-5", 9),
+      ligne("2026-09-25", "claude-haiku-5", 0.5),
+      ligne("2026-10-20", "claude-sonnet-5", 2),
+      ligne("2026-10-21", "claude-haiku-5", 0.25),
+    ]);
+    expect(await depotAccueilDrizzle(db).depenseParModeleDepuis("2026-09-25")).toEqual([
+      { modele: "claude-sonnet-5", usd: 2 },
+      { modele: "claude-haiku-5", usd: 0.75 },
+    ]);
   });
 });

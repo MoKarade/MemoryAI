@@ -6,7 +6,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { PanneauEspace } from "@/components/PanneauEspace";
 import { contenuEspaces, ESPACES, type IdEspace } from "@/lib/accueil/espaces";
-import { debutDuMoisQuebec, tableauIdees, tableauMonde, tableauOutils } from "@/lib/accueil/tableaux";
+import { debutDuMoisQuebec, finDuMois, jourMoins, tableauBudget, tableauIdees, tableauMonde, tableauOutils } from "@/lib/accueil/tableaux";
 
 vi.mock("next/link", async () => {
   const { createElement: ce } = await import("react");
@@ -147,5 +147,78 @@ describe("le début de « ce mois-ci », à l'heure de Québec", () => {
 
   it("le 1er à 2 h UTC, c'est encore le mois d'avant à Québec", () => {
     expect(debutDuMoisQuebec(new Date("2026-11-01T02:00:00Z")).toISOString()).toBe("2026-10-01T04:00:00.000Z");
+  });
+});
+
+describe("Budget, comme la maquette", () => {
+  const zero = { chat: 0, apprentissage: 0 };
+  const jourDe = (jour: string, chat: number, apprentissage = 0) => ({ jour, parPoste: { chat, apprentissage } });
+  const base = {
+    jour: "2026-10-24",
+    depense: { chat: 0.25, apprentissage: 0.5 },
+    plafonds: { chat: 1, apprentissage: 2 },
+    parJour: [jourDe("2026-09-30", 9), jourDe("2026-10-20", 1), jourDe("2026-10-22", 0.5, 0.5), jourDe("2026-10-24", 0.25, 0.5)],
+    parModele: [
+      { modele: "claude-sonnet-5", usd: 3 },
+      { modele: "claude-haiku-5", usd: 1 },
+      { modele: "vide", usd: 0 },
+    ],
+  };
+
+  it("a les six tuiles de la maquette, à leur place, les garde-fous repliés", () => {
+    const t = tableauBudget(base);
+    expect(t.question).toBe("Ce que LIA coûte ce mois-ci");
+    expect(t.tuiles.map((x) => x.cle)).toEqual(["plafond", "rythme", "trente", "modele", "fin", "garde"]);
+    expect(t.tuiles.map((x) => x.largeur)).toEqual([6, 6, 12, 6, 6, 12]);
+    expect(t.tuiles.find((x) => x.cle === "garde")?.repliee).toBe(true);
+  });
+
+  it("l'anneau : la dépense du jour par poste face au plafond total", () => {
+    const t = tableauBudget(base);
+    expect(t.tuiles[0]?.titre).toBe("Plafond de 3,00 $ par jour");
+    expect(t.tuiles[0]?.corps[0]).toMatchObject({ genre: "anneau", centre: "0,75 $", sous: "sur 3,00 $", plafond: 3, resume: "0,75 $ dépensés aujourd'hui sur un plafond de 3,00 $ par jour." });
+  });
+
+  it("le rythme : chaque poste face à son plafond, le mois sans barre inventée", () => {
+    const corps = tableauBudget({ ...base, depense: { chat: 0.9, apprentissage: 0 } }).tuiles[1]?.corps[0];
+    if (corps?.genre !== "jauges") throw new Error("jauges attendues");
+    expect(corps.lignes.map((l) => l.libelle)).toEqual(["Aujourd'hui", "Parler", "Apprendre", "Ce mois-ci"]);
+    expect(corps.lignes[1]).toEqual({ libelle: "Parler", valeur: "0,90 $ / 1,00 $", part: 0.9, alerte: true });
+    expect(corps.lignes[2]?.alerte).toBe(false);
+    // Septembre ne compte pas dans « ce mois-ci ».
+    expect(corps.lignes[3]).toEqual({ libelle: "Ce mois-ci", valeur: "2,75 $", part: null });
+  });
+
+  it("par modèle : la part de chacun, un modèle à zéro écarté", () => {
+    const corps = tableauBudget(base).tuiles[3]?.corps[0];
+    if (corps?.genre !== "barres") throw new Error("barres attendues");
+    expect(corps.barres).toEqual([
+      { libelle: "claude-sonnet-5", valeur: "75 %", part: 1 },
+      { libelle: "claude-haiku-5", valeur: "25 %", part: 1 / 3 },
+    ]);
+  });
+
+  it("la fin du mois : ce qui est dépensé, puis le rythme des sept derniers jours", () => {
+    // Octobre : 2,75 $ déjà ; sept derniers jours (18 au 24) : 2,75 $, soit 0,39 $ par jour sur 7 jours restants.
+    expect(finDuMois(base)?.usd).toBeCloseTo(2.75 + (2.75 / 7) * 7);
+    expect(finDuMois({ jour: "2026-10-24", parJour: [jourDe("2026-10-24", 1), jourDe("2026-10-23", 1)] })).toBeNull();
+  });
+
+  it("sans dépense, aucune tuile n'invente un chiffre", () => {
+    const t = tableauBudget({ ...base, depense: zero, parJour: [], parModele: [] });
+    expect(t.tuiles.find((x) => x.cle === "trente")?.corps[0]?.genre).toBe("vide");
+    expect(t.tuiles.find((x) => x.cle === "modele")?.corps[0]?.genre).toBe("vide");
+    expect(t.tuiles.find((x) => x.cle === "fin")?.corps[0]?.genre).toBe("vide");
+  });
+
+  it("sans base, les six tuiles le disent, vides", () => {
+    const t = tableauBudget(null);
+    expect(t.tuiles).toHaveLength(6);
+    expect(t.tuiles.every((x) => x.corps.every((c) => c.genre === "vide"))).toBe(true);
+  });
+
+  it("un jour moins n jours, au calendrier", () => {
+    expect(jourMoins("2026-10-24", 29)).toBe("2026-09-25");
+    expect(jourMoins("2026-03-01", 1)).toBe("2026-02-28");
   });
 });
