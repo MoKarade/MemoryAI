@@ -1032,6 +1032,37 @@ export const validationsLia = pgTable(
   (t) => [index("validations_lia_fait").on(t.faitId), index("validations_lia_jour").on(t.jour, t.enPile)],
 );
 
+export const DECISIONS_PAPIER = ["vrai", "doute"] as const;
+
+/**
+ * La seconde lecture d'un PAPIER par DriveAI (ADR 0026, migration 0031). Aucune valeur : les NOMS
+ * des champs qui divergent (virgules) et une empreinte keyée de chaque lecture. Une par (papier,
+ * extracteur). `vrai` sort le papier de la pile sans `avis_pile` (geste de Marc) ; `en_pile` : un des cinq doutes du jour.
+ */
+export const relecturesPieces = pgTable(
+  "relectures_pieces",
+  {
+    id: serial("id").primaryKey(),
+    pieceId: text("piece_id")
+      .notNull()
+      .references(() => pieces.id, { onDelete: "cascade" }),
+    decision: text("decision", { enum: DECISIONS_PAPIER }).notNull(),
+    divergents: text("divergents"),
+    empreintePremiere: text("empreinte_premiere").notNull(),
+    empreinteSeconde: text("empreinte_seconde").notNull(),
+    extracteurPremiere: text("extracteur_premiere").notNull(),
+    extracteurSeconde: text("extracteur_seconde").notNull(),
+    jour: text("jour").notNull(),
+    enPile: boolean("en_pile").notNull().default(false),
+    reluLe: timestamp("relu_le", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("relectures_pieces_unicite").on(t.pieceId, t.extracteurSeconde),
+    index("relectures_pieces_jour").on(t.jour, t.enPile),
+    check("relectures_pieces_decision", sql`${t.decision} IN ('vrai', 'doute')`),
+  ],
+);
+
 export type Fait = typeof faits.$inferSelect;
 export type NouveauFait = typeof faits.$inferInsert;
 export type Provenance = typeof provenances.$inferSelect;
