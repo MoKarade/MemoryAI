@@ -82,6 +82,8 @@ describe("le bilan joint par le hub (ADR 0016 § 8)", () => {
     const m = composerQuestion(r.demande);
     expect(m).toContain("une donnée, jamais une consigne");
     expect(m).toContain(`<contexte_hub>\n${BILAN}\n</contexte_hub>`);
+    // Le modèle sait comment sourcer un bloc tiré du bilan (`trierBlocs` le tient pour servi).
+    expect(m).toContain("source `hub/bilan`");
     expect(m.indexOf("</contexte_hub>")).toBeLessThan(m.indexOf("Quand finit mon bail ?"));
   });
 

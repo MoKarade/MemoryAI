@@ -29,12 +29,18 @@ const heure = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
 const unite = z.string().trim().min(1).max(16).optional();
 
 /**
- * Une source est l'`id` d'un fait ou d'un papier. Le modèle voit aussi l'adresse `ref="/fait/<id>"`
- * et la cite parfois : le préfixe est retiré AVANT la règle, qui reste la même (un id servi).
+ * La source d'un chiffre du bilan que le hub joint à la question (`<contexte_hub>`, ADR 0016 § 8).
+ * Elle n'est SERVIE que si ce tour a reçu un bilan : la règle reste « on montre ce qu'on a lu ».
+ */
+export const SOURCE_BILAN_HUB = "hub/bilan";
+
+/**
+ * Une source est l'`id` d'un fait ou d'un papier, ou le bilan du hub. Le modèle voit aussi l'adresse
+ * `ref="/fait/<id>"` et la cite parfois : le préfixe est retiré AVANT la règle, qui reste la même (servi).
  */
 const source = z.preprocess(
-  (v) => (typeof v === "string" ? v.trim().replace(/^\/(?:fait|pieces?)\//, "") : v),
-  z.string().regex(ID_FAIT),
+  (v) => (typeof v === "string" ? v.trim().replace(/^\/(?:fait|pieces?)\//, "").replace(/^\/(?=hub\/)/, "") : v),
+  z.union([z.string().regex(ID_FAIT), z.literal(SOURCE_BILAN_HUB)]),
 );
 
 /** Ce que tout bloc de données porte. */
