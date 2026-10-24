@@ -2,7 +2,7 @@
 
 <!-- GÉNÉRÉ par `node .github/ci/generer-index.mjs` : ne pas modifier à la main (`--verifier` échoue si ce fichier est périmé). -->
 
-43 document(s). Ancien titre -> nouveau chemin : [correspondance.md](correspondance.md).
+44 document(s). Ancien titre -> nouveau chemin : [correspondance.md](correspondance.md).
 
 ## docs/
 
@@ -38,6 +38,7 @@
 - [ADR 0022 — LIA laisse des notes au coordinateur, qui les lit comme des observations](adr/0022-lia-laisse-des-notes-au-coordinateur.md) — `docs/adr/0022-lia-laisse-des-notes-au-coordinateur.md`
 - [ADR 0023 — Des faits DÉDUITS par une règle, reliés à ceux d'où ils viennent](adr/0023-des-faits-deduits-par-regle.md) — `docs/adr/0023-des-faits-deduits-par-regle.md`
 - [ADR 0024 — LIA lit la météo et l'actualité, de sources publiques gratuites et sans clé](adr/0024-lia-lit-la-meteo-et-l-actualite.md) — `docs/adr/0024-lia-lit-la-meteo-et-l-actualite.md`
+- [ADR 0025 — LIA valide seule un fait que deux signaux confirment, Marc ne voit que les doutes](adr/0025-lia-valide-seule-ce-que-deux-signaux-confirment.md) — `docs/adr/0025-lia-valide-seule-ce-que-deux-signaux-confirment.md`
 - [Registre des numéros d'ADR](adr/NUMEROS.md) — `docs/adr/NUMEROS.md`
 
 ## docs/claude/
