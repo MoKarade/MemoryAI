@@ -1001,6 +1001,37 @@ export const mondeCache = pgTable("monde_cache", {
   luLe: timestamp("lu_le", { withTimezone: true }).notNull(),
 });
 
+/** Ce que la relecture de LIA a décidé d'un fait (ADR 0025, migration 0030). */
+export const DECISIONS_LIA = ["valide", "doute", "sans-source"] as const;
+
+/**
+ * La TRACE de chaque relecture de LIA (ADR 0025 § 4) : un fait relu une fois, jamais deux. La
+ * raison du modèle est CHIFFRÉE (elle cite la source) ; l'extrait lu et la valeur ne laissent
+ * qu'une empreinte keyée, de quoi prouver ce qui a été comparé sans le garder. `en_pile` : ce
+ * doute fait partie des cinq du jour mis en tête de la pile de Marc.
+ */
+export const validationsLia = pgTable(
+  "validations_lia",
+  {
+    id: serial("id").primaryKey(),
+    faitId: text("fait_id")
+      .notNull()
+      .references(() => faits.id, { onDelete: "cascade" }),
+    decision: text("decision", { enum: DECISIONS_LIA }).notNull(),
+    verdict: text("verdict"),
+    signalCode: boolean("signal_code").notNull(),
+    raison: text("raison"),
+    empreinteSource: text("empreinte_source"),
+    empreinteValeur: text("empreinte_valeur").notNull(),
+    extracteur: text("extracteur").notNull(),
+    /** Le jour de Québec, `AAAA-MM-JJ` : c'est sur lui que se comptent les cinq doutes. */
+    jour: text("jour").notNull(),
+    enPile: boolean("en_pile").notNull().default(false),
+    reluLe: timestamp("relu_le", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("validations_lia_fait").on(t.faitId), index("validations_lia_jour").on(t.jour, t.enPile)],
+);
+
 export type Fait = typeof faits.$inferSelect;
 export type NouveauFait = typeof faits.$inferInsert;
 export type Provenance = typeof provenances.$inferSelect;

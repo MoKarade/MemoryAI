@@ -32,6 +32,7 @@ import { estGele } from "@/lib/gel";
 import { rendreLisible } from "@/lib/lecture";
 import { accesDonnees } from "@/lib/pageDonnees";
 import { depotPiecesLectureDrizzle } from "@/lib/pieces/depotLecture";
+import { depotRelectureDrizzle } from "@/lib/relectureLia";
 
 export const dynamic = "force-dynamic";
 /** Une passe lit plusieurs conversations et appelle le modèle : la seconde par défaut ne suffit pas. */
@@ -131,6 +132,8 @@ export async function POST(req: Request): Promise<Response> {
       });
     },
     comptesParPredicat: () => comptesParPredicatValides(acces.db),
+    // ADR 0025 : LIA valide seule ce que deux signaux confirment ; ses comptes sortent dans la réponse.
+    relecture: depotRelectureDrizzle(acces.db),
   });
   return rendre(r, banc);
 }

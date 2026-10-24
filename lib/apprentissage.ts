@@ -33,6 +33,7 @@ import { produireDesQuestions } from "./questions/producteur";
 import { poserContradictions, type ResultatContradictions } from "./questions/poserContradictions";
 import { comblerLesTrous, type ResultatComblement } from "./questions/combler";
 import type { FaitEnConflit } from "./questions/contradictions";
+import { passeRelecture, type DepotRelecture, type ResultatRelecture } from "./relectureLia";
 
 /**
  * Combien de messages non extraits valent une passe. ⚠️ Ce n'est pas un réglage de confort :
@@ -87,6 +88,8 @@ export interface ResultatPasse {
    * pleine » et « aucun trou » donnent le même zéro dans `questionsPosees`.
    */
   comblement?: ResultatComblement;
+  /** Ce que la relecture de LIA a validé ou laissé à Marc (ADR 0025). Absent : elle n'a pas tourné. */
+  relecture?: ResultatRelecture;
 }
 
 /** Une passe qui n'a rien fait, avec son motif. Jamais un objet vide et muet. */
@@ -148,6 +151,11 @@ export interface ContextePasse {
    * laissent libres. `false` n'existe que pour les tests qui portent sur le producteur par modèle.
    */
   comblerLesTrous?: boolean;
+  /**
+   * La relecture de LIA (ADR 0025) : elle valide seule ce que deux signaux confirment. Absente,
+   * elle ne tourne pas ; elle passe en DERNIER, pour ne jamais prendre le budget de l'extraction.
+   */
+  relecture?: DepotRelecture;
 }
 
 /**
@@ -268,6 +276,18 @@ export async function passeApprentissage(ctx: ContextePasse): Promise<ResultatPa
     }
   } else if (res.fin === "termine") {
     res.fin = "budget";
+  }
+
+  if (ctx.relecture) {
+    try {
+      const r = await passeRelecture({ client: ctx.client, cle: ctx.cle, depot: ctx.relecture, admin: ctx.admin, maintenant: ctx.maintenant });
+      res.relecture = r;
+      res.coutUsd += r.coutUsd;
+      if (res.fin === "rien-a-faire" && r.relus > 0) res.fin = "termine";
+    } catch (err) {
+      // Jamais bloquant : ce qui précède est déjà écrit, et la relecture reprendra à la passe suivante.
+      console.error("[apprentissage] relecture impossible", err);
+    }
   }
 
   return res;
