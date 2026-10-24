@@ -47,6 +47,11 @@ const TRACES = {
   cal: ["M4 6h16v14H4z", "M4 10h16M8 3v4M16 3v4"],
   eye: ["M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z", rond(12, 12, 2.5)],
   cardok: [cadre(4, 5, 16, 14, 2), "M8 12.5l2.5 2.5L16 9.5"],
+  moon: ["M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"],
+  thermo: ["M10 14V5a2 2 0 0 1 4 0v9a4 4 0 1 1-4 0z"],
+  pulse: ["M3 12h4l2-6 3 12 2-6h7"],
+  phone: ["M6 3h4l1.5 4.5-2 1.5a11 11 0 0 0 5.5 5.5l1.5-2L21 14v4a2 2 0 0 1-2 2A16 16 0 0 1 4 5a2 2 0 0 1 2-2z"],
+  path: [rond(5, 6, 2), rond(19, 18, 2), "M7 6h6a4 4 0 0 1 0 8h-2a4 4 0 0 0 0 4h6"],
 } satisfies Record<Icone, string[]> & Record<string, string[]>;
 
 export type NomIcone = keyof typeof TRACES;

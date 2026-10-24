@@ -6,7 +6,7 @@
 // recopier. Un espace se remplit quand le lot qui produit sa donnée est livré, pas avant.
 
 import type { Poste } from "@/lib/coutChat";
-import { LIBELLE_OUTIL, tableauBudget, tableauIdees, tableauMonde, tableauOutils, type EntreesBudget, type Tableau } from "./tableaux";
+import { LIBELLE_OUTIL, tableauBudget, tableauIdees, tableauJournee, tableauMonde, tableauOutils, tableauSante, tableauSouvenirs, type EntreesBudget, type Tableau } from "./tableaux";
 
 export const IDS_ESPACES = ["souvenirs", "sante", "journee", "idees", "monde", "budget", "outils", "formes"] as const;
 export type IdEspace = (typeof IDS_ESPACES)[number];
@@ -68,6 +68,8 @@ export interface EntreesEspaces {
   formes: readonly string[];
   /** Les appels de ce mois par outil (journal d'accès) ; null sans base, absent : non lus. */
   appels?: readonly { outil: string; n: number }[] | null;
+  /** Les lectures du jour (journal d'accès), la plus récente d'abord ; null sans base. */
+  lectures?: readonly { ts: Date; lecteur: string; outil: string }[] | null;
 }
 
 const LIBELLE_POSTE: Record<Poste, string> = { chat: "Parler", apprentissage: "Apprendre" };
@@ -109,16 +111,19 @@ export function contenuEspaces(e: EntreesEspaces): Record<IdEspace, ContenuEspac
         { href: "/conversations", libelle: "Anciennes conversations" },
         { href: "/pieces", libelle: "Ce qu'elle sait" },
       ],
+      tableau: tableauSouvenirs(),
     },
     sante: {
       phrase: "Pas encore de données de santé. Elles arriveront par Health Connect, sur ton téléphone.",
       dit: "Rien sur ta santé pour l'instant : j'attends Health Connect.",
       vide: true,
+      tableau: tableauSante(),
     },
     journee: {
       phrase: "Elle ne tient pas encore le journal de sa journée. Il viendra quand elle agira seule.",
       dit: "Je ne tiens pas encore le journal de ma journée.",
       vide: true,
+      tableau: tableauJournee(e.lectures ?? null),
     },
     idees: e.aJuger
       ? {
