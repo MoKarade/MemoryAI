@@ -2,7 +2,7 @@
 
 <!-- GÉNÉRÉ par `node .github/ci/generer-index.mjs` : ne pas modifier à la main (`--verifier` échoue si ce fichier est périmé). -->
 
-39 document(s). Ancien titre -> nouveau chemin : [correspondance.md](correspondance.md).
+40 document(s). Ancien titre -> nouveau chemin : [correspondance.md](correspondance.md).
 
 ## docs/
 
@@ -34,6 +34,7 @@
 - [ADR 0017 — LIA vit dans MemoryAI, le hub exécute](adr/0017-lia-vit-dans-memoryai.md) — `docs/adr/0017-lia-vit-dans-memoryai.md`
 - [ADR 0019 — Sauver la mémoire par re-chiffrement, l'ancien déploiement servant d'oracle](adr/0019-sauvetage-par-rechiffrement.md) — `docs/adr/0019-sauvetage-par-rechiffrement.md`
 - [ADR 0020 — Les messages deviennent des événements datés, avec leurs personnes](adr/0020-les-messages-deviennent-des-evenements.md) — `docs/adr/0020-les-messages-deviennent-des-evenements.md`
+- [ADR 0021 — Les demandes « Que peut-on changer ici ? » du hub sont gardées dans MemoryAI](adr/0021-les-demandes-de-changement-du-hub.md) — `docs/adr/0021-les-demandes-de-changement-du-hub.md`
 - [Registre des numéros d'ADR](adr/NUMEROS.md) — `docs/adr/NUMEROS.md`
 
 ## docs/claude/
