@@ -242,6 +242,12 @@ describe("la frontière — aucune app n'atteint les conversations", () => {
     // DANS le périmètre, et l'écrire —, pas un élargissement de motif pour faire passer.
     f === "lib/apprentissage.ts" ||
     f === "app/api/cron/apprentissage/route.ts" ||
+    // **LA RELECTURE DE LIA** (ADR 0025, 24/10). Ajoutée parce que le test a ROUGI. Elle fait
+    // partie de la même passe : elle relit un fait tiré d'une conversation face à cette
+    // conversation, envoie au modèle de relecture l'EXTRAIT autour de la valeur (l'extraction lui
+    // envoie déjà la conversation entière) et n'écrit qu'un statut et une trace chiffrée. Aucun
+    // jeton d'app, aucun périmètre ; ce qu'elle exporte aux pages ne lit aucune conversation.
+    f === "lib/relectureLia.ts" ||
     // **RÉGLER** (L26a, 18/09). Cette ligne s'est ajoutée parce que le test a ROUGI, et le
     // geste que demande sa consigne est de se demander si le fichier a sa place DANS le
     // périmètre — pas d'élargir un motif pour faire passer. Il l'a, pour trois raisons :

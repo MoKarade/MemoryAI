@@ -133,6 +133,8 @@ describe("les trente tables", () => {
       "sauvetage_echecs",
       "sauvetage_etat",
       "sujets",
+      // [ADR 0025] La trace des relectures de LIA (migration 0030).
+      "validations_lia",
       // [L27] La voix de Lia, écrite par Marc dans Régler : UNE ligne, `id = 1` (migration 0022).
       "voix_lia",
     ]);
