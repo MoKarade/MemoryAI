@@ -26,3 +26,6 @@
 | 0019 | Sauver la mémoire par re-chiffrement, l'ancien déploiement servant d'oracle | proposé (voie choisie par Marc, 23/10 14:54Z) | MemoryAI, sauvetage |
 | 0020 | Les messages deviennent des événements datés, avec leurs personnes | proposé (plan du 22/10, décision 1) | MemoryAI#70 |
 | 0021 | Les demandes « Que peut-on changer ici ? » du hub sont gardées dans MemoryAI | proposé (décision du fil Assistant, 24/10) ; code après l'OK de Marc | MemoryAI#169 |
+| 0022 | LIA laisse des notes au coordinateur, qui les lit comme des observations | proposé (option B de Marc, 24/10 17:44Z) ; code après l'OK de Marc | MemoryAI#188 |
+| 0023 | Des faits DÉDUITS par une règle, reliés à ceux d'où ils viennent | proposé (demande de Marc, 24/10 18:44Z) ; code après l'OK de Marc | MemoryAI#185 |
+| 0024 | LIA lit la météo et l'actualité, de sources publiques gratuites et sans clé | proposé (demande de Marc, 24/10 18:41Z) ; code après l'OK de Marc | MemoryAI#189 |
