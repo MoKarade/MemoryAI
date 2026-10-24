@@ -32,11 +32,11 @@ describe("le panneau d'un espace", () => {
     expect(html).not.toContain("maison-panneau-tete");
   });
 
-  it("ouvert sur Budget, il montre les vraies lignes et le lien vers les dépenses", () => {
+  it("ouvert sur Budget, il montre les vraies dépenses en tuiles et le lien vers les dépenses", () => {
     const html = rendre("budget");
     expect(html).toContain("data-ouvert");
     expect(html).toContain('aria-hidden="false"');
-    expect(html).toContain("<dt>Parler</dt><dd>0,25 $ sur 1,00 $</dd>");
+    expect(html).toContain("<span>Parler</span><span class=\"tab-valeur\">0,25 $ / 1,00 $</span>");
     expect(html).toContain('href="/depenses"');
     // La mini-barre marque l'espace courant, et lui seul.
     expect(html.match(/aria-current="true"/g)).toHaveLength(1);

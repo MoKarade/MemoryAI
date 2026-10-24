@@ -1634,6 +1634,91 @@ code {
   border-radius: inherit;
   background: var(--teinte, var(--repere));
 }
+.tab-barre--alerte i {
+  background: var(--alerte-texte);
+}
+.tab-jauges,
+.tab-liste,
+.tab-legende {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.tab-jauges,
+.tab-liste {
+  display: grid;
+  gap: 0.6rem;
+}
+.tab-jauges li {
+  display: grid;
+  gap: 0.3rem;
+}
+.tab-jauges li > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  color: var(--texte-doux);
+  font-size: 0.9rem;
+}
+.tab-liste li {
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.55rem 0.75rem;
+  border-left: 3px solid var(--teinte, var(--repere));
+  background: var(--surface-douce);
+  border-radius: 0 var(--rayon-petit) var(--rayon-petit) 0;
+}
+.tab-liste small {
+  color: var(--texte-doux);
+}
+.tab-anneau {
+  display: grid;
+  justify-items: center;
+  gap: 0.6rem;
+}
+.tab-anneau svg {
+  width: min(100%, 200px);
+  height: auto;
+}
+.tab-anneau-piste,
+.tab-anneau-part {
+  fill: none;
+  stroke-width: 14;
+}
+.tab-anneau-piste {
+  stroke: var(--surface-douce);
+}
+.tab-anneau-part {
+  stroke: var(--teinte);
+}
+.tab-anneau-centre {
+  fill: var(--texte);
+  font-size: 20px;
+  font-weight: 200;
+}
+.tab-anneau-sous {
+  fill: var(--texte-doux);
+  font-size: 10px;
+}
+.tab-legende {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem 1rem;
+  font-size: 0.85rem;
+  color: var(--texte-doux);
+}
+.tab-legende li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.tab-legende i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--teinte);
+}
 
 /* « Parler » dans la maison (maquette v5, écart A7, `components/ConversationMaison.tsx`) : le fil
    défile seul, la saisie reste en bas ; suggestions et bouton à 44 px, champ à 16 px. */
