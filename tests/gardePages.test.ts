@@ -38,6 +38,7 @@ const ROUTES_A_MARQUEUR: Record<string, { route: string; marqueur: RegExp }> = {
   // Le jeton du hub, comparé en temps constant par le helper du contrat (ADR 0016).
   "app/api/ask/route.ts": { route: "/api/ask", marqueur: /jetonsEgaux\(/ },
   "app/api/etat-lia/route.ts": { route: "/api/etat-lia", marqueur: /jetonsEgaux\(/ },
+  "app/api/demandes/route.ts": { route: "/api/demandes", marqueur: /jetonsEgaux\(/ },
   "app/api/mcp/authorize/route.ts": { route: "/api/mcp/authorize", marqueur: /ctx\.auth\.authorize\(/ },
   "app/api/mcp/token/route.ts": { route: "/api/mcp/token", marqueur: /exchangeCode\(/ },
   "app/api/mcp/register/route.ts": { route: "/api/mcp/register", marqueur: /registerClient\(/ },

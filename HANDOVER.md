@@ -23,6 +23,14 @@ seul à garder les anciennes clés dans son environnement figé. **Ne jamais le 
 - 24/10/2026 : `MEMORYAI_TOKEN_DRIVEAI_ECRITURE` roté sur Vercel memory-ai (autorisé par Marc, posé par le PC) ; côté
   DriveAI, la propriété Apps Script reste à remettre.
 
+## 🟨 EN ATTENTE DE MARC — 24/10/2026 : les demandes « Que peut-on changer ici ? » du hub (MemoryAI#169, ADR 0021)
+
+Codé et testé, PR en BROUILLON : l'ADR 0021 touche la frontière des données (protocole, `docs/claude/11-protocole.md`),
+donc elle ne sort du brouillon qu'avec l'OK de Marc. Table `demandes` (migration 0027, additive), `lib/demandes.ts`,
+route `/api/demandes` (jeton du hub en temps constant, `x-lia-proprietaire: 1`, gel respecté en lecture et en écriture).
+Contrat exact dans l'ADR ; il a été envoyé au fil Refonte Hubperso (côté hub : Hubperso#450). Le `nom` est chiffré
+niveau 1 et n'entre dans aucun prompt.
+
 ## 🔨 EN COURS — 22/10/2026 : refonte LIA, MemoryAI devient sa maison (chantier MemoryAI#67)
 
 Go de Marc le 22/10 sur les 11 décisions (plan : https://claude.ai/artifact/FjSqJYh6apLY8CPbwrRivY ; décisions
