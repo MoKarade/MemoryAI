@@ -6,7 +6,7 @@
 // recopier. Un espace se remplit quand le lot qui produit sa donnée est livré, pas avant.
 
 import type { Poste } from "@/lib/coutChat";
-import { tableauIdees, tableauMonde, type Tableau } from "./tableaux";
+import { LIBELLE_OUTIL, tableauIdees, tableauMonde, tableauOutils, type Tableau } from "./tableaux";
 
 export const IDS_ESPACES = ["souvenirs", "sante", "journee", "idees", "monde", "budget", "outils", "formes"] as const;
 export type IdEspace = (typeof IDS_ESPACES)[number];
@@ -66,16 +66,9 @@ export interface EntreesEspaces {
   budget: { depense: Record<Poste, number>; plafonds: Record<Poste, number> } | null;
   outils: readonly string[];
   formes: readonly string[];
+  /** Les appels de ce mois par outil (journal d'accès) ; null sans base, absent : non lus. */
+  appels?: readonly { outil: string; n: number }[] | null;
 }
-
-const LIBELLE_OUTIL: Record<string, string> = {
-  memoryai_contexte: "Ce qu'elle sait de toi, en bref",
-  memoryai_chercher: "Chercher un fait",
-  memoryai_etat: "L'état de sa mémoire",
-  memoryai_inventaire: "L'inventaire de ce qu'elle sait",
-  memoryai_papiers_facettes: "Les sortes de papiers",
-  memoryai_papiers_chercher: "Chercher dans les papiers",
-};
 
 const LIBELLE_POSTE: Record<Poste, string> = { chat: "Parler", apprentissage: "Apprendre" };
 
@@ -166,6 +159,7 @@ export function contenuEspaces(e: EntreesEspaces): Record<IdEspace, ContenuEspac
       dit: `J'ai ${e.outils.length} outils, tous en lecture.`,
       vide: e.outils.length === 0,
       puces: e.outils.map((o) => LIBELLE_OUTIL[o] ?? o),
+      tableau: tableauOutils({ outils: e.outils, formes: e.formes, appels: e.appels ?? null }),
     },
     formes: {
       phrase: `Elle choisit la forme de sa réponse parmi ${e.formes.length} : chacune cite ses sources.`,
