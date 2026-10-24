@@ -70,6 +70,10 @@ clé Anthropic : coût nul. `memoryai_etat` rend les comptes et la dernière mes
   de l'accueil n'a plus que le logo, « LIA », la pastille et UN bouton à droite, « Mémoire » ; ni menu ni « Parler ».
   La touche `/` ouvre `/chat`, jamais dans un champ (`lib/accueil/raccourcis.ts`, verrou `tests/accueilRaccourcis.test.ts`) ;
   les autres sections passent par la Mémoire (son menu) et les liens des espaces.
+  Écart A3 : LIA salue selon l'heure de Québec à l'arrivée (les quatre saluts de la maquette) et dit seule ce que les
+  espaces disent de vrai (« N à juger », dépense du jour et plafonds), à tour de rôle ; rien d'autre
+  (`lib/accueil/paroles.ts`). Chaque espace porte `data-lia-cible`, `data-lia-dit` (sa phrase, `ContenuEspace.dit`) et
+  `data-lia-activite` (le geste de la maquette) : elle va le voir et le dit. Verrou : `tests/accueilParoles.test.ts`.
 - Cinquième pas : **l'onglet Accès de la page Mémoire** (`/memoire/acces`). Part des faits validés par niveau, journal d'accès filtrable par niveau
   servi (métadonnées signées seulement), carte horaire des lectures sur 30 jours à l'heure de Québec, oublis
   (compte et dates) et garde-fous, chacun pointant vers le code qui le tient. Lectures : `lib/memoire/depotAcces.ts`
