@@ -3,21 +3,27 @@
 // composé côté serveur, rien de plus : sans source réelle, la phrase le dit (`.maison-vide`).
 //
 // ⚠️ Toujours dans la page, même fermé (`aria-hidden`, rien dedans) : il glisse au lieu d'apparaître.
+// Il porte aussi « Parler » (`parler`, écart A7) : titre « LIA », la conversation pour corps.
 
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { ESPACES, type ContenuEspace, type Espace, type IdEspace } from "@/lib/accueil/espaces";
 import { IconeEspace } from "./IconeEspace";
 
-export function PanneauEspace({ espace, contenu, choisir, fermer }: { espace: Espace | null; contenu: ContenuEspace | null; choisir: (id: IdEspace) => void; fermer: () => void }) {
+export function PanneauEspace({ espace, contenu, choisir, fermer, parler = null }: { espace: Espace | null; contenu: ContenuEspace | null; choisir: (id: IdEspace | "parler") => void; fermer: () => void; parler?: ReactNode }) {
+  const titre = parler !== null ? "LIA" : espace?.titre;
   return (
-    <aside className="maison-panneau" data-ouvert={espace ? "" : undefined} role="dialog" aria-label={espace?.titre ?? "Espace"} aria-hidden={!espace}>
-      {espace && contenu ? (
+    <aside className="maison-panneau" data-ouvert={titre ? "" : undefined} role="dialog" aria-label={titre ?? "Espace"} aria-hidden={!titre}>
+      {titre ? (
         <>
           <div className="maison-panneau-tete">
-            <h2>{espace.titre}</h2>
+            <h2>{titre}</h2>
             <div className="maison-mini" role="group" aria-label="Espaces">
+              <button type="button" aria-label="Parler" aria-current={parler !== null} onClick={() => choisir("parler")}>
+                <IconeEspace nom="chat" taille={18} />
+              </button>
               {ESPACES.map((e) => (
-                <button key={e.id} type="button" aria-label={e.libelle} aria-current={e.id === espace.id} onClick={() => choisir(e.id)}>
+                <button key={e.id} type="button" aria-label={e.libelle} aria-current={parler === null && e.id === espace?.id} onClick={() => choisir(e.id)}>
                   <IconeEspace nom={e.icone} taille={18} />
                 </button>
               ))}
@@ -26,6 +32,8 @@ export function PanneauEspace({ espace, contenu, choisir, fermer }: { espace: Es
               <IconeEspace nom="croix" taille={18} />
             </button>
           </div>
+          {parler !== null ? <div className="maison-panneau-corps parler-corps">{parler}</div> : null}
+          {parler === null && espace && contenu ? (
           <div className={`maison-panneau-corps teinte-${espace.teinte}`}>
             <p className={contenu.vide ? "maison-vide" : "maison-phrase"}>{contenu.phrase}</p>
             {contenu.lignes ? (
@@ -55,6 +63,7 @@ export function PanneauEspace({ espace, contenu, choisir, fermer }: { espace: Es
               </div>
             ) : null}
           </div>
+          ) : null}
         </>
       ) : null}
     </aside>

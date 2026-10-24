@@ -24,6 +24,7 @@ const TRACES = {
   db: ["M5 7c0-1.5 3-3 7-3s7 1.5 7 3-3 3-7 3-7-1.5-7-3z", "M5 7v10c0 1.5 3 3 7 3s7-1.5 7-3V7", "M5 12c0 1.5 3 3 7 3s7-1.5 7-3"],
   chat: ["M4 5h16v11H10l-4 4v-4H4z", "M8 9.5h8M8 12.5h5"],
   croix: ["M6 6l12 12M18 6L6 18"],
+  envoyer: ["M4 12l16-8-6 16-3-7z"],
   // La page Mémoire : onglets, retour, chevron des tuiles et icônes de leurs titres.
   chev: ["M6 9l6 6 6-6"],
   back: ["M15 5l-7 7 7 7"],

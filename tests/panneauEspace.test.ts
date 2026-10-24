@@ -40,7 +40,21 @@ describe("le panneau d'un espace", () => {
     expect(html).toContain('href="/depenses"');
     // La mini-barre marque l'espace courant, et lui seul.
     expect(html.match(/aria-current="true"/g)).toHaveLength(1);
-    expect(html.match(/<button type="button" aria-label="/g)).toHaveLength(ESPACES.length);
+    // Huit espaces, plus « Parler » en tête (maquette v5).
+    expect(html.match(/<button type="button" aria-label="/g)).toHaveLength(ESPACES.length + 1);
+    expect(html).toContain('aria-label="Parler" aria-current="false"');
+  });
+
+  it("ouvert sur « Parler », il titre « LIA » et porte la conversation (écart A7)", () => {
+    const html = renderToStaticMarkup(
+      createElement(PanneauEspace, { espace: null, contenu: null, choisir: () => undefined, fermer: () => undefined, parler: createElement("p", null, "conversation") }),
+    );
+    expect(html).toContain("data-ouvert");
+    expect(html).toContain('aria-label="LIA"');
+    expect(html).toContain("<h2>LIA</h2>");
+    expect(html).toContain('aria-label="Parler" aria-current="true"');
+    expect(html.match(/aria-current="true"/g)).toHaveLength(1);
+    expect(html).toContain("<p>conversation</p>");
   });
 
   it("sans source réelle, il le dit au lieu d'inventer", () => {
