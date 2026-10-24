@@ -2260,6 +2260,17 @@ code {
 .capacites li > svg {
   grid-column: 1 / -1;
 }
+/* Ton rythme habituel (Apprentissage) : le cadran des 24 heures. */
+.rose-heures {
+  display: block;
+  width: 100%;
+  max-width: 15rem;
+  margin: 0 auto 0.5rem;
+}
+.rose-heures text {
+  fill: var(--texte-doux);
+  font-size: 10px;
+}
 .etapes-apprentissage {
   margin: 0;
   padding: 0;

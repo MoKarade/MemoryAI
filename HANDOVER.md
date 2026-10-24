@@ -117,6 +117,10 @@ clé Anthropic : coût nul. `memoryai_etat` rend les comptes et la dernière mes
   (`lib/memoire/depotApprentissage.ts`) ; une mesure illisible est écartée et comptée, jamais lue comme 0. La courbe
   d'entraînement, les versions et les habitudes de la maquette n'existent pas : aucun réseau n'est entraîné. Verrou :
   `tests/memoireApprentissage.test.ts`.
+  24/10 (écart C2) : les sept tuiles de la maquette dans son ordre. La courbe = le banc ; Porte de qualité, Les
+  exemples et Versions dessinées VIDES (aucun réseau entraîné) ; Ce qu'elle a appris de toi = faits tirés des
+  conversations ; Ton rythme habituel = lectures par heure sur 30 jours ; Oubli réel = le vrai chemin d'un oubli
+  (`ETAPES_OUBLI`) et le compte. Par capacité, Ce qu'elle te demande et Comment elle apprend restent, repliés.
 - Huitième pas : **la coque de la Mémoire, comme la maquette** (Marc, 23/10 : « exactement comme les maquettes »).
   `components/CoqueMemoire.tsx` : vue plein écran SANS le menu de l'app, retour vers LIA, logo, et les CINQ onglets
   segmentés à icônes de la maquette. `components/Tuile.tsx` : la tuile repliable (`<details>`) à filet violet, sur un
