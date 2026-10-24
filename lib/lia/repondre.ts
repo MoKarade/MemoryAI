@@ -81,6 +81,9 @@ export async function repondreLia(demande: DemandeAsk, origine: string, lecteur:
       admin: depotAdminDrizzle(db),
       couches,
     });
+    // Chaque tour laisse ses COMPTEURS (jamais son contenu) : sans eux, « 0 bloc » ne dit pas si
+    // le modèle n'a rien proposé ou si tout a été rejeté.
+    console.info(`[${lecteur}] tour : ${r.blocs.length} bloc(s), outils ${r.outilsAppeles.join(", ") || "aucun"}`);
     // Les raisons portent des chemins de champs, jamais des valeurs : un journal n'est pas chiffré.
     if (r.blocsRejetes > 0) console.error(`[${lecteur}] ${r.blocsRejetes} bloc(s) rejeté(s) : ${r.raisonsBlocs.join(" ; ")}`);
     const reponse = composerReponse(r.reponse, origine, r.blocs);

@@ -8,7 +8,7 @@
 import { describe, it, expect } from "vitest";
 import { PROMPT_SYSTEME } from "../lib/chat/agent";
 import { REGLES_CITATION } from "../lib/chat/liens";
-import { construirePrompt, REGLES_SYSTEME } from "../lib/chat/prompt";
+import { construirePrompt, REGLE_BLOCS, REGLES_SYSTEME } from "../lib/chat/prompt";
 import { baliserVoix } from "../lib/chat/voix";
 
 /** Les phrases qui font les règles : si l'une disparaît, Lia ne tient plus sa frontière. */
@@ -45,6 +45,13 @@ describe("les règles — la couche que personne ne modifie", () => {
 });
 
 describe("construirePrompt", () => {
+  it("la règle des blocs suit les règles, seulement quand l'outil est offert, avant voix et profil", () => {
+    expect(construirePrompt(undefined, { blocs: false })).toBe(REGLES_SYSTEME);
+    const p = construirePrompt({ voix: "<voix>\nV\n</voix>", profil: null }, { blocs: true });
+    expect(p.startsWith(`${REGLES_SYSTEME}\n\n${REGLE_BLOCS}\n\n<voix>`)).toBe(true);
+    expect(REGLE_BLOCS).toContain("lia_blocs");
+  });
+
   it("sans couches : exactement les règles — le comportement d'avant", () => {
     expect(construirePrompt()).toBe(REGLES_SYSTEME);
     expect(construirePrompt({ voix: null, profil: null })).toBe(REGLES_SYSTEME);

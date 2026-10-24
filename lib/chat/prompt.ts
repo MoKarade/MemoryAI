@@ -40,13 +40,30 @@ export const REGLES_SYSTEME: string = [
   REGLES_CITATION,
 ].join("\n");
 
+/**
+ * La règle des BLOCS, ajoutée seulement quand l'appelant sait les rendre (`lia_blocs` offert).
+ * Le 24/10, l'outil était offert sans que le prompt en parle : le modèle, à qui la question dit
+ * « Réponds court », répondait en texte seul, même sur un bilan chiffré (tâche Hubperso 360).
+ * Une règle de FORME, jamais un fait : les valeurs restent celles des outils ou du bilan.
+ */
+export const REGLE_BLOCS: string =
+  "L'outil lia_blocs te permet de MONTRER au lieu de dire. Dès que ta réponse porte des chiffres, des dates, une série, " +
+  "une répartition ou une comparaison que tes outils ou le bilan <contexte_hub> t'ont donnés, appelle lia_blocs AVANT " +
+  "d'écrire ton texte, avec un à trois blocs de la forme qui colle (chiffre, jauge, barres, chrono, courbe, tableau…), " +
+  "puis garde le texte court : il commente les blocs, il ne les répète pas. Sans donnée sourcée, aucun bloc.";
+
 /** Les deux blocs de données, DÉJÀ balisés (`baliserVoix`, `baliserProfil`) ; `null` quand il n'y en a pas. */
 export interface Couches {
   voix: string | null;
   profil: string | null;
 }
 
-/** Règles, puis voix, puis profil. Les règles sont toujours là, intactes et en tête. */
-export function construirePrompt(couches: Couches = { voix: null, profil: null }): string {
-  return [REGLES_SYSTEME, couches.voix, couches.profil].filter((b): b is string => b !== null && b !== "").join("\n\n");
+/**
+ * Règles (et celle des blocs si l'outil est offert), puis voix, puis profil. Les règles sont
+ * toujours là, intactes et en tête.
+ */
+export function construirePrompt(couches: Couches = { voix: null, profil: null }, options: { blocs?: boolean } = {}): string {
+  return [REGLES_SYSTEME, options.blocs ? REGLE_BLOCS : null, couches.voix, couches.profil]
+    .filter((b): b is string => b !== null && b !== "")
+    .join("\n\n");
 }

@@ -11,6 +11,7 @@ import { drizzle } from "drizzle-orm/pglite";
 import { eq } from "drizzle-orm";
 import * as schema from "../lib/db/schema";
 import { deriverCle } from "../lib/chiffrement";
+import { construirePrompt, REGLE_BLOCS } from "../lib/chat/prompt";
 import { OUTIL_BLOCS, PlafondAtteintError, PROMPT_SYSTEME, tourDeChat, type ClientModele, type ReponseModele } from "../lib/chat/agent";
 import { depotAdminDrizzle } from "../lib/depotAdmin";
 import { depotDrizzle } from "../lib/depotFaits";
@@ -152,6 +153,7 @@ describe("tourDeChat", () => {
     const inventee = "2f2e2d2c-2b2a-4928-8726-252423222120";
     const chiffre = (source: string) => ({ type: "chiffre", libelle: "Employeur connu", valeur: 1, sources: [source] });
     const outilsVus: string[][] = [];
+    const systemes: string[] = [];
     const reponses = [
       appel("memoryai_contexte", {}),
       appel("lia_blocs", { blocs: [chiffre(bon!.id), chiffre(inventee)] }),
@@ -160,12 +162,14 @@ describe("tourDeChat", () => {
     const client: ClientModele = {
       async create(p) {
         outilsVus.push(p.tools.map((t) => t.name));
+        systemes.push(String(p.system));
         return reponses.shift()!;
       },
     };
     const base = { modele: "claude-haiku-4-5" as const, messages: [{ role: "user" as const, content: "montre" }], inclureN2: false, inclureN3: false, outils: outils(), admin: depotAdminDrizzle(db) };
     const r = await tourDeChat({ ...base, client, blocs: true });
     expect(outilsVus[0]).toContain("lia_blocs");
+    expect(systemes[0]).toContain(REGLE_BLOCS);
     expect(r.blocs).toEqual([chiffre(bon!.id)]);
     expect(r.blocsRejetes).toBe(1);
     expect(r.raisonsBlocs).toHaveLength(1);
@@ -173,6 +177,7 @@ describe("tourDeChat", () => {
     const sans = faux([appel("lia_blocs", { blocs: [chiffre(bon!.id)] }), texte("ok")]);
     const r2 = await tourDeChat({ ...base, client: sans.client });
     expect(r2.blocs).toEqual([]);
+    expect(construirePrompt()).not.toContain(REGLE_BLOCS);
     expect(r2.outilsAppeles).toEqual([]);
     // Le bilan du hub compte comme servi seulement si l'appelant le dit (question avec bilan),
     // et la description de l'outil le NOMME en clair (pas un gabarit resté littéral).
