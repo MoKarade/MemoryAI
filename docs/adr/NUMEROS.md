@@ -25,3 +25,4 @@
 | 0018 | Les deux clés irremplaçables ont une copie, faite par le serveur | accepté (carte de Marc, 23/10 12:58Z) ; à reprendre après 0019 | branche `cles-infisical` |
 | 0019 | Sauver la mémoire par re-chiffrement, l'ancien déploiement servant d'oracle | proposé (voie choisie par Marc, 23/10 14:54Z) | MemoryAI, sauvetage |
 | 0020 | Les messages deviennent des événements datés, avec leurs personnes | proposé (plan du 22/10, décision 1) | MemoryAI#70 |
+| 0021 | Les demandes « Que peut-on changer ici ? » du hub sont gardées dans MemoryAI | proposé (décision du fil Assistant, 24/10) ; code après l'OK de Marc | MemoryAI#169 |
