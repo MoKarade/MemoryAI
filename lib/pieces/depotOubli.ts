@@ -77,6 +77,14 @@ export function depotOubliPiecesDrizzle(db: Base): DepotOubliPieces {
         .update(schema.pieces)
         .set({ supprimeLe: maintenant })
         .where(eq(schema.pieces.id, pieceId));
+      // ADR 0020 : un export oublié emporte les messages qu'on en a tirés, sinon on les retrouverait.
+      const fileIds = exemplaires.map((e) => e.fileId);
+      if (fileIds.length > 0) {
+        await db
+          .update(schema.evenements)
+          .set({ supprimeLe: maintenant })
+          .where(and(inArray(schema.evenements.sourceRef, fileIds), isNull(schema.evenements.supprimeLe)));
+      }
       // ADR 0019 : l'archive du sauvetage garde les anciens scellés de ce papier ; un papier
       // oublié n'y reste pas (revue du 23/10).
       await effacerTraceSauvetage(db, "pieces", pieceId);

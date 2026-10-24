@@ -183,6 +183,13 @@
       "when": 1791158400025,
       "tag": "0025_lia_etat",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1791158400026,
+      "tag": "0026_evenements",
+      "breakpoints": true
     }
   ]
 }
