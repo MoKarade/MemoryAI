@@ -12,7 +12,8 @@ import { heureQuebec, libelleLecteur } from "@/lib/memoire/acces";
 
 /** Les noms des tracés de `components/IconeEspace.tsx` employés ici (lib ne dépend pas des composants). */
 type IconeTuile = "globe" | "eye" | "cal" | "target" | "shield" | "bulb" | "grid" | "chart" | "croix" | "tool" | "lock" | "spark" | "search" | "star" | "coin" | "clock" | "layers" | "pie" | "bell"
-  | "chat" | "path" | "folder" | "alert" | "pulse" | "heart" | "moon" | "phone" | "thermo";
+  | "chat" | "path" | "folder" | "alert" | "pulse" | "heart" | "moon" | "phone" | "thermo"
+  | "map" | "list" | "gauge" | "num" | "table" | "net" | "radar" | "funnel" | "flow" | "heat" | "kanban" | "tree" | "doc" | "cardok";
 
 export type Corps =
   | { genre: "vide"; texte: string }
@@ -340,6 +341,52 @@ export function tableauJournee(lectures: readonly { ts: Date; lecteur: string; o
       { cle: "relances", largeur: 5, icone: "bell", titre: "Relances", repliee: true, corps: [vide("Aucune relance pour l'instant.")] },
       { cle: "aujourdhui", largeur: 6, icone: "cal", titre: "Aujourd'hui", corps: [vide("Ton agenda du jour viendra avec l'agenda.")] },
       { cle: "surveille", largeur: 6, icone: "eye", titre: "Ce qu'elle surveille", repliee: true, corps: [vide("Elle ne surveille encore aucune app.")] },
+    ],
+  };
+}
+
+/** Les 22 formes de la maquette (`TYPES_BLOCS`) : leur nom pour Marc, leur icône, ce qu'elles montrent. */
+const FORMES: Readonly<Record<string, { titre: string; icone: IconeTuile; dit: string }>> = {
+  carte: { titre: "Carte", icone: "map", dit: "Des lieux sur une carte." },
+  chrono: { titre: "Chronologie", icone: "clock", dit: "Des moments, dans l'ordre." },
+  liste: { titre: "Liste", icone: "list", dit: "Des éléments, un par ligne." },
+  chat: { titre: "Fil de chat", icone: "chat", dit: "Un échange de messages." },
+  courbe: { titre: "Courbes", icone: "chart", dit: "Une évolution dans le temps." },
+  barres: { titre: "Barres", icone: "chart", dit: "Des quantités côte à côte." },
+  camembert: { titre: "Parts", icone: "pie", dit: "Les parts d'un tout." },
+  jauge: { titre: "Jauge", icone: "gauge", dit: "Une valeur entre son minimum et son maximum." },
+  chiffre: { titre: "Chiffre", icone: "num", dit: "Un nombre clé, en grand." },
+  tableau: { titre: "Tableau", icone: "table", dit: "Des lignes et des colonnes." },
+  calendrier: { titre: "Calendrier", icone: "cal", dit: "Des jours marqués." },
+  reseau: { titre: "Réseau", icone: "net", dit: "Des choses reliées entre elles." },
+  comparaison: { titre: "Avant et après", icone: "layers", dit: "Deux à quatre colonnes, face à face." },
+  radar: { titre: "Radar", icone: "radar", dit: "Plusieurs mesures d'un coup d'œil." },
+  entonnoir: { titre: "Entonnoir", icone: "funnel", dit: "Ce qui reste à chaque étape." },
+  flux: { titre: "Flux", icone: "flow", dit: "Ce qui passe d'un endroit à l'autre." },
+  heatmap: { titre: "Carte de chaleur", icone: "heat", dit: "Une intensité, case par case." },
+  kanban: { titre: "Colonnes", icone: "kanban", dit: "Des cartes rangées par étape." },
+  arbre: { titre: "Arbre", icone: "tree", dit: "Une hiérarchie, de la racine aux branches." },
+  document: { titre: "Document", icone: "doc", dit: "Un papier, avec son émetteur et sa date." },
+  cadran: { titre: "Cadran 24 h", icone: "clock", dit: "Une journée sur un cadran." },
+  confirmation: { titre: "Confirmation", icone: "cardok", dit: "Une action qu'elle propose et que tu confirmes." },
+};
+
+/** Le panneau Formes : chaque forme de son catalogue fermé, et comment elle les combine (`lib/lia/blocs.ts`). */
+export function tableauFormes(formes: readonly string[], maxBlocs: number): Tableau {
+  return {
+    question: "Elle choisit la forme de sa réponse",
+    tuiles: [
+      {
+        cle: "combine",
+        largeur: 12,
+        icone: "bulb",
+        titre: "Elle combine",
+        corps: [{ genre: "texte", texte: `Dans une réponse, elle combine jusqu'à ${maxBlocs} formes parmi ${formes.length}. Chacune cite les faits qu'elle montre, sauf la confirmation, qui ne montre rien.` }],
+      },
+      ...formes.map((f): TuileEspace => {
+        const d = FORMES[f];
+        return { cle: f, largeur: 4, icone: d?.icone ?? "grid", titre: d?.titre ?? f, corps: [{ genre: "texte", texte: d?.dit ?? f }] };
+      }),
     ],
   };
 }

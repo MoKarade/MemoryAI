@@ -6,7 +6,8 @@
 // recopier. Un espace se remplit quand le lot qui produit sa donnée est livré, pas avant.
 
 import type { Poste } from "@/lib/coutChat";
-import { LIBELLE_OUTIL, tableauBudget, tableauIdees, tableauJournee, tableauMonde, tableauOutils, tableauSante, tableauSouvenirs, type EntreesBudget, type Tableau } from "./tableaux";
+import { MAX_BLOCS } from "@/lib/lia/blocs";
+import { LIBELLE_OUTIL, tableauBudget, tableauFormes, tableauIdees, tableauJournee, tableauMonde, tableauOutils, tableauSante, tableauSouvenirs, type EntreesBudget, type Tableau } from "./tableaux";
 
 export const IDS_ESPACES = ["souvenirs", "sante", "journee", "idees", "monde", "budget", "outils", "formes"] as const;
 export type IdEspace = (typeof IDS_ESPACES)[number];
@@ -173,6 +174,7 @@ export function contenuEspaces(e: EntreesEspaces): Record<IdEspace, ContenuEspac
       dit: `Carte, courbe, liste… je choisis parmi ${e.formes.length} formes.`,
       vide: e.formes.length === 0,
       puces: [...e.formes],
+      tableau: tableauFormes(e.formes, MAX_BLOCS),
     },
   };
 }

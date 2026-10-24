@@ -5,8 +5,9 @@ import { describe, it, expect, vi } from "vitest";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { PanneauEspace } from "@/components/PanneauEspace";
+import { MAX_BLOCS, TYPES_BLOCS } from "@/lib/lia/blocs";
 import { contenuEspaces, ESPACES, type IdEspace } from "@/lib/accueil/espaces";
-import { debutDuMoisQuebec, finDuMois, jourMoins, tableauBudget, tableauIdees, tableauJournee, tableauMonde, LECTURES_DU_JOUR_MAX, minuitQuebec, tableauOutils, tableauSante, tableauSouvenirs } from "@/lib/accueil/tableaux";
+import { debutDuMoisQuebec, finDuMois, jourMoins, tableauBudget, tableauFormes, tableauIdees, tableauJournee, tableauMonde, LECTURES_DU_JOUR_MAX, minuitQuebec, tableauOutils, tableauSante, tableauSouvenirs } from "@/lib/accueil/tableaux";
 
 vi.mock("next/link", async () => {
   const { createElement: ce } = await import("react");
@@ -71,8 +72,10 @@ describe("le panneau qui a ses tuiles", () => {
     expect(html).not.toContain("maison-vide");
   });
 
-  it("un espace sans tuiles garde son corps d'avant", () => {
-    const html = rendre("formes");
+  it("un contenu sans tuiles garde son corps d'avant", () => {
+    const contenu = { ...contenuEspaces(entrees).sante, tableau: undefined };
+    const espace = ESPACES.find((e) => e.id === "sante") ?? null;
+    const html = renderToStaticMarkup(createElement(PanneauEspace, { espace, contenu, choisir: () => undefined, fermer: () => undefined }));
     expect(html).toContain("maison-vide");
     expect(html).not.toContain("tab-question");
   });
@@ -282,5 +285,21 @@ describe("Souvenirs, Santé et Sa journée, comme la maquette", () => {
   it("minuit à Québec, en instant", () => {
     expect(minuitQuebec("2026-10-24").toISOString()).toBe("2026-10-24T04:00:00.000Z");
     expect(minuitQuebec("2026-11-02").toISOString()).toBe("2026-11-02T05:00:00.000Z");
+  });
+});
+
+describe("Formes, comme la maquette", () => {
+  it("« Elle combine » puis une tuile par forme du catalogue fermé, avec son nom pour Marc", () => {
+    const t = tableauFormes(TYPES_BLOCS, MAX_BLOCS);
+    expect(t.question).toBe("Elle choisit la forme de sa réponse");
+    expect(t.tuiles).toHaveLength(TYPES_BLOCS.length + 1);
+    expect(t.tuiles[0]?.corps[0]).toMatchObject({ texte: expect.stringContaining(`jusqu'à ${MAX_BLOCS} formes parmi ${TYPES_BLOCS.length}`) });
+    // Chaque forme du catalogue a son nom et son icône ; aucune ne retombe sur son identifiant technique.
+    expect(t.tuiles.slice(1).every((x) => x.titre !== x.cle && x.icone !== "grid")).toBe(true);
+    expect(t.tuiles.find((x) => x.cle === "camembert")?.titre).toBe("Parts");
+  });
+
+  it("une forme inconnue garde son identifiant, sans inventer de description", () => {
+    expect(tableauFormes(["inconnue"], 1).tuiles[1]).toMatchObject({ titre: "inconnue", icone: "grid" });
   });
 });

@@ -84,7 +84,8 @@ clé Anthropic : coût nul. `memoryai_etat` rend les comptes et la dernière mes
   Budget aussi : anneau du jour par poste, rythme face aux plafonds, trente jours, part par modèle, fin du mois au
   rythme des sept derniers jours (rien avant trois jours de dépense dans le mois), garde-fous repliés.
   Souvenirs, Santé et Sa journée aussi : la recherche mène à ce qui existe, « Quand consulter » rappelle le 811 et le
-  911, « 24 h » et « Journal » montrent ses vraies lectures du jour ; le reste est vide honnête. Reste Formes.
+  911, « 24 h » et « Journal » montrent ses vraies lectures du jour ; le reste est vide honnête. Formes : une tuile par
+  forme du catalogue fermé (`TYPES_BLOCS`), nommée pour Marc, sans dessin d'exemple pour l'instant.
 - Cinquième pas : **l'onglet Accès de la page Mémoire** (`/memoire/acces`). Part des faits validés par niveau, journal d'accès filtrable par niveau
   servi (métadonnées signées seulement), carte horaire des lectures sur 30 jours à l'heure de Québec, oublis
   (compte et dates) et garde-fous, chacun pointant vers le code qui le tient. Lectures : `lib/memoire/depotAcces.ts`

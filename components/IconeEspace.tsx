@@ -52,6 +52,19 @@ const TRACES = {
   pulse: ["M3 12h4l2-6 3 12 2-6h7"],
   phone: ["M6 3h4l1.5 4.5-2 1.5a11 11 0 0 0 5.5 5.5l1.5-2L21 14v4a2 2 0 0 1-2 2A16 16 0 0 1 4 5a2 2 0 0 1 2-2z"],
   path: [rond(5, 6, 2), rond(19, 18, 2), "M7 6h6a4 4 0 0 1 0 8h-2a4 4 0 0 0 0 4h6"],
+  // Les formes de réponse (panneau Formes).
+  map: ["M4 6l5-2 6 2 5-2v14l-5 2-6-2-5 2z", "M9 4v14M15 6v14"],
+  list: ["M9 7h11M9 12h11M9 17h11", rond(5, 7, 1), rond(5, 12, 1), rond(5, 17, 1)],
+  gauge: ["M4.5 17a8.5 8.5 0 1 1 15 0", "M12 14l4-5"],
+  num: ["M9 4L7 20M17 4l-2 16M5 9h15M4 15h15"],
+  table: ["M4 5h16v14H4z", "M4 10h16M4 15h16M10 5v14"],
+  radar: ["M12 4l7.5 5.5-3 8.5H7.5l-3-8.5z", "M12 12l0-8M12 12l7.5-2.5M12 12l-7.5-2.5M12 12l3.5 6M12 12l-3.5 6"],
+  funnel: ["M4 5h16l-6 8v6l-4-2v-4z"],
+  flow: ["M4 6h5c4 0 4 6 8 6h3M4 18h5c4 0 4-6 8-6"],
+  heat: [cadre(4, 4, 4, 4, 1), cadre(10, 4, 4, 4, 1), cadre(16, 4, 4, 4, 1), cadre(4, 10, 4, 4, 1), cadre(10, 10, 4, 4, 1), cadre(16, 10, 4, 4, 1), cadre(4, 16, 4, 4, 1), cadre(10, 16, 4, 4, 1)],
+  kanban: [cadre(4, 4, 4.5, 16, 1), cadre(10, 4, 4.5, 10, 1), cadre(16, 4, 4, 13, 1)],
+  tree: [rond(12, 5, 2), rond(6, 19, 2), rond(18, 19, 2), "M12 7v4M12 11H6v6M12 11h6v6"],
+  doc: ["M7 3h7l4 4v14H7z", "M14 3v4h4M10 12h5M10 16h5"],
 } satisfies Record<Icone, string[]> & Record<string, string[]>;
 
 export type NomIcone = keyof typeof TRACES;
