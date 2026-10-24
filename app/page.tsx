@@ -19,8 +19,7 @@ import { OUTILS_LIA_HUB } from "@/lib/lia/ask";
 import { TYPES_BLOCS } from "@/lib/lia/blocs";
 import { accesDonnees } from "@/lib/pageDonnees";
 import { bandeauAJuger, type BandeauAJuger } from "@/lib/pile/bandeau";
-import { chargerEntreesPile } from "@/lib/pile/charger";
-import { composerPile, restantParGenre } from "@/lib/pile/composer";
+import { resteAJuger } from "@/lib/pile/charger";
 import { requireSession } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
@@ -36,15 +35,7 @@ export default async function MaisonDeLia() {
   let appels: EntreesEspaces["appels"] = null;
   let lectures: EntreesEspaces["lectures"] = null;
   if (acces.ok) {
-    const { candidats, deductions, questions, avis } = await chargerEntreesPile(acces.db);
-    const ordre = composerPile({
-      pieces: candidats,
-      faits: deductions.map((d) => ({ id: d.fait.id, creeLe: d.fait.creeLe })),
-      questions: questions.map((q) => ({ id: q.id, creeLe: q.creeLe })),
-      avis,
-      aujourdhui: jour,
-    });
-    aJuger = bandeauAJuger(restantParGenre(ordre, avis));
+    aJuger = bandeauAJuger(await resteAJuger(acces.db, jour));
     const admin = depotAdminDrizzle(acces.db);
     const accueil = depotAccueilDrizzle(acces.db);
     budget = {

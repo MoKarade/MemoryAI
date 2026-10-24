@@ -27,7 +27,9 @@ export type Corps =
   /** Des lignes « libellé · valeur » avec une barre de remplissage (`part` entre 0 et 1, `null` : pas de barre). */
   | { genre: "jauges"; lignes: { libelle: string; valeur: string; part: number | null; alerte?: boolean }[] }
   | { genre: "histogramme"; barres: { cle: string; etiquette: string; valeur: number; texte: string }[]; resume: string; unite: string }
-  | { genre: "liste"; elements: { libelle: string; detail?: string }[] };
+  | { genre: "liste"; elements: { libelle: string; detail?: string }[] }
+  /** Des bulles dont l'aire suit la valeur (les thèmes de la mémoire). */
+  | { genre: "bulles"; bulles: { libelle: string; valeur: number }[]; resume: string };
 
 /** Les teintes de `globals.css` (`.teinte-*`) : jamais une couleur ici. */
 type Teinte = "repere" | "accent";
