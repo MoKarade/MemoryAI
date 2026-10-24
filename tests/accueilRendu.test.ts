@@ -8,7 +8,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { AccueilClient } from "@/app/AccueilClient";
 import { contenuEspaces } from "@/lib/accueil/espaces";
 
-vi.mock("next/navigation", () => ({ usePathname: () => "/" }));
+vi.mock("next/navigation", () => ({ usePathname: () => "/", useRouter: () => ({ push: () => undefined }) }));
 vi.mock("next/link", async () => {
   const { createElement: ce } = await import("react");
   return { default: ({ href, children, ...reste }: { href: string; children?: unknown }) => ce("a", { href, ...reste }, children as never) };
@@ -45,9 +45,14 @@ describe("la maison de LIA, au premier affichage", () => {
     expect(html).toContain('aria-label="2 à juger : 2 questions"');
   });
 
-  it("garde l'accès à la conversation complète et à la mémoire", () => {
+  it("en haut, un seul bouton à droite, « Mémoire », comme la maquette (écart A1)", () => {
     const html = rendre(null);
-    expect(html).toContain('href="/chat"');
-    expect(html).toContain('href="/memoire"');
+    const droite = html.match(/<nav class="maison-droite"[\s\S]*?<\/nav>/)?.[0] ?? "";
+    expect(droite.match(/<a /g)).toHaveLength(1);
+    expect(droite).toContain('href="/memoire"');
+    // Ni « Parler » ni le menu de l'app dans l'en-tête : la conversation s'ouvre par `/` ou en
+    // touchant LIA, les sections par la Mémoire et les liens des espaces.
+    expect(html).not.toContain('href="/chat"');
+    expect(html).not.toContain("menu-bouton");
   });
 });
