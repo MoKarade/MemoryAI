@@ -10,6 +10,7 @@ import type { FaitAvecProvenance } from "../depotLecture";
 import { depotQuestionsDrizzle } from "../depotQuestions";
 import { MAX_OUVERTES } from "../questions";
 import type { Question } from "../db/schema";
+import { doutesEnTete } from "../relectureLia";
 import { depotPileDrizzle } from "./depot";
 import { composerPile, restantParGenre, type AvisEnVigueur, type CandidatPiece, type GenreCarte } from "./composer";
 
@@ -23,17 +24,20 @@ export interface EntreesPile {
   deductions: FaitAvecProvenance[];
   questions: Question[];
   avis: AvisEnVigueur[];
+  /** Les doutes de LIA, en tête de la pile (ADR 0025). */
+  faitsEnTete: string[];
 }
 
 export async function chargerEntreesPile(db: Db): Promise<EntreesPile> {
   const pile = depotPileDrizzle(db);
-  const [candidats, deductions, questions, avis] = await Promise.all([
+  const [candidats, deductions, questions, avis, faitsEnTete] = await Promise.all([
     pile.candidatsPieces(),
     depotAdminDrizzle(db).aValider(LIMITE_DEDUCTIONS),
     depotQuestionsDrizzle(db).ouvertes(MAX_OUVERTES),
     pile.avis(),
+    doutesEnTete(db),
   ]);
-  return { candidats, deductions, questions, avis };
+  return { candidats, deductions, questions, avis, faitsEnTete };
 }
 
 /**
@@ -41,8 +45,9 @@ export async function chargerEntreesPile(db: Db): Promise<EntreesPile> {
  * jour-là. Une seule composition pour l'accueil et l'onglet Mémoire : leurs comptes ne divergent pas.
  */
 export async function resteAJuger(db: Db, aujourdhui: string): Promise<Record<GenreCarte, number>> {
-  const { candidats, deductions, questions, avis } = await chargerEntreesPile(db);
+  const { candidats, deductions, questions, avis, faitsEnTete } = await chargerEntreesPile(db);
   const ordre = composerPile({
+    faitsEnTete,
     pieces: candidats,
     faits: deductions.map((d) => ({ id: d.fait.id, creeLe: d.fait.creeLe })),
     questions: questions.map((q) => ({ id: q.id, creeLe: q.creeLe })),

@@ -90,6 +90,8 @@ export function composerPile(params: {
   avis: readonly AvisEnVigueur[];
   /** Le jour de Marc, `AAAA-MM-JJ` (fuseau de Québec). */
   aujourdhui: string;
+  /** Les faits dont LIA doute (ADR 0025, cinq par jour au plus) : ils passent EN TÊTE de la pile. */
+  faitsEnTete?: readonly string[];
 }): CarteRef[] {
   const enVigueur = avisEnVigueur(params.avis);
   const passees: { ref: CarteRef; le: number }[] = [];
@@ -107,8 +109,10 @@ export function composerPile(params: {
     .sort((x, y) => x.rang - y.rang || plusRecentDabord(x.p, y.p))
     .map(({ p }): CarteRef => ({ genre: "piece", id: p.id }));
 
+  const enTete = new Set(params.faitsEnTete ?? []);
+  const tete: CarteRef[] = [...enTete].filter((id) => garder("fait", id)).map((id): CarteRef => ({ genre: "fait", id }));
   const aCote: CarteRef[] = [
-    ...[...params.faits].filter((f) => garder("fait", f.id)).sort(plusRecentDabord).map((f): CarteRef => ({ genre: "fait", id: f.id })),
+    ...[...params.faits].filter((f) => !enTete.has(f.id) && garder("fait", f.id)).sort(plusRecentDabord).map((f): CarteRef => ({ genre: "fait", id: f.id })),
     ...[...params.questions].filter((q) => garder("question", q.id)).sort(plusRecentDabord).map((q): CarteRef => ({ genre: "question", id: q.id })),
   ];
 
@@ -138,7 +142,7 @@ export function composerPile(params: {
     }
   }
   passees.sort((x, y) => x.le - y.le);
-  return [...pile, ...passees.map((x) => x.ref)];
+  return [...tete, ...pile, ...passees.map((x) => x.ref)];
 }
 
 /** Combien il reste de cartes par famille (hors cartes passées, qui ne sont pas « à faire »). */

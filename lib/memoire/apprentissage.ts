@@ -84,7 +84,7 @@ export const comptesQuestions = (lignes: readonly { statut: string; n: number }[
 
 export const LIBELLE_STATUT_FAIT: Record<(typeof STATUTS)[number], string> = {
   propose: "À valider",
-  valide: "Validés par toi",
+  valide: "Validés",
   rejete: "Rejetés",
   perime: "Remplacés depuis",
 };
@@ -99,7 +99,8 @@ export const LIBELLE_STATUT_QUESTION: Record<(typeof STATUTS_QUESTION)[number], 
 export const ETAPES: readonly { texte: string; ou: string }[] = [
   { texte: "Elle relit les conversations neuves, dès quatre messages non lus.", ou: "lib/apprentissage.ts" },
   { texte: "Elle en tire des faits proposés, jamais validés d'office.", ou: "lib/conversations/extraction.ts" },
-  { texte: "Tu valides ou tu rejettes dans « À valider ».", ou: "app/a-valider/page.tsx" },
+  { texte: "Elle relit seule ce qu'elle a proposé face à sa source, et ne valide que ce que le code ET sa relecture confirment.", ou: "lib/relectureLia.ts" },
+  { texte: "Tu juges ses doutes, cinq par jour en tête de la pile, et tout le reste dans « À valider ».", ou: "app/a-valider/page.tsx" },
   { texte: "Elle te demande ce qui manque encore, ou ce qui se contredit.", ou: "lib/questions/producteur.ts" },
   { texte: "Le banc mesure chaque jour ce qu'elle retrouve, sur les mêmes questions.", ou: "lib/banc/passe.ts" },
 ];
