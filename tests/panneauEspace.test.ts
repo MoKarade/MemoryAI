@@ -59,7 +59,8 @@ describe("le panneau d'un espace", () => {
 
   it("sans source réelle, il le dit au lieu d'inventer", () => {
     const html = rendre("sante");
-    expect(html).toContain('class="maison-vide"');
+    expect(html).toContain('class="tuile-vide"');
+    expect(html).toContain("Health Connect");
     expect(html).not.toContain("maison-lignes");
   });
 });

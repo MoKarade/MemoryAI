@@ -44,6 +44,13 @@ describe("appelsParOutilDepuis", () => {
   });
 });
 
+describe("lecturesDepuis", () => {
+  it("rend les lectures depuis l'instant, la plus récente d'abord, sans dépasser la limite", async () => {
+    const r = await depotAccueilDrizzle(db).lecturesDepuis(new Date("2026-10-03T00:00:00Z"), 1);
+    expect(r).toEqual([{ ts: new Date("2026-10-04T12:00:00Z"), lecteur: "chat", outil: "memoryai_etat" }]);
+  });
+});
+
 describe("depenseParModeleDepuis", () => {
   it("somme la dépense par modèle depuis le jour (inclus), la plus forte d'abord", async () => {
     const ligne = (jour: string, modele: string, coutUsd: number) => ({ jour, modele, coutUsd, poste: "chat" as const });
