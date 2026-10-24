@@ -3,7 +3,7 @@
 //
 // La conversation complète a déménagé à `/chat` (section « Parler ») ; toucher LIA ouvre ici une
 // discussion légère (`lia-ui`, `POST /api/lia/ask`). Cette page LIT seulement : la pile (« N à
-// juger »), la dépense du jour et les plafonds, les appels du mois par outil. Ce que montre chaque espace est composé par
+// juger »), la dépense du jour et les plafonds, les trente derniers jours et les modèles, les appels du mois par outil. Ce que montre chaque espace est composé par
 // `contenuEspaces` (pur, `tests/accueil.test.ts`) : sans source réelle, un espace le dit.
 //
 // ⚠️ `requireSession()` comme partout (`tests/gardePages.test.ts`), et `force-dynamic` : sans
@@ -12,7 +12,7 @@
 import { AccueilClient } from "./AccueilClient";
 import { depotAccueilDrizzle } from "@/lib/accueil/depotAccueil";
 import { contenuEspaces, type EntreesEspaces } from "@/lib/accueil/espaces";
-import { debutDuMoisQuebec } from "@/lib/accueil/tableaux";
+import { debutDuMoisQuebec, jourMoins } from "@/lib/accueil/tableaux";
 import { jourQuebec } from "@/lib/coutChat";
 import { depotAdminDrizzle } from "@/lib/depotAdmin";
 import { OUTILS_LIA_HUB } from "@/lib/lia/ask";
@@ -45,8 +45,15 @@ export default async function MaisonDeLia() {
     });
     aJuger = bandeauAJuger(restantParGenre(ordre, avis));
     const admin = depotAdminDrizzle(acces.db);
-    budget = { depense: await admin.depenseDuJourParPoste(jour), plafonds: await admin.plafonds() };
-    appels = await depotAccueilDrizzle(acces.db).appelsParOutilDepuis(debutDuMoisQuebec(new Date()));
+    const accueil = depotAccueilDrizzle(acces.db);
+    budget = {
+      jour,
+      depense: await admin.depenseDuJourParPoste(jour),
+      plafonds: await admin.plafonds(),
+      parJour: await admin.depenseParJour(31), // tout le mois en cours, au pire 31 jours
+      parModele: await accueil.depenseParModeleDepuis(jourMoins(jour, 29)),
+    };
+    appels = await accueil.appelsParOutilDepuis(debutDuMoisQuebec(new Date()));
   }
   const contenus = contenuEspaces({ aJuger, budget, appels, outils: [...OUTILS_LIA_HUB], formes: TYPES_BLOCS });
   return <AccueilClient contenus={contenus} aJuger={aJuger ? { titre: aJuger.titre, detail: aJuger.detail } : null} />;

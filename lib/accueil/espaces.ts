@@ -6,7 +6,7 @@
 // recopier. Un espace se remplit quand le lot qui produit sa donnée est livré, pas avant.
 
 import type { Poste } from "@/lib/coutChat";
-import { LIBELLE_OUTIL, tableauIdees, tableauMonde, tableauOutils, type Tableau } from "./tableaux";
+import { LIBELLE_OUTIL, tableauBudget, tableauIdees, tableauMonde, tableauOutils, type EntreesBudget, type Tableau } from "./tableaux";
 
 export const IDS_ESPACES = ["souvenirs", "sante", "journee", "idees", "monde", "budget", "outils", "formes"] as const;
 export type IdEspace = (typeof IDS_ESPACES)[number];
@@ -62,8 +62,8 @@ export interface ContenuEspace {
 export interface EntreesEspaces {
   /** « N à juger » de la pile (`bandeauAJuger`), ou null sans base / rien à juger. */
   aJuger: { total: number; titre: string } | null;
-  /** Dépense du jour et plafond par poste ; null sans base (on ne devine pas un zéro). */
-  budget: { depense: Record<Poste, number>; plafonds: Record<Poste, number> } | null;
+  /** Dépense du jour et plafond par poste (+ le détail des tuiles Budget) ; null sans base (on ne devine pas un zéro). */
+  budget: ({ depense: Record<Poste, number>; plafonds: Record<Poste, number> } & Partial<Pick<EntreesBudget, "jour" | "parJour" | "parModele">>) | null;
   outils: readonly string[];
   formes: readonly string[];
   /** Les appels de ce mois par outil (journal d'accès) ; null sans base, absent : non lus. */
@@ -148,11 +148,13 @@ export function contenuEspaces(e: EntreesEspaces): Record<IdEspace, ContenuEspac
             valeur: `${dollars(e.budget?.depense[p] ?? 0)} sur ${dollars(e.budget?.plafonds[p] ?? 0)}`,
           })),
           liens: [{ href: "/depenses", libelle: "Toutes les dépenses" }],
+          tableau: tableauBudget({ jour: e.budget.jour ?? "", depense: e.budget.depense, plafonds: e.budget.plafonds, parJour: e.budget.parJour ?? [], parModele: e.budget.parModele ?? [] }),
         }
       : {
           phrase: "La base n'est pas joignable : la dépense du jour n'est pas lisible.",
           dit: "Je ne lis pas la dépense du jour : la base ne répond pas.",
           vide: true,
+          tableau: tableauBudget(null),
         },
     outils: {
       phrase: `${e.outils.length} outils, tous en lecture seule : depuis ici, elle ne change rien.`,

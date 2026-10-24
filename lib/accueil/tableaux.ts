@@ -6,11 +6,11 @@
 // place, avec son titre et son icône. ⚠️ NO FAKE DATA : une tuile sans donnée réelle se dessine
 // VIDE (`genre: "vide"`), avec une ligne qui dit ce qui manque ; jamais un chiffre de la maquette.
 
-import { jourQuebec } from "@/lib/coutChat";
+import { jourQuebec, POSTES, type Poste } from "@/lib/coutChat";
 import { FUSEAU } from "@/lib/fuseau";
 
 /** Les noms des tracés de `components/IconeEspace.tsx` employés ici (lib ne dépend pas des composants). */
-type IconeTuile = "globe" | "eye" | "cal" | "target" | "shield" | "bulb" | "grid" | "chart" | "croix" | "tool" | "lock" | "spark" | "search" | "star";
+type IconeTuile = "globe" | "eye" | "cal" | "target" | "shield" | "bulb" | "grid" | "chart" | "croix" | "tool" | "lock" | "spark" | "search" | "star" | "coin" | "clock" | "layers" | "pie" | "bell";
 
 export type Corps =
   | { genre: "vide"; texte: string }
@@ -18,7 +18,16 @@ export type Corps =
   | { genre: "chiffres"; chiffres: { icone: IconeTuile; valeur: string; libelle: string }[] }
   /** Un classement en barres horizontales (`part` rapportée au plus grand). */
   | { genre: "barres"; barres: { libelle: string; valeur: string; part: number }[]; resume: string }
-  | { genre: "pastilles"; elements: string[] };
+  | { genre: "pastilles"; elements: string[] }
+  /** Un anneau : les parts d'un total face à un plafond (la dépense du jour par poste). */
+  | { genre: "anneau"; parts: { libelle: string; valeur: number; teinte: Teinte }[]; centre: string; sous: string; plafond: number; resume: string }
+  /** Des lignes « libellé · valeur » avec une barre de remplissage (`part` entre 0 et 1, `null` : pas de barre). */
+  | { genre: "jauges"; lignes: { libelle: string; valeur: string; part: number | null; alerte?: boolean }[] }
+  | { genre: "histogramme"; barres: { cle: string; etiquette: string; valeur: number; texte: string }[]; resume: string; unite: string }
+  | { genre: "liste"; elements: { libelle: string; detail?: string }[] };
+
+/** Les teintes de `globals.css` (`.teinte-*`) : jamais une couleur ici. */
+type Teinte = "repere" | "accent";
 
 interface TuileEspace {
   cle: string;
@@ -36,6 +45,194 @@ export interface Tableau {
 }
 
 const vide = (texte: string): Corps => ({ genre: "vide", texte });
+
+const dollars = (v: number) => `${v.toFixed(2).replace(".", ",")} $`;
+
+const LIBELLE_POSTE: Record<Poste, string> = { chat: "Parler", apprentissage: "Apprendre" };
+const TEINTE_POSTE: Record<Poste, Teinte> = { chat: "repere", apprentissage: "accent" };
+
+/** Au-delà de cette part d'un plafond, la barre passe en alerte (le seuil « proche » de la maison). */
+const SEUIL_ALERTE = 0.8;
+/** En dessous de ces jours de dépense dans le mois, on n'estime pas la fin du mois. */
+const JOURS_MIN_ESTIMATION = 3;
+/** Le rythme de l'estimation : la moyenne des derniers jours. */
+const JOURS_RYTHME = 7;
+
+export interface EntreesBudget {
+  /** Jour de Québec, `AAAA-MM-JJ`. */
+  jour: string;
+  depense: Record<Poste, number>;
+  plafonds: Record<Poste, number>;
+  /** Les jours les plus récents qui portent une dépense, dans l'ordre (`depenseParJour`). */
+  parJour: readonly { jour: string; parPoste: Record<Poste, number> }[];
+  /** Sur les trente derniers jours. */
+  parModele: readonly { modele: string; usd: number }[];
+}
+
+const somme = (r: Record<Poste, number>) => POSTES.reduce((t, p) => t + (r[p] ?? 0), 0);
+const borne01 = (x: number) => Math.max(0, Math.min(1, x));
+
+/** Le nombre de jours du mois de `jour` (`AAAA-MM-JJ`). */
+function joursDuMois(jour: string): number {
+  const [a, m] = jour.split("-").map(Number);
+  return new Date(Date.UTC(a ?? 1970, m ?? 1, 0)).getUTCDate();
+}
+
+/** `jour` moins `n` jours, en `AAAA-MM-JJ` (calcul de calendrier, sans fuseau). */
+export function jourMoins(jour: string, n: number): string {
+  const [a, m, j] = jour.split("-").map(Number);
+  return new Date(Date.UTC(a ?? 1970, (m ?? 1) - 1, (j ?? 1) - n)).toISOString().slice(0, 10);
+}
+
+/**
+ * La fin du mois au rythme des sept derniers jours : ce qui est déjà dépensé ce mois-ci, plus la
+ * moyenne de ces jours pour chaque jour qui reste. `null` avant trois jours de dépense dans le
+ * mois : une estimation sur un jour ou deux serait un chiffre inventé qui se croit mesuré.
+ */
+export function finDuMois(b: Pick<EntreesBudget, "jour" | "parJour">): { usd: number; deja: number } | null {
+  const mois = b.jour.slice(0, 7);
+  const duMois = b.parJour.filter((d) => d.jour.startsWith(mois) && d.jour <= b.jour);
+  if (duMois.length < JOURS_MIN_ESTIMATION) return null;
+  const deja = duMois.reduce((t, d) => t + somme(d.parPoste), 0);
+  const depuis = jourMoins(b.jour, JOURS_RYTHME - 1);
+  // Un jour sans ligne dans la fenêtre a dépensé zéro : la moyenne se fait sur les SEPT jours.
+  const recents = b.parJour.filter((d) => d.jour >= depuis && d.jour <= b.jour).reduce((t, d) => t + somme(d.parPoste), 0);
+  const restants = joursDuMois(b.jour) - Number(b.jour.slice(8, 10));
+  return { usd: deja + (recents / JOURS_RYTHME) * restants, deja };
+}
+
+export function tableauBudget(b: EntreesBudget | null): Tableau {
+  const question = "Ce que LIA coûte ce mois-ci";
+  if (!b) {
+    const panne = vide("La base ne répond pas : la dépense n'est pas lisible.");
+    return {
+      question,
+      tuiles: [
+        { cle: "plafond", largeur: 6, icone: "coin", titre: "Plafond du jour", corps: [panne] },
+        { cle: "rythme", largeur: 6, icone: "clock", titre: "Rythme", corps: [panne] },
+        { cle: "trente", largeur: 12, icone: "chart", titre: "Trente jours", corps: [panne] },
+        { cle: "modele", largeur: 6, icone: "layers", titre: "Par modèle", corps: [panne] },
+        { cle: "fin", largeur: 6, icone: "pie", titre: "Fin du mois", corps: [panne] },
+        { cle: "garde", largeur: 12, icone: "bell", titre: "Garde-fous du budget", repliee: true, corps: [panne] },
+      ],
+    };
+  }
+  const total = somme(b.depense);
+  const plafond = somme(b.plafonds);
+  const mois = b.jour.slice(0, 7);
+  const duMois = b.parJour.filter((d) => d.jour.startsWith(mois)).reduce((t, d) => t + somme(d.parPoste), 0);
+  const fin = finDuMois(b);
+  const modeles = b.parModele.filter((m) => m.usd > 0);
+  const maxModele = Math.max(...modeles.map((m) => m.usd), 0);
+  const totalModeles = modeles.reduce((t, m) => t + m.usd, 0);
+  const trente = b.parJour.slice(-30);
+
+  return {
+    question,
+    tuiles: [
+      {
+        cle: "plafond",
+        largeur: 6,
+        icone: "coin",
+        titre: `Plafond de ${dollars(plafond)} par jour`,
+        corps: [
+          {
+            genre: "anneau",
+            parts: POSTES.map((p) => ({ libelle: LIBELLE_POSTE[p], valeur: b.depense[p] ?? 0, teinte: TEINTE_POSTE[p] })),
+            centre: dollars(total),
+            sous: `sur ${dollars(plafond)}`,
+            plafond,
+            resume: `${dollars(total)} dépensés aujourd'hui sur un plafond de ${dollars(plafond)} par jour.`,
+          },
+        ],
+      },
+      {
+        cle: "rythme",
+        largeur: 6,
+        icone: "clock",
+        titre: "Rythme",
+        corps: [
+          {
+            genre: "jauges",
+            lignes: [
+              { libelle: "Aujourd'hui", valeur: `${dollars(total)} / ${dollars(plafond)}`, part: plafond > 0 ? borne01(total / plafond) : null },
+              ...POSTES.map((p) => {
+                const part = (b.plafonds[p] ?? 0) > 0 ? (b.depense[p] ?? 0) / b.plafonds[p] : null;
+                return { libelle: LIBELLE_POSTE[p], valeur: `${dollars(b.depense[p] ?? 0)} / ${dollars(b.plafonds[p] ?? 0)}`, part: part === null ? null : borne01(part), alerte: part !== null && part >= SEUIL_ALERTE };
+              }),
+              // Pas de plafond au mois : la ligne n'a pas de barre, on ne la rapporte à rien d'inventé.
+              { libelle: "Ce mois-ci", valeur: dollars(duMois), part: null },
+            ],
+          },
+        ],
+      },
+      {
+        cle: "trente",
+        largeur: 12,
+        icone: "chart",
+        titre: "Trente jours",
+        corps: trente.length
+          ? [
+              {
+                genre: "histogramme",
+                barres: trente.map((d) => ({ cle: d.jour, etiquette: d.jour.slice(5), valeur: somme(d.parPoste), texte: dollars(somme(d.parPoste)) })),
+                resume: `Dépense de chacun des ${trente.length} derniers jours qui en portent une.`,
+                unite: "$ US",
+              },
+              { genre: "texte", texte: "Le détail, jour par jour et poste par poste :", lien: { href: "/depenses", libelle: "Toutes les dépenses" } },
+            ]
+          : [vide("Aucune dépense enregistrée pour l'instant.")],
+      },
+      {
+        cle: "modele",
+        largeur: 6,
+        icone: "layers",
+        titre: "Par modèle",
+        corps: modeles.length
+          ? [
+              {
+                genre: "barres",
+                barres: modeles.map((m) => ({ libelle: m.modele, valeur: `${Math.round((m.usd / totalModeles) * 100)} %`, part: maxModele > 0 ? m.usd / maxModele : 0 })),
+                resume: `Part de chaque modèle dans la dépense des trente derniers jours : ${modeles.map((m) => `${m.modele} ${Math.round((m.usd / totalModeles) * 100)} %`).join(", ")}.`,
+              },
+            ]
+          : [vide("Aucune dépense sur les trente derniers jours.")],
+      },
+      {
+        cle: "fin",
+        largeur: 6,
+        icone: "pie",
+        titre: "Fin du mois",
+        corps: fin
+          ? [
+              { genre: "chiffres", chiffres: [{ icone: "pie", valeur: `≈ ${dollars(fin.usd)}`, libelle: "d'ici la fin du mois" }] },
+              { genre: "texte", texte: `Estimation : ${dollars(fin.deja)} déjà dépensés ce mois-ci, puis le rythme des ${JOURS_RYTHME} derniers jours.` },
+            ]
+          : [vide(`Pas encore d'estimation : il faut au moins ${JOURS_MIN_ESTIMATION} jours de dépense ce mois-ci.`)],
+      },
+      {
+        cle: "garde",
+        largeur: 12,
+        icone: "bell",
+        titre: "Garde-fous du budget",
+        repliee: true,
+        corps: [
+          {
+            genre: "liste",
+            elements: [
+              { libelle: `Parler : ${dollars(b.plafonds.chat ?? 0)} par jour`, detail: "plafond atteint, elle ne répond plus jusqu'au lendemain (heure de Québec)" },
+              { libelle: `Apprendre : ${dollars(b.plafonds.apprentissage ?? 0)} par jour`, detail: "plafond atteint, la passe s'arrête et reprend le lendemain" },
+              { libelle: "Relu à chaque appel", detail: "un plafond baissé s'applique tout de suite, même au milieu d'une passe" },
+              { libelle: "0 $ met en pause", detail: "un plafond existe toujours, il ne se désactive pas" },
+            ],
+          },
+          { genre: "texte", texte: "Les plafonds se règlent dans Dépenses.", lien: { href: "/depenses", libelle: "Régler les plafonds" } },
+        ],
+      },
+    ],
+  };
+}
+
 
 export function tableauIdees(aJuger: { total: number; titre: string } | null): Tableau {
   return {
