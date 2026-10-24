@@ -1,5 +1,5 @@
 // lib/memoire/tuilesMemoire.ts — les tuiles de l'onglet Mémoire autour du réseau (maquette v5,
-// écart C) : Thèmes, Sources, Croissance, Les plus reliés, À valider et Papiers. PUR : la page lit la base, ce module compose, `CorpsTuile` dessine.
+// écart C) : Thèmes, Sources, Croissance, Les plus reliés, À valider et Papiers ; et À confirmer (Accès). PUR : la page lit la base, ce module compose, `CorpsTuile` dessine.
 //
 // ⚠️ Des COMPTES et des dates, jamais une valeur de fait : comme le réseau, ces tuiles montrent la
 // forme de la mémoire, pas son contenu.
@@ -112,4 +112,13 @@ export function corpsPapiers(parDomaine: readonly { domaine: string | null; n: n
     barres: lignes.map((l) => ({ libelle: l.libelle, valeur: l.n.toLocaleString("fr-CA"), part: l.n / max })),
     resume: `Papiers gardés par dossier : ${lignes.map((l) => `${l.libelle} ${l.n}`).join(", ")}.`,
   };
+}
+
+/** À confirmer : les questions ouvertes de LIA, la plus récente d'abord, et le lien pour répondre. */
+export function corpsAConfirmer(questions: readonly { question: string; motif: string; creeLe: Date }[], maintenant: Date): Corps[] {
+  if (questions.length === 0) return [{ genre: "vide", texte: "Rien à confirmer : LIA n'a aucune question ouverte." }];
+  return [
+    { genre: "liste", elements: questions.map((q) => ({ libelle: q.question, detail: `${q.motif} · il y a ${depuis(q.creeLe, maintenant)}` })) },
+    { genre: "texte", texte: `${questions.length} question${questions.length > 1 ? "s" : ""} en attente de ta réponse.`, lien: { href: "/questions", libelle: "Répondre" } },
+  ];
 }
