@@ -18,8 +18,15 @@ import { K_RAPPEL, noterBanc, tirerBanc, validerBanc, type Mesure, type PapierBa
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- même alias que les autres dépôts
 type Base = PgDatabase<PgQueryResultHKT, any>;
 
-/** Le banc en vigueur. Un banc neuf (messages, courriels) prendra un AUTRE nom, jamais celui-ci. */
-export const BANC_COURANT = "papiers-v1";
+/**
+ * Le banc en vigueur. Un banc neuf (messages, courriels) prendra un AUTRE nom, jamais celui-ci.
+ *
+ * ⚠️ `papiers-v1` a été figé sous la clé retirée à l'incident du 23/10 (ADR 0019) ; le sauvetage
+ * n'a pas rescellé `banc_questions`, et chaque passe échouait au déchiffrement (prod, 23/10
+ * 20:55Z et 23:44Z). Ses lignes restent en base, jamais réécrites ; `papiers-v2` est retiré du
+ * même parc, sous la clé en vigueur, et sa première mesure devient la mesure de base.
+ */
+export const BANC_COURANT = "papiers-v2";
 /** Ce qui cherche au lot 0 : la recherche plein texte des papiers, nourrie des mots-clés. */
 const CHERCHEUR_LOT0 = "plein-texte-mots-cles";
 /** Le réveil passe toutes les trois heures ; une mesure par jour suffit à suivre un lot. */

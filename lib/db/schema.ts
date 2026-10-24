@@ -761,8 +761,8 @@ export const avisPile = pgTable(
 
 /**
  * Le BANC de questions de la refonte LIA (MemoryAI#69, migration 0023). Tiré UNE fois par banc
- * (`banc` = son nom, `papiers-v1` d'abord), jamais réécrit : un banc qu'on retouche ne mesure
- * plus rien.
+ * (`banc` = son nom : `papiers-v1` d'abord, illisible depuis l'incident du 23/10, puis
+ * `papiers-v2`), jamais réécrit : un banc qu'on retouche ne mesure plus rien.
  *
  * ⚠️ `contenu` est CHIFFRÉ (AAD `banc|<id>`, niveau 2) : la question nomme un émetteur ou un
  * type de papier de Marc. `capacite` reste en clair : elle ne dit rien sur lui, et c'est elle
