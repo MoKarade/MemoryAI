@@ -952,6 +952,26 @@ export const evenementPersonnes = pgTable(
   ],
 );
 
+/**
+ * Les DEMANDES « Que peut-on changer ici ? » du hub (ADR 0021, migration 0027). Pas des faits :
+ * ni source, ni validation, jamais servies à un modèle. Contenu borné par `lib/demandes.ts` ;
+ * `nom` est CHIFFRÉ au niveau 1 (AAD `demande|<id>|1`), `empreinte` rend l'écriture idempotente.
+ */
+export const demandes = pgTable(
+  "demandes",
+  {
+    id: text("id").primaryKey(),
+    empreinte: text("empreinte").notNull(),
+    type: text("type").notNull(),
+    app: text("app").notNull(),
+    genre: text("genre").notNull(),
+    nom: text("nom").notNull(),
+    demandeLe: timestamp("demande_le", { withTimezone: true }).notNull(),
+    creeLe: timestamp("cree_le", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("demandes_empreinte").on(t.empreinte), index("demandes_demande_le").on(t.demandeLe)],
+);
+
 export type Fait = typeof faits.$inferSelect;
 export type NouveauFait = typeof faits.$inferInsert;
 export type Provenance = typeof provenances.$inferSelect;

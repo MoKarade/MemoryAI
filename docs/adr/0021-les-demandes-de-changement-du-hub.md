@@ -29,12 +29,25 @@ jamais transporter du texte de page.
 4. **La porte** : `POST` et `GET /api/demandes`, `x-hub-token` en temps constant, côté serveur du
    hub seulement, comme `/api/etat-lia`. Le hub dit `x-lia-proprietaire: 1` après avoir vérifié la
    session ; un invité ne dépose rien. Codes : 503 sans `HUB_TOKEN`, 401 jeton faux, 403 propriétaire
-   non dit, 503 gelée (écriture), toujours `no-store`, aucun refus en cache.
+   non dit, 503 gelée (lecture ET écriture), toujours `no-store`, aucun refus en cache.
 5. **Idempotent et oubliable** : une empreinte keyée `(type, app, genre, nom, jour)` est unique ;
    la même demande le même jour n'en crée pas une deuxième. `oublis` est consulté avant toute
    insertion ; oublier une demande pose son empreinte, et elle ne revient pas.
 6. **La liste** : `GET` rend les 100 plus récentes, champs du schéma seulement, du plus récent au
    plus ancien. Le hub l'affiche ; MemoryAI ne l'envoie à aucun modèle dans ce lot.
+
+## Le contrat, tel que codé (24/10/2026, PR de la tâche MemoryAI#169, en brouillon)
+
+- `POST` : corps JSON strict de 2 Ko au plus (au-delà 413, illisible 400). `nom` rogné puis 1 à 80
+  caractères, sans `<`, `>` ni caractère de contrôle. `demandeLe` en ISO 8601 AVEC fuseau, posé par
+  le hub ; plus de 5 minutes dans le futur, refusé. Champ inconnu ou invalide : 422
+  `{ error: "champs_invalides", champs: [...] }`, les chemins des champs, jamais leur valeur.
+- Réponses : 201 `{ id, demandeLe, nouvelle: true }` ; 200 `{ id, demandeLe, nouvelle: false }` pour
+  la même demande le même jour de Québec ; 410 `{ error: "oubliee" }` si son empreinte est dans
+  `oublis`, rien n'est écrit.
+- `GET` : 200 `{ demandes: [{ id, type, app, genre, nom, demandeLe }] }`, `nom` déchiffré.
+- Code : `lib/demandes.ts` (pur et I/O séparés), `app/api/demandes/route.ts`, migration
+  `drizzle/0027_demandes.sql`. Preuve : `tests/demandes.test.ts` (PGlite, données fictives).
 
 ## Ce qui reste ouvert
 
