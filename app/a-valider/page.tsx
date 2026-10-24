@@ -175,7 +175,7 @@ export default async function AValiderPage() {
                   </p>
                   <p className="fait-valeur">{f.valeurType === "date" ? <time dateTime={f.valeur}>{f.valeur}</time> : f.valeur}</p>
                   <p className="hint">
-                    source : {LIBELLES_FIABILITE[f.fiabiliteSource] ?? f.fiabiliteSource} · <Link href={`/fait/${f.id}`}>détail</Link>
+                    source : {LIBELLES_FIABILITE[f.fiabiliteSource] ?? f.fiabiliteSource} · <Link className="lien-cible" href={`/fait/${f.id}`}>détail</Link>
                   </p>
                   <form action={restaurerAction}>
                     <input type="hidden" name="id" value={f.id} />

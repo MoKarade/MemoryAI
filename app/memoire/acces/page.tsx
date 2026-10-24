@@ -139,7 +139,8 @@ export default async function AccesPage({ searchParams }: { searchParams: Promis
           {carte.lecteurs.length === 0 ? (
             <p className="doux">Aucune lecture ces {FENETRE_JOURS} derniers jours.</p>
           ) : (
-            <div className="defile-heures">
+            // Défile sur téléphone : focusable pour défiler au clavier (axe, scrollable-region-focusable).
+            <div className="defile-heures" tabIndex={0} role="region" aria-label="Carte des lectures par heure, défilante">
               <svg
                 className="carte-heures"
                 viewBox={`0 0 ${G + 24 * 12} ${carte.lecteurs.length * 14 + 16}`}
