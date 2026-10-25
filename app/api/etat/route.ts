@@ -40,6 +40,8 @@ import { identifierEcrivain, jetonDepuisEntete, refusJeton } from "@/lib/jetons"
 import { assurerMigrations } from "@/lib/migrations";
 import { depotPiecesLectureDrizzle } from "@/lib/pieces/depotLecture";
 import { composerEtatPublic } from "@/lib/etatPublic";
+import { papiersVraisParLia } from "@/lib/pieces/depotRelecture";
+import { valideesParLia } from "@/lib/relectureLia";
 
 export const dynamic = "force-dynamic";
 
@@ -65,8 +67,10 @@ export async function GET(request: Request): Promise<Response> {
   const pieces = depotPiecesLectureDrizzle(db);
   const papiers = await pieces.comptes();
   const extracteurs = await pieces.comptesParExtracteur();
+  // Ce que LIA a tranché seule : Marc ne juge plus rien (tâche MemoryAI 231).
+  const parLia = { faits: await valideesParLia(db), papiers: await papiersVraisParLia(db) };
 
   // ⚠️ La composition est PURE et vit dans `lib/etatPublic.ts` : c'est elle que les tests
   // perturbent, sans base. Une seconde mise en forme écrite ici serait « une règle et demie ».
-  return Response.json(composerEtatPublic(faits, papiers, extracteurs, estGele()), { headers: NO_STORE });
+  return Response.json(composerEtatPublic(faits, papiers, extracteurs, estGele(), parLia), { headers: NO_STORE });
 }
