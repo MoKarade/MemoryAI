@@ -180,3 +180,34 @@ describe("comment un papier se présente", () => {
     expect(titrePiece({ type: "  ", emetteur: "  " })).toBeNull();
   });
 });
+
+describe("un papier de niveau 0 (tâche MemoryAI 230)", () => {
+  it("relit ses facettes en clair : l'écrivain les scelle à tout niveau, 0 compris", async () => {
+    const r = await ecrireLotPieces(
+      [papier("ecr-n0", { domaine: "08 · Perso & projets", titulaire: "Camille Exemple", titulaire_confiance: 0.9, exemplaires: [{ file_id: "ecr-n0", chemin: "/08 · Perso & projets/ecr-n0" }] })],
+      DRIVEAI,
+      cle,
+      depotPiecesDrizzle(db),
+    );
+    expect(r.acceptees).toBe(1);
+    const id = await idDe("ecr-n0");
+    const brute = (await depotPiecesLectureDrizzle(db).parId(id))!;
+    expect(brute.piece.niveau).toBe(0);
+    expect(brute.piece.type).toMatch(/^v2:/);
+
+    const f = rendreFacettesPiece(brute, TOUT, cle)!;
+    expect([f.type, f.emetteur, f.titulaire]).toEqual(["relevé", "Banque Aurore", "Camille Exemple"]);
+    const complet = rendreLisiblePiece(brute, TOUT, cle)!;
+    expect([complet.type, complet.titulaire]).toEqual(["relevé", "Camille Exemple"]);
+    expect(complet.exemplaires[0]!.chemin).toBe("/08 · Perso & projets/ecr-n0");
+  });
+
+  it("une ancienne ligne N0 en texte nu reste lue telle quelle ; au niveau 1, un texte nu reste refusé", async () => {
+    const id = await idDe("ecr-n0");
+    const brute = (await depotPiecesLectureDrizzle(db).parId(id))!;
+    const nue = { ...brute, piece: { ...brute.piece, type: "relevé ancien" } };
+    expect(rendreFacettesPiece(nue, TOUT, cle)!.type).toBe("relevé ancien");
+    const n1 = { ...nue, piece: { ...nue.piece, niveau: 1 } };
+    expect(() => rendreFacettesPiece(n1, TOUT, cle)).toThrow();
+  });
+});

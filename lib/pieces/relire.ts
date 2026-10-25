@@ -4,13 +4,14 @@
 // lecture déchiffrée EN MÉMOIRE, `deciderPapier`, et des EMPREINTES seulement en base.
 // ⚠️ Le MÊME extracteur referait la même erreur au même endroit : refusé, jamais une concordance.
 
-import { dechiffrer, empreinte, type Cle } from "../chiffrement";
+import { empreinte, type Cle } from "../chiffrement";
 import { jourQuebec } from "../coutChat";
 import type { Ecrivain } from "../jetons";
 import { SauvetageEnCoursError } from "../sauvetage/porte";
 import { EcriturePiecesRetireeError } from "./ecrire";
 import { APPS_PIECES } from "./lignee";
 import type { DepotRelecture } from "./depotRelecture";
+import { ouvrirFacette } from "./lecture";
 import { CHAMPS_COMPARES, deciderPapier, forme, LOT_MAX_RELECTURES, schemaRelecture, type Lecture } from "./secondeLecture";
 
 /** Les doutes qui passent en tête de la pile de Marc, par jour (ADR 0026 §6). */
@@ -70,8 +71,8 @@ export async function relireLot(
       r.refusees.push({ index, code: "meme_extracteur" });
       continue;
     }
-    // ⚠️ Scellées à TOUT niveau, 0 compris : `ecrireLotPieces` est le seul chemin d'écriture.
-    const ouvrir = (v: string | null) => (v === null ? null : dechiffrer(cle, v, p.id, p.niveau));
+    // Le même chemin que l'écran : la facette d'un niveau 0 est scellée, sauf ancienne ligne.
+    const ouvrir = (v: string | null) => ouvrirFacette(cle, v, p.id, p.niveau);
     const premiere: Lecture = {
       titulaire: ouvrir(p.titulaire),
       emetteur: ouvrir(p.emetteur),
