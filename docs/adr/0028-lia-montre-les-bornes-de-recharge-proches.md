@@ -41,8 +41,8 @@ branchée ». La règle du projet : aucune donnée scrapée, zéro coût, aucune
    puis les 5 plus proches dans un rayon de 25 km. Les bornes d'un même parc sont regroupées sur
    une ligne (« 2 bornes »). Les lignes du CSV sont bornées et validées : coordonnées dans les
    limites, textes coupés, sans balise, et tout champ hors forme est ignoré.
-4. **Le cache** garde le résultat (les 5 lignes), pas le fichier. Clé : `bornes|<ville>` dans
-   `monde_cache`. Une lecture par jour au plus, avec un délai de 10 secondes. Une panne ou une
+4. **Le cache** garde le résultat (les 5 lignes), pas le fichier. Clé : `bornes|<lat>,<lon>`
+   (le point de la ville, arrondi au centième) dans `monde_cache`. Une lecture par jour au plus, avec un délai de 10 secondes. Une panne ou une
    forme inattendue rend « Le Circuit électrique ne répond pas » et se compte dans le journal.
 5. **La tuile** montre une ligne par parc :
    - le nom du parc, la distance (« à 1,2 km »), le niveau et la puissance (« Niveau 2, 7,2 kW ») ;
