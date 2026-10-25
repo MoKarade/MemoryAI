@@ -85,7 +85,7 @@ export function Nav({ active, droite }: { active: CleNav; droite?: React.ReactNo
       <Link href="/" className="nav-marque">
         Lia
       </Link>
-      {/* Une seule chose à droite, et c'est la page qui la choisit (l'accueil : « N à juger »). */}
+      {/* Une seule chose à droite, et c'est la page qui la choisit. */}
       {droite ? <div className="nav-droite">{droite}</div> : null}
     </header>
   );

@@ -968,31 +968,9 @@ a.pastille {
   cursor: not-allowed;
 }
 
-/* « N à juger » : la pastille de l'en-tête de l'accueil, qui mène à la pile. */
+/* Ce que la page met à droite de la barre (`Nav`, prop `droite`). */
 .nav-droite {
   margin-left: auto;
-}
-.pastille-juger {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  min-height: 44px;
-  padding: 0 1rem;
-  border: 1px solid var(--bordure-champ);
-  border-radius: 999px;
-  color: var(--texte);
-  font-size: 0.875rem;
-  font-weight: 600;
-  text-decoration: none;
-}
-.pastille-juger:hover {
-  background: var(--surface-douce);
-}
-.pastille-point {
-  width: 8px;
-  height: 8px;
-  border-radius: 4px;
-  background: var(--accent);
 }
 
 /* Une option de QCM : la valeur en bouton, sa provenance dessous (page /questions).

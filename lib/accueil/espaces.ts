@@ -63,8 +63,6 @@ export interface ContenuEspace {
 }
 
 export interface EntreesEspaces {
-  /** « N à juger » de la pile (`bandeauAJuger`), ou null sans base / rien à juger. */
-  aJuger: { total: number; titre: string } | null;
   /** Dépense du jour et plafond par poste (+ le détail des tuiles Budget) ; null sans base (on ne devine pas un zéro). */
   budget: ({ depense: Record<Poste, number>; plafonds: Record<Poste, number> } & Partial<Pick<EntreesBudget, "jour" | "parJour" | "parModele">>) | null;
   outils: readonly string[];
@@ -141,17 +139,14 @@ export function contenuEspaces(e: EntreesEspaces): Record<IdEspace, ContenuEspac
       vide: true,
       tableau: tableauJournee(e.lectures ?? null),
     },
-    idees: e.aJuger
-      ? {
-          phrase: "Ce qu'elle a déduit ou lu attend ton avis : vrai ou faux.",
-          dit: `${e.aJuger.titre}. On regarde ensemble ?`,
-          remarque: true,
-          vide: false,
-          liens: [{ href: "/questions", libelle: e.aJuger.titre }],
-          pastille: e.aJuger.total,
-          tableau: tableauIdees(e.aJuger),
-        }
-      : { phrase: "Rien à juger pour l'instant.", dit: "Rien à juger pour l'instant.", vide: true, tableau: tableauIdees(null) },
+    // Marc ne juge plus JAMAIS ce que LIA déduit ou lit (25/10/2026, tâche MemoryAI 231) : plus
+    // de « N à juger », ni pastille, ni remarque, ni lien vers la pile. LIA tranche seule.
+    idees: {
+      phrase: "Elle ne propose pas encore d'idées pour tes apps.",
+      dit: "Je n'ai pas encore d'idée pour tes apps.",
+      vide: true,
+      tableau: tableauIdees(),
+    },
     monde: e.meteo?.ok
       ? {
           phrase: "La météo d'Environnement Canada, à l'heure de son observation, et les titres du jour.",

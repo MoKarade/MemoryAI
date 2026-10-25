@@ -64,16 +64,15 @@ describe("le bandeau « à juger » suit la pile, pas les seules questions", () 
   });
 });
 
-describe("app/page.tsx compte via la pile", () => {
+describe("app/page.tsx ne compte plus la pile", () => {
   const src = readFileSync("app/page.tsx", "utf8");
   // Ancré sur des APPELS, jamais sur le nom nu : le fichier parle de lui-même en commentaire.
-  // La composition vit dans `resteAJuger` (partagée avec l'onglet Mémoire) : la page l'appelle, et
-  // elle seule compose la pile puis compte.
-  it("appelle resteAJuger(, qui appelle composerPile( et restantParGenre(", () => {
-    const charger = readFileSync("lib/pile/charger.ts", "utf8");
-    expect(src).toContain("resteAJuger(acces.db");
-    expect(charger).toContain("composerPile(");
-    expect(charger).toContain("restantParGenre(");
+  // Marc ne juge plus rien (25/10/2026, tâche MemoryAI 231) : l'accueil ne compose ni ne compte
+  // plus la pile, et n'affiche donc plus aucun bandeau « à juger ».
+  it("ne compte plus la pile : ni resteAJuger(, ni bandeauAJuger(", () => {
+    expect(src).not.toContain("resteAJuger(");
+    expect(src).not.toContain("bandeauAJuger(");
+    expect(readFileSync("app/memoire/page.tsx", "utf8")).not.toContain("resteAJuger(");
   });
   it("n'appelle plus le compte des seules questions ouvertes", () => {
     expect(src).not.toMatch(/\.comptes\(\)/);

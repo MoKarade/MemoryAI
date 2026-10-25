@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { contenuEspaces, ESPACES, type EntreesEspaces } from "@/lib/accueil/espaces";
 import { parleSeuleMaison, salutSelonHeure } from "@/lib/accueil/paroles";
 
-const BASE: EntreesEspaces = { aJuger: null, budget: null, outils: ["memoryai_etat"], formes: ["carte"] };
+const BASE: EntreesEspaces = { budget: null, outils: ["memoryai_etat"], formes: ["carte"] };
 const budget = (chat: number, apprentissage = 0): EntreesEspaces["budget"] => ({
   depense: { chat, apprentissage },
   plafonds: { chat: 1, apprentissage: 2 },
@@ -32,17 +32,18 @@ describe("ce qu'elle dit seule", () => {
     expect(parleSeuleMaison("relance", c, 14)).toBeNull();
   });
 
-  it("des choses à juger : elle le dit après le salut", () => {
-    const c = contenuEspaces({ ...BASE, aJuger: { total: 2, titre: "2 à juger" } });
-    expect(parleSeuleMaison("salut", c, 9)).toBe("Bonjour. Café ? 2 à juger. On regarde ensemble ?");
-    expect(parleSeuleMaison("rien", c, 9)).toBe("2 à juger. On regarde ensemble ?");
+  it("elle ne propose JAMAIS de juger : Marc ne juge plus rien (tâche MemoryAI 231)", () => {
+    const c = contenuEspaces({ ...BASE, budget: budget(0.11) });
+    for (const motif of ["salut", "rien", "relance"] as const) {
+      for (const tour of [0, 1, 2]) expect(parleSeuleMaison(motif, c, 9, tour) ?? "").not.toMatch(/juger|On regarde ensemble/);
+    }
   });
 
-  it("à tour de rôle : à juger, puis la dépense du jour", () => {
-    const c = contenuEspaces({ ...BASE, aJuger: { total: 1, titre: "1 à juger" }, budget: budget(0.11) });
-    expect(parleSeuleMaison("rien", c, 9, 0)).toBe("1 à juger. On regarde ensemble ?");
-    expect(parleSeuleMaison("rien", c, 9, 1)).toBe("0,11 $ aujourd'hui, tout va bien.");
-    expect(parleSeuleMaison("relance", c, 9, 2)).toBe("1 à juger. On regarde ensemble ?");
+  it("à tour de rôle : la dépense du jour, seule remarque vraie qui reste", () => {
+    const c = contenuEspaces({ ...BASE, budget: budget(0.11) });
+    expect(parleSeuleMaison("salut", c, 9)).toBe("Bonjour. Café ? 0,11 $ aujourd'hui, tout va bien.");
+    expect(parleSeuleMaison("rien", c, 9, 0)).toBe("0,11 $ aujourd'hui, tout va bien.");
+    expect(parleSeuleMaison("relance", c, 9, 1)).toBe("0,11 $ aujourd'hui, tout va bien.");
   });
 });
 
@@ -81,8 +82,8 @@ describe("chaque espace a sa phrase et son geste", () => {
   });
 
   it("les espaces sans source ne sont jamais une remarque : elle n'en parle pas seule", () => {
-    const c = contenuEspaces({ ...BASE, aJuger: { total: 1, titre: "1 à juger" }, budget: budget(0.1) });
-    for (const id of ["sante", "journee", "monde", "souvenirs", "outils", "formes"] as const) {
+    const c = contenuEspaces({ ...BASE, budget: budget(0.1) });
+    for (const id of ["sante", "journee", "monde", "souvenirs", "outils", "formes", "idees"] as const) {
       expect(c[id].remarque, id).toBeFalsy();
     }
   });

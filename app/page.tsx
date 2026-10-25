@@ -2,8 +2,7 @@
 // maquette v5 validée par Marc le 22/10/2026 ; « Memory ai est toujours pas en refonte », 23/10).
 //
 // La conversation complète a déménagé à `/chat` (section « Parler ») ; toucher LIA ouvre ici une
-// discussion légère (`lia-ui`, `POST /api/lia/ask`). Cette page LIT seulement : la pile (« N à
-// juger »), la dépense du jour et les plafonds, les trente derniers jours et les modèles, les appels du mois par outil. Ce que montre chaque espace est composé par
+// discussion légère (`lia-ui`, `POST /api/lia/ask`). Cette page LIT seulement : la dépense du jour et les plafonds, les trente derniers jours et les modèles, les appels du mois par outil. Ce que montre chaque espace est composé par
 // `contenuEspaces` (pur, `tests/accueil.test.ts`) : sans source réelle, un espace le dit.
 //
 // ⚠️ `requireSession()` comme partout (`tests/gardePages.test.ts`), et `force-dynamic` : sans
@@ -18,8 +17,6 @@ import { depotAdminDrizzle } from "@/lib/depotAdmin";
 import { OUTILS_LIA_HUB } from "@/lib/lia/ask";
 import { TYPES_BLOCS } from "@/lib/lia/blocs";
 import { accesDonnees } from "@/lib/pageDonnees";
-import { bandeauAJuger, type BandeauAJuger } from "@/lib/pile/bandeau";
-import { resteAJuger } from "@/lib/pile/charger";
 import { requireSession } from "@/lib/session";
 import { sourceMeteoEccc } from "@/lib/monde/meteo";
 import { sourceActualite } from "@/lib/monde/actualite";
@@ -30,16 +27,13 @@ export default async function MaisonDeLia() {
   await requireSession();
   const acces = await accesDonnees();
   const jour = jourQuebec(new Date());
-  // ⚠️ Un COMPTE, pas les cartes : la pastille dit qu'il y a quelque chose à juger, `/questions`
-  // le montre. `avis` entre dans le compte : une carte déjà jugée n'est plus « à juger ».
-  let aJuger: BandeauAJuger | null = null;
+  // Plus de « N à juger » : Marc ne juge plus rien, LIA tranche seule (tâche MemoryAI 231).
   let budget: EntreesEspaces["budget"] = null;
   let appels: EntreesEspaces["appels"] = null;
   let lectures: EntreesEspaces["lectures"] = null;
   let meteo: EntreesEspaces["meteo"] = null;
   let actualite: EntreesEspaces["actualite"] = null;
   if (acces.ok) {
-    aJuger = bandeauAJuger(await resteAJuger(acces.db, jour));
     const admin = depotAdminDrizzle(acces.db);
     const accueil = depotAccueilDrizzle(acces.db);
     budget = {
@@ -55,6 +49,6 @@ export default async function MaisonDeLia() {
     meteo = await sourceMeteoEccc(acces.db, process.env.MEMORYAI_METEO_VILLE).lire(new Date());
     actualite = await sourceActualite(acces.db).lire(new Date());
   }
-  const contenus = contenuEspaces({ aJuger, budget, appels, lectures, meteo, actualite, outils: [...OUTILS_LIA_HUB], formes: TYPES_BLOCS });
-  return <AccueilClient contenus={contenus} aJuger={aJuger ? { titre: aJuger.titre, detail: aJuger.detail } : null} />;
+  const contenus = contenuEspaces({ budget, appels, lectures, meteo, actualite, outils: [...OUTILS_LIA_HUB], formes: TYPES_BLOCS });
+  return <AccueilClient contenus={contenus} />;
 }

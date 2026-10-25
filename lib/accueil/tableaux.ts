@@ -400,7 +400,7 @@ export function tableauFormes(formes: readonly string[], maxBlocs: number): Tabl
   };
 }
 
-export function tableauIdees(aJuger: { total: number; titre: string } | null): Tableau {
+export function tableauIdees(): Tableau {
   return {
     question: "Les idées de LIA pour tes apps",
     tuiles: [
@@ -409,10 +409,7 @@ export function tableauIdees(aJuger: { total: number; titre: string } | null): T
         largeur: 12,
         icone: "bulb",
         titre: "Boîte à idées",
-        corps: [
-          ...(aJuger ? [{ genre: "texte", texte: `${aJuger.titre} : ce qu'elle a déduit ou lu attend ton avis.`, lien: { href: "/questions", libelle: "Juger maintenant" } } as const] : []),
-          vide("Elle ne propose pas encore d'idées pour tes apps."),
-        ],
+        corps: [vide("Elle ne propose pas encore d'idées pour tes apps.")],
       },
       { cle: "etapes", largeur: 6, icone: "grid", titre: "Où elles en sont", corps: [vide("Aucune idée proposée : rien à suivre.")] },
       { cle: "utilite", largeur: 6, icone: "chart", titre: "Utilité estimée", corps: [vide("Elle estimera l'utilité de chaque idée quand elle en proposera.")] },

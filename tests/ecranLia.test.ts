@@ -59,10 +59,12 @@ describe("le panneau d'options replié l'est vraiment", () => {
   });
 });
 
-describe("l'accueil dit « N à juger » dans l'en-tête, seulement s'il y a quelque chose à juger", () => {
-  it("la pastille est conditionnée au compte, et son nom accessible porte le détail", () => {
-    expect(page).toMatch(/aJuger\s*&&\s*\(\s*<Link href="\/questions" className="pastille-juger"/);
-    expect(page).toContain("aria-label={`${aJuger.titre} : ${aJuger.detail}`}");
+describe("l'accueil ne dit plus jamais « N à juger » (Marc ne juge plus rien, tâche MemoryAI 231)", () => {
+  it("ni pastille, ni lien vers la pile, ni sa règle CSS", () => {
+    expect(page).not.toContain("pastille-juger");
+    expect(page).not.toContain("aJuger");
+    expect(page).not.toContain('href="/questions"');
+    expect(css).not.toContain(".pastille-juger");
   });
 
   it("l'ancien bandeau replié au-dessus de la conversation a disparu", () => {
