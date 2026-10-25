@@ -7,7 +7,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { PanneauEspace } from "@/components/PanneauEspace";
 import { MAX_BLOCS, TYPES_BLOCS } from "@/lib/lia/blocs";
 import { contenuEspaces, ESPACES, type IdEspace } from "@/lib/accueil/espaces";
-import { debutDuMoisQuebec, finDuMois, jourMoins, quandQuebec, tableauBudget, type ActiviteDuJour, tableauFormes, tableauIdees, tableauJournee, tableauMonde, LECTURES_DU_JOUR_MAX, minuitQuebec, tableauOutils, tableauSante, tableauSouvenirs } from "@/lib/accueil/tableaux";
+import { debutDuMoisQuebec, finDuMois, jourMoins, quandEcheance, quandQuebec, tableauBudget, type ActiviteDuJour, tableauFormes, tableauIdees, tableauJournee, tableauMonde, LECTURES_DU_JOUR_MAX, minuitQuebec, tableauOutils, tableauSante, tableauSouvenirs } from "@/lib/accueil/tableaux";
 
 vi.mock("next/link", async () => {
   const { createElement: ce } = await import("react");
@@ -307,6 +307,45 @@ describe("Souvenirs, Santé et Sa journée, comme la maquette", () => {
     ]);
     expect(temps.barres[4]?.part).toBe(1);
     expect(temps.barres[3]?.part).toBe(0);
+  });
+
+  it("Sa journée : les relances, les échéances de ses papiers dans l'ordre des dates (tâche 232)", () => {
+    // Données FICTIVES (dépôt public) : des dates et des dossiers inventés.
+    const r = tableauJournee([], activite, {
+      jour: "2026-10-24",
+      echeances: [
+        { dateEcheance: "2026-10-22", domaine: "99 · Essai" },
+        { dateEcheance: "2026-10-24", domaine: null },
+        { dateEcheance: "2026-11-02", domaine: "98 · Autre essai" },
+      ],
+      total: 4,
+    }).tuiles.find((x) => x.cle === "relances")?.corps;
+    expect(r).toEqual([
+      {
+        genre: "liste",
+        elements: [
+          { libelle: "passée depuis 2 jours (le 22 oct.)", detail: "99 · Essai" },
+          { libelle: "aujourd'hui", detail: "Sans dossier" },
+          { libelle: "le 2 nov., dans 9 jours", detail: "98 · Autre essai" },
+        ],
+      },
+      { genre: "texte", texte: "4 échéances lues dans tes papiers (les 3 premières), dans l'ordre des dates." },
+    ]);
+  });
+
+  it("Sa journée : relances vides ou en panne, dites telles quelles", () => {
+    const corps = (relances: Parameters<typeof tableauJournee>[2]) => tableauJournee([], activite, relances).tuiles.find((x) => x.cle === "relances")?.corps;
+    expect(corps(undefined)).toEqual([{ genre: "vide", texte: "Aucune relance : elle ne lit pas encore tes échéances." }]);
+    expect(corps(null)).toEqual([{ genre: "vide", texte: "La base ne répond pas : tes échéances ne sont pas lisibles." }]);
+    expect(corps({ jour: "2026-10-24", echeances: [], total: 0 })).toEqual([{ genre: "vide", texte: "Aucune échéance dans tes papiers : rien de passé depuis 7 jours, rien d'ici 60 jours." }]);
+    expect(corps({ jour: "2026-10-24", echeances: [{ dateEcheance: "2026-10-25", domaine: "99 · Essai" }], total: 1 })?.[1]).toEqual({ genre: "texte", texte: "1 échéance lue dans tes papiers, dans l'ordre des dates." });
+  });
+
+  it("quandEcheance compte les jours de calendrier, au singulier comme au pluriel", () => {
+    expect(quandEcheance("2026-10-25", "2026-10-24")).toBe("demain");
+    expect(quandEcheance("2026-10-23", "2026-10-24")).toBe("passée depuis 1 jour (le 23 oct.)");
+    // Le passage à l'heure normale (1er novembre) ne décale pas le compte.
+    expect(quandEcheance("2026-11-03", "2026-10-31")).toBe("le 3 nov., dans 3 jours");
   });
 
   it("Sa journée : ce qu'elle surveille, chaque vérification avec sa dernière heure (Québec)", () => {
