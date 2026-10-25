@@ -14,11 +14,11 @@ import * as schema from "../lib/db/schema";
 import { deriverCle } from "../lib/chiffrement";
 import { depotPiecesDrizzle } from "../lib/pieces/depot";
 import { ecrireLotPieces, EcriturePiecesRetireeError } from "../lib/pieces/ecrire";
-import { depotRelectureDrizzle, papiersEnTete, papiersVraisParLia, relecturePapier } from "../lib/pieces/depotRelecture";
+import { aRelireParExtracteur, depotRelectureDrizzle, papiersARelire, papiersEnTete, papiersVraisParLia, relecturePapier } from "../lib/pieces/depotRelecture";
 import { depotPileDrizzle } from "../lib/pile/depot";
 import { composerPile } from "../lib/pile/composer";
 import { DOUTES_PAR_JOUR, LotRelecturesTropGrandError, relireLot } from "../lib/pieces/relire";
-import { LOT_MAX_RELECTURES } from "../lib/pieces/secondeLecture";
+import { lecturesIndependantes, LOT_MAX_RELECTURES } from "../lib/pieces/secondeLecture";
 import type { Ecrivain } from "../lib/jetons";
 
 const cle = deriverCle(Buffer.alloc(32, 7).toString("base64"));
@@ -173,5 +173,41 @@ describe("la pile lit la seconde lecture", () => {
       piecesEnTete: ["p1", "p-oublie"],
     });
     expect(pile).toEqual([]);
+  });
+});
+
+// Amendement du 25/10 (question de DriveAI) : une lecture OCR ne confirme pas une autre lecture OCR.
+describe("une seconde lecture passe par un AUTRE canal", () => {
+  const ecrire = (lot: unknown[]) => ecrireLotPieces(lot, DRIVEAI, cle, depotPiecesDrizzle(db));
+
+  it("lecturesIndependantes : texte et vision, oui ; deux textes OCR, jamais ; deux visions, seulement de deux modèles", () => {
+    expect(lecturesIndependantes("sonnet-vision-v3-a", "haiku-ocr-relecture-v1")).toBe(true);
+    expect(lecturesIndependantes("haiku-ocr-piece-v2", "opus-vision-relecture-v1")).toBe(true);
+    expect(lecturesIndependantes("haiku-ocr-piece-v2", "haiku-ocr-relecture-v1")).toBe(false);
+    expect(lecturesIndependantes("haiku-ocr-piece-v2", "sonnet-ocr-relecture-v1")).toBe(false);
+    expect(lecturesIndependantes("sonnet-vision-v3-a", "sonnet-vision-relecture-v1")).toBe(false);
+    expect(lecturesIndependantes("sonnet-vision-v3-a", "opus-vision-relecture-v1")).toBe(true);
+  });
+
+  it("ROUGE : le même canal est refusé (meme_canal), rien n'est écrit ; un autre canal concorde", async () => {
+    expect((await ecrire([papier("f-ocr", { extracteur: "haiku-ocr-piece-v2" }), papier("f-vis2")])).acceptees).toBe(2);
+    const r = await relire([relecture("f-ocr"), relecture("f-vis2", { extracteur: "sonnet-vision-relecture-v1" }), relecture("f-ocr", { extracteur: "opus-vision-relecture-v1" })]);
+    expect(r.refusees).toEqual([
+      { index: 0, code: "meme_canal" },
+      { index: 1, code: "meme_canal" },
+    ]);
+    expect(r.vrais).toBe(1);
+    expect(await traces("f-vis2")).toEqual([]);
+  });
+
+  it("papiersARelire : seulement des papiers lus, de niveau 0 ou 1, jamais relus, lisibles par CE canal ; des étiquettes, aucune valeur", async () => {
+    await ecrire([papier("f-a1"), papier("f-a2", { extracteur: "haiku-ocr-piece-v2" }), papier("f-a3", { domaine: "04 · Immigration" })]);
+    const texte = await papiersARelire(db, "texte", LOT_MAX_RELECTURES);
+    expect(texte.map((x) => x.fileId)).toEqual(["f-vis2", "f-a1"]);
+    expect(texte[0]).toEqual({ fileId: "f-vis2", extracteur: "sonnet-vision-v3-a" });
+    expect(await papiersARelire(db, "vision", LOT_MAX_RELECTURES)).toEqual([{ fileId: "f-a2", extracteur: "haiku-ocr-piece-v2" }]);
+    expect(await papiersARelire(db, "texte", 1)).toHaveLength(1);
+    // f-a3 (niveau 3) et les papiers déjà relus ne sont jamais proposés.
+    expect(await aRelireParExtracteur(db)).toEqual({ "sonnet-vision-v3-a": 2, "haiku-ocr-piece-v2": 1 });
   });
 });
