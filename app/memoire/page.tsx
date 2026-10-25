@@ -15,10 +15,9 @@ import { depotLectureDrizzle } from "@/lib/depotLecture";
 import { depotLiensDrizzle } from "@/lib/depotLiens";
 import { depotMemoireDrizzle } from "@/lib/memoire/depotMemoire";
 import { construireReseau } from "@/lib/memoire/reseau";
-import { jourQuebec } from "@/lib/coutChat";
-import { corpsAValider, corpsCroissance, corpsPapiers, corpsPlusRelies, corpsSources, corpsThemes } from "@/lib/memoire/tuilesMemoire";
+import { corpsCroissance, corpsPapiers, corpsPlusRelies, corpsSources, corpsThemes, corpsTranche } from "@/lib/memoire/tuilesMemoire";
 import { accesDonnees, MESSAGES_MANQUE } from "@/lib/pageDonnees";
-import { resteAJuger } from "@/lib/pile/charger";
+import { papiersVraisParLia } from "@/lib/pieces/depotRelecture";
 import { requireSession } from "@/lib/session";
 import { MemoireClient } from "./MemoireClient";
 
@@ -40,13 +39,13 @@ export default async function MemoirePage() {
   // ⚠️ Les liens ENREGISTRÉS (`tous`), pas l'aperçu recalculé : l'aperçu déchiffre chaque fait
   // pour le comparer, et cette page n'a besoin d'aucune valeur.
   const memoire = depotMemoireDrizzle(acces.db);
-  const [faitsBruts, liensEnBase, parSource, papiers, parDomaine, reste] = await Promise.all([
+  const [faitsBruts, liensEnBase, parSource, papiers, parDomaine, vraisParLia] = await Promise.all([
     depotLectureDrizzle(acces.db).faits({ statuts: ["valide"], limite: LIMITE }),
     depotLiensDrizzle(acces.db).tous(LIMITE_LIENS),
     memoire.faitsParSource(),
     memoire.nombrePapiers(),
     memoire.papiersParDomaine(),
-    resteAJuger(acces.db, jourQuebec(new Date())),
+    papiersVraisParLia(acces.db),
   ]);
   const faits = faitsBruts.map((r) => ({ id: r.fait.id, predicat: r.fait.predicat, niveau: r.fait.niveau }));
   const ids = new Set(faits.map((f) => f.id));
@@ -78,8 +77,8 @@ export default async function MemoirePage() {
         <Tuile largeur={6} icone="link" titre="Les plus reliés">
           <CorpsTuile c={corpsPlusRelies(faits, liens)} />
         </Tuile>
-        <Tuile largeur={6} icone="alert" titre="À valider">
-          {corpsAValider(reste).map((c, i) => (
+        <Tuile largeur={6} icone="cardok" titre="Tranché par LIA">
+          {corpsTranche(vraisParLia).map((c, i) => (
             <CorpsTuile key={i} c={c} />
           ))}
         </Tuile>

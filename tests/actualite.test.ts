@@ -205,7 +205,7 @@ describe("la tuile Actualité", () => {
 
   it("fils en panne : la tuile le DIT ; avec des titres, l'espace Monde n'est plus vide", () => {
     expect(tableauMonde(null, { titres: [], retires: 0, enPanne: ["rc-une"] }).tuiles[1]?.corps).toEqual([{ genre: "vide", texte: "Actualité indisponible : les fils ne répondent pas." }]);
-    const base = { aJuger: null, budget: null, outils: [], formes: [] };
+    const base = { budget: null, outils: [], formes: [] };
     expect(contenuEspaces({ ...base, actualite: { titres: [], retires: 0, enPanne: ["rc-une"] } }).monde.vide).toBe(true);
     expect(contenuEspaces({ ...base, actualite }).monde).toMatchObject({ vide: false, dit: "J'ai lu les derniers titres de l'actualité." });
     const outilsMonde = tableauOutils({ outils: [], monde: ["monde_meteo", "monde_actualite"], formes: [], appels: null }).tuiles.find((x) => x.cle === "monde");

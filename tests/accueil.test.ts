@@ -8,7 +8,6 @@ import { contenuEspaces, ESPACES, IDS_ESPACES, type EntreesEspaces } from "@/lib
 import { heureAllumee, peindreDecor, type Pinceau } from "@/lib/accueil/decor";
 
 const ENTREES: EntreesEspaces = {
-  aJuger: null,
   budget: null,
   outils: ["memoryai_chercher", "memoryai_etat"],
   formes: ["carte", "courbe", "liste"],
@@ -93,11 +92,12 @@ describe("les espaces", () => {
     ]);
   });
 
-  it("la pastille d'Idées est le compte réel de la pile, et n'existe pas sans rien à juger", () => {
-    expect(contenuEspaces(ENTREES).idees.pastille).toBeUndefined();
-    const c = contenuEspaces({ ...ENTREES, aJuger: { total: 3, titre: "3 à juger" } });
-    expect(c.idees.pastille).toBe(3);
-    expect(c.idees.liens).toEqual([{ href: "/questions", libelle: "3 à juger" }]);
+  it("Idées ne demande jamais de juger : ni pastille, ni lien vers la pile, ni « à juger » (tâche MemoryAI 231)", () => {
+    const c = contenuEspaces(ENTREES);
+    expect(c.idees.pastille).toBeUndefined();
+    expect(c.idees.liens).toBeUndefined();
+    expect(c.idees.remarque).toBeUndefined();
+    expect(JSON.stringify(c)).not.toMatch(/à juger|Juger maintenant|\/questions/);
   });
 
   it("outils et formes viennent des listes réelles (comptées, nommées)", () => {
@@ -109,9 +109,9 @@ describe("les espaces", () => {
   });
 
   it("chaque lien mène à une page qui existe", () => {
-    const c = contenuEspaces({ ...ENTREES, aJuger: { total: 1, titre: "1 à juger" }, budget: { depense: { chat: 0, apprentissage: 0 }, plafonds: { chat: 1, apprentissage: 2 } } });
+    const c = contenuEspaces({ ...ENTREES, budget: { depense: { chat: 0, apprentissage: 0 }, plafonds: { chat: 1, apprentissage: 2 } } });
     const liens = Object.values(c).flatMap((x) => x.liens ?? []);
-    expect(liens.length).toBeGreaterThanOrEqual(4);
+    expect(liens.length).toBeGreaterThanOrEqual(3);
     for (const l of liens) expect(() => readFileSync(`app${l.href}/page.tsx`), l.href).not.toThrow();
   });
 });

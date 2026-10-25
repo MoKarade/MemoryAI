@@ -5,8 +5,8 @@
 // ancienne adresse, entière. Toucher LIA ouvre aussi une discussion légère partout (`lia-ui`) ;
 // celle-ci reste l'atelier : historique, choix du modèle, niveaux 2 et 3.
 //
-// ⚠️ `requireSession()` comme partout (`tests/gardePages.test.ts`). La pastille « N à juger »
-// a déménagé avec l'accueil : une même pastille sur deux pages finit par dire deux choses.
+// ⚠️ `requireSession()` comme partout (`tests/gardePages.test.ts`). Plus aucune pastille
+// « N à juger » nulle part : Marc ne juge plus rien (tâche MemoryAI 231).
 //
 // Ce que cette page NE fait pas encore (ADR 0005 §4 B1) : le bandeau « Ce qui s'en vient »
 // (3 à 5 échéances). Aucune requête d'échéances n'existe dans ce dépôt — mesuré, zéro

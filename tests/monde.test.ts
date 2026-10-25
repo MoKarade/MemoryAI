@@ -215,7 +215,7 @@ describe("l'espace Monde", () => {
   it("sans ville ou ECCC en panne, la tuile le DIT, et l'espace reste vide", () => {
     expect(tableauMonde({ ok: false, raison: "non-reglee" }).tuiles[0]?.corps).toEqual([{ genre: "vide", texte: "Pas de météo : aucune ville réglée." }]);
     expect(tableauMonde({ ok: false, raison: "indisponible" }).tuiles[0]?.corps[0]).toMatchObject({ genre: "vide" });
-    const base = { aJuger: null, budget: null, outils: [], formes: [] };
+    const base = { budget: null, outils: [], formes: [] };
     expect(contenuEspaces({ ...base, meteo: { ok: false, raison: "indisponible" } }).monde.vide).toBe(true);
     const c = contenuEspaces({ ...base, meteo: lue }).monde;
     expect(c.vide).toBe(false);

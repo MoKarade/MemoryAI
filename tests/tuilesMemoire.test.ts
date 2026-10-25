@@ -2,7 +2,7 @@
 // écart C) : Thèmes et Sources, des comptes et des dates, jamais une valeur de fait.
 
 import { describe, it, expect } from "vitest";
-import { corpsAValider, corpsCroissance, corpsPapiers, corpsPlusRelies, corpsSources, corpsThemes, depuis } from "@/lib/memoire/tuilesMemoire";
+import { corpsCroissance, corpsPapiers, corpsPlusRelies, corpsSources, corpsThemes, corpsTranche, depuis, NE_JUGE_PLUS } from "@/lib/memoire/tuilesMemoire";
 
 describe("Thèmes", () => {
   it("compte les faits par domaine (préfixe du prédicat), le plus gros d'abord", () => {
@@ -114,21 +114,18 @@ describe("Les plus reliés", () => {
   });
 });
 
-describe("À valider", () => {
-  it("rien à juger : un vide honnête, pas un « 0 »", () => {
-    expect(corpsAValider({ piece: 0, fait: 0, question: 0 })).toEqual([{ genre: "vide", texte: "Rien à juger : la pile est vide." }]);
+describe("Tranché par LIA (Marc ne juge plus rien, tâche MemoryAI 231)", () => {
+  it("rien de tranché : la règle, puis un vide honnête, jamais un lien vers la pile", () => {
+    expect(corpsTranche(0)).toEqual([
+      { genre: "texte", texte: NE_JUGE_PLUS },
+      { genre: "vide", texte: "Aucun papier encore confirmé par une seconde lecture." },
+    ]);
+    expect(JSON.stringify(corpsTranche(0))).not.toMatch(/\/questions|Juger maintenant|à juger/);
   });
 
-  it("par genre, au singulier comme au pluriel, et le lien vers la pile", () => {
-    const [liste, texte] = corpsAValider({ piece: 2, fait: 0, question: 1 });
-    expect(liste).toEqual({
-      genre: "liste",
-      elements: [
-        { libelle: "Papiers lus", detail: "2 papiers lus à juger" },
-        { libelle: "Questions", detail: "1 question à juger" },
-      ],
-    });
-    expect(texte).toEqual({ genre: "texte", texte: "3 à juger en tout.", lien: { href: "/questions", libelle: "Juger maintenant" } });
+  it("le compte réel des papiers jugés vrais, au singulier comme au pluriel", () => {
+    expect(corpsTranche(1)[1]).toEqual({ genre: "texte", texte: "1 papier jugé vrai par LIA." });
+    expect(corpsTranche(12)[1]).toEqual({ genre: "texte", texte: "12 papiers jugés vrais par LIA." });
   });
 });
 
