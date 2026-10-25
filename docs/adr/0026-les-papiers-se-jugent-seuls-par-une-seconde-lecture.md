@@ -72,3 +72,23 @@ Tâche : MemoryAI#231. Cet amendement remplace ce qui, plus haut, « laisse à M
 - **Par étapes** : l'accueil et l'onglet Mémoire cessent de dire « à juger » d'abord. La pile
   (`en_pile`, `/questions`) et le compte « à juger par Marc » de `GET /api/etat` suivent dans une
   PR à part.
+
+## Amendement du 25/10/2026 : un autre canal, et la liste de ce qui reste à relire
+
+Questions de DriveAI (25/10, tâche DriveAI#678), au moment de construire la seconde lecture :
+
+- **Un autre canal, vérifié par la porte.** Le point 1 dit « un autre canal » ; la porte ne
+  refusait que la même étiquette. Une seconde lecture Haiku sur le même texte OCR qu'une première
+  lecture Haiku sur OCR hériterait de la même erreur d'OCR, et la concordance ne prouverait rien.
+  La porte refuse donc `meme_canal` : deux lectures du texte OCR, jamais ; deux lectures par la
+  vision, seulement par deux modèles différents ; texte et vision, oui (`lecturesIndependantes`).
+  Le canal se lit dans l'étiquette (« vision » ou non), le modèle dans son premier mot.
+- **La liste à relire** : `GET /api/pieces/relecture?canal=texte|vision&limite=1..50`, même jeton
+  d'écrivain que le POST. Elle rend le `file_id` de l'exemplaire principal et l'étiquette de la
+  première lecture des papiers vivants, lus, de niveau 0 ou 1, jamais relus, lisibles par ce canal ;
+  plus le compte de ce qui reste, par étiquette. Ni valeur, ni domaine, ni nom : la seconde lecture
+  reste aveugle. Les `file_id` sont ceux de DriveAI, qui détient déjà les documents. Sans elle,
+  DriveAI paierait des lectures que la porte refuserait (`inconnu`, niveau 2 ou 3).
+- **Conséquence, dite à Marc** : un papier dont la première lecture est Haiku sur OCR ne peut être
+  confirmé que par une lecture par la vision, plus chère. La répartition des étiquettes se lit
+  dans `parExtracteur`.
