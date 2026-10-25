@@ -22,7 +22,7 @@
 // ⚠️ Le sommaire n'est pas une demi-fuite : il ne déchiffre RIEN. Ce qu'il rend est ce que la
 // base porte déjà en clair, et qui y est en clair parce qu'on l'a décidé (`lib/db/schema.ts`).
 
-import { dechiffrer, DechiffrementError, type Cle } from "../chiffrement";
+import { dechiffrer, DechiffrementError, estScelleAncien, longueurClaire, type Cle } from "../chiffrement";
 import { lienDrive, niveauMaxServi, type PolitiqueLecture } from "../lecture";
 import type { Piece, PieceExemplaire } from "../db/schema";
 
@@ -99,6 +99,17 @@ function dechiffrerSi(cle: Cle, valeur: string | null, id: string, niveau: numbe
   return enClair ? valeur : dechiffrer(cle, valeur, id, niveau);
 }
 
+/**
+ * Une facette (type, émetteur, titulaire, chemin). ⚠️ `ecrireLotPieces` les scelle à TOUT
+ * niveau, 0 compris : on suit donc la FORME de la valeur, comme `rescellerPiece`, pas le niveau.
+ * Au niveau 0, seul un texte nu (ancienne ligne) est le clair ; au-delà, tout se déchiffre.
+ */
+export function ouvrirFacette(cle: Cle, valeur: string | null, id: string, niveau: number): string | null {
+  if (valeur === null) return null;
+  const scelleCourant = longueurClaire(valeur) !== null && !estScelleAncien(valeur);
+  return niveau === 0 && !scelleCourant ? valeur : dechiffrer(cle, valeur, id, niveau);
+}
+
 function jsonChiffre(cle: Cle, valeur: string | null, id: string, niveau: number): Record<string, never> | null {
   if (valeur === null) return null;
   return JSON.parse(dechiffrer(cle, valeur, id, niveau)) as Record<string, never>;
@@ -152,9 +163,9 @@ export function rendreFacettesPiece(
   return {
     id: p.id,
     forme: sort,
-    type: complet ? dechiffrerSi(cle, p.type, p.id, n, n === 0) : null,
-    emetteur: complet ? dechiffrerSi(cle, p.emetteur, p.id, n, n === 0) : null,
-    titulaire: complet ? dechiffrerSi(cle, p.titulaire, p.id, n, n === 0) : null,
+    type: complet ? ouvrirFacette(cle, p.type, p.id, n) : null,
+    emetteur: complet ? ouvrirFacette(cle, p.emetteur, p.id, n) : null,
+    titulaire: complet ? ouvrirFacette(cle, p.titulaire, p.id, n) : null,
     domaine: p.domaine,
     annee: p.annee,
     dateDocument: p.dateDocument,
@@ -221,16 +232,16 @@ export function rendreLisiblePiece(
   const n = p.niveau;
   return {
     ...socle,
-    type: dechiffrerSi(cle, p.type, p.id, n, n === 0),
-    emetteur: dechiffrerSi(cle, p.emetteur, p.id, n, n === 0),
-    titulaire: dechiffrerSi(cle, p.titulaire, p.id, n, n === 0),
+    type: ouvrirFacette(cle, p.type, p.id, n),
+    emetteur: ouvrirFacette(cle, p.emetteur, p.id, n),
+    titulaire: ouvrirFacette(cle, p.titulaire, p.id, n),
     titulaireConfiance: p.titulaireConfiance,
     resume: dechiffrerSi(cle, p.resume, p.id, n, p.resumeEnClair),
     champsStructures: jsonChiffre(cle, p.champsStructures, p.id, n),
     champsLibres: jsonChiffre(cle, p.champsLibres, p.id, n) as Record<string, string> | null,
     exemplaires: r.exemplaires.map((x) => ({
       fileId: x.fileId,
-      chemin: dechiffrerSi(cle, x.chemin, p.id, n, n === 0),
+      chemin: ouvrirFacette(cle, x.chemin, p.id, n),
       lien: lienDrive(x.fileId),
       principal: x.principal,
     })),
