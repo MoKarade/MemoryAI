@@ -35,6 +35,13 @@ import { construirePrompt, REGLES_SYSTEME, type Couches } from "./prompt";
 export const MAX_TOURS_OUTILS = 6;
 export const MAX_MESSAGES = 40;
 export const MAX_TOKENS_SORTIE = 1500;
+/**
+ * La relance d'un tour qui finit SANS TEXTE (journal du 25/10 20:20Z : « réponse vide » après
+ * `memoryai_etat` et `memoryai_contexte`, donc LIA muette dans MemoryAI, tâche MemoryAI 235).
+ * Doc Anthropic « Empty responses with end_turn » : un NOUVEAU message de Marc, jamais la
+ * réponse vide renvoyée telle quelle. Une seule fois par tour.
+ */
+export const RELANCE_REPONSE_VIDE = "Réponds maintenant à ma question, en texte, avec ce que tu as lu.";
 
 /**
  * Les RÈGLES du prompt système : QUI parle et COMMENT, jamais un fait (`lib/chat/prompt.ts`).
@@ -236,6 +243,7 @@ export async function tourDeChat(params: {
     raisonsBlocs: [],
   };
 
+  let relancee = false;
   for (let tour = 0; tour <= MAX_TOURS_OUTILS; tour++) {
     // Le budget se lit en base à CHAQUE appel : deux onglets ne se partagent pas un compteur en mémoire.
     // Le poste `chat` et rien d'autre : une passe d'apprentissage ne doit pas fermer le chat.
@@ -258,6 +266,13 @@ export async function tourDeChat(params: {
     const textes = reponse.content.filter((b): b is { type: "text"; text: string } => b.type === "text").map((b) => b.text);
     const appels = reponse.content.filter((b): b is Extract<ReponseModele["content"][number], { type: "tool_use" }> => b.type === "tool_use");
 
+    if (appels.length === 0 && textes.join("").trim() === "" && !relancee && tour < MAX_TOURS_OUTILS) {
+      // La raison d'arrêt (jamais le contenu) : « end_turn » et « max_tokens » ne se soignent pas pareil.
+      console.warn(`[chat] réponse vide (${reponse.stop_reason ?? "inconnu"}) : une relance`);
+      relancee = true;
+      conversation.push({ role: "user", content: RELANCE_REPONSE_VIDE });
+      continue;
+    }
     if (appels.length === 0 || reponse.stop_reason !== "tool_use" || tour === MAX_TOURS_OUTILS) {
       const brut = textes.join("\n").trim() || (appels.length ? "Je n'ai pas pu terminer : trop d'allers-retours avec la mémoire." : "");
       // [L25] LE point qui décide. La garantie vit ici parce que c'est le seul endroit

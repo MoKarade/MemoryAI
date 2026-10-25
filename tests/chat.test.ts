@@ -12,7 +12,7 @@ import { eq } from "drizzle-orm";
 import * as schema from "../lib/db/schema";
 import { deriverCle } from "../lib/chiffrement";
 import { construirePrompt, REGLE_BLOCS } from "../lib/chat/prompt";
-import { OUTIL_BLOCS, PlafondAtteintError, PROMPT_SYSTEME, tourDeChat, type ClientModele, type ReponseModele } from "../lib/chat/agent";
+import { OUTIL_BLOCS, PlafondAtteintError, PROMPT_SYSTEME, RELANCE_REPONSE_VIDE, tourDeChat, type ClientModele, type ReponseModele } from "../lib/chat/agent";
 import { depotAdminDrizzle } from "../lib/depotAdmin";
 import { depotDrizzle } from "../lib/depotFaits";
 import { depotQuestionsDrizzle } from "../lib/depotQuestions";
@@ -109,6 +109,24 @@ describe("tourDeChat", () => {
     expect(retour[0]!.content).toContain("Entreprise Exemple");
     const journal = await db.select().from(schema.accesJournal);
     expect(journal.some((j) => j.lecteur === "chat" && j.outil === "memoryai_chercher")).toBe(true);
+  });
+
+  // Journal du 25/10 20:20Z : après deux outils, le modèle a fini SANS TEXTE et LIA s'est tue (tâche MemoryAI 235).
+  it("une fin de tour vide se relance UNE fois, par un nouveau message ; vide encore, rien n'est inventé", async () => {
+    const vide: ReponseModele = { content: [], stop_reason: "end_turn", usage: { input_tokens: 1000, output_tokens: 3 } };
+    const { client, recus } = faux([appel("memoryai_contexte", {}), vide, texte("Voilà ce que je sais.")]);
+    const r = await tourDeChat({ client, modele: "claude-sonnet-5", messages: [{ role: "user", content: "quoi de neuf ?" }], inclureN2: false, inclureN3: false, outils: outils(), admin: depotAdminDrizzle(db) });
+    expect(r.reponse).toBe("Voilà ce que je sais.");
+    expect(r.appels).toBe(3);
+    const troisieme = recus[2] as { role: string; content: unknown }[];
+    expect(troisieme[troisieme.length - 1]).toEqual({ role: "user", content: RELANCE_REPONSE_VIDE });
+    // La réponse vide n'est jamais renvoyée telle quelle : l'avant-dernier message reste les retours d'outil.
+    expect((troisieme[troisieme.length - 2]!.content as { type: string }[])[0]!.type).toBe("tool_result");
+
+    const deuxFois = faux([vide, vide]);
+    const r2 = await tourDeChat({ client: deuxFois.client, modele: "claude-sonnet-5", messages: [{ role: "user", content: "salut" }], inclureN2: false, inclureN3: false, outils: outils(), admin: depotAdminDrizzle(db) });
+    expect(r2.reponse).toBe("");
+    expect(r2.appels).toBe(2);
   });
 
   // LA garde Q11 : la bascule de la CONVERSATION écrase ce que le modèle demande.
