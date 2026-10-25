@@ -47,7 +47,8 @@ export const SURFACES_COMPTEURS = [
   // oublie un fait. `tests/reglerFusion.test.ts` DÉRIVE la liste du code et exige les deux
   // sens : rien d'oublié, rien de fantôme.
   "/a-valider",
-  "/questions",
+  // `/questions` en est sorti le 25/10 (tâche MemoryAI 231) : sans la pile vrai / faux, elle ne
+  // montre plus de compte, seulement la question du dessus.
   "/conversations",
   "/graphe",
   // ⚠⚠ [L34] Ajouté parce que la garde de L26b a ROUGI sur la page neuve, une heure après

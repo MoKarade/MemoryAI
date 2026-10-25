@@ -2,7 +2,7 @@
 //
 // [R1, MemoryAI#9] PLUS DE BARRE D'ONGLETS. L'en-tête porte le bouton du menu et le nom de
 // l'app ; les sections vivent dans le menu (`MenuLia`), celui de `docs/REFONTE-INTERFACE.md` §4 :
-// Lia (sa maison, l'orbite de MemoryAI#74) · Parler (la conversation complète) · Mémoire (le réseau en 3D) · Vrai ou faux · Ce qu'elle sait · Lecture des papiers · Dépenses · Anciennes
+// Lia (sa maison, l'orbite de MemoryAI#74) · Parler (la conversation complète) · Mémoire (le réseau en 3D) · Questions (ses questions, plus rien à juger) · Ce qu'elle sait · Lecture des papiers · Dépenses · Anciennes
 // conversations · Réglages. Chaque entrée est une SECTION, pas une page : un détail
 // (`/fait/[id]`) ou un cadre embarqué (`/widget`) n'y figure pas.
 //
@@ -26,7 +26,7 @@ export const SECTIONS = [
   { cle: "parler", href: "/", libelle: "Lia" },
   { cle: "discussion", href: "/chat", libelle: "Parler" },
   { cle: "memoire", href: "/memoire", libelle: "Mémoire" },
-  { cle: "vrai-faux", href: "/questions", libelle: "Vrai ou faux" },
+  { cle: "vrai-faux", href: "/questions", libelle: "Questions" },
   { cle: "savoir", href: "/pieces", libelle: "Ce qu'elle sait" },
   { cle: "lecture", href: "/avancement", libelle: "Lecture des papiers" },
   { cle: "depenses", href: "/depenses", libelle: "Dépenses" },
@@ -54,7 +54,7 @@ export type CleNav =
 
 /**
  * Où vit chaque ancienne page dans le menu. ⚠️ Écrit comme une table plutôt que deviné par une
- * heuristique de nom : `pieces` va dans « Ce qu'elle sait » et `a-valider` dans « Vrai ou faux »,
+ * heuristique de nom : `pieces` va dans « Ce qu'elle sait » et `a-valider` dans « Questions »,
  * et rien dans leur nom ne le dit.
  */
 const SECTION_DE: Record<CleNav, (typeof SECTIONS)[number]["cle"] | null> = {
