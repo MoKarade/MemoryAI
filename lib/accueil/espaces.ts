@@ -7,6 +7,7 @@
 
 import type { Poste } from "@/lib/coutChat";
 import { MAX_BLOCS } from "@/lib/lia/blocs";
+import type { LectureBornes } from "@/lib/monde/bornes";
 import type { LectureMeteo, Meteo } from "@/lib/monde/meteo";
 import type { Actualite } from "@/lib/monde/actualite";
 import { LECTURES_DU_JOUR_MAX, LIBELLE_OUTIL, tableauBudget, tableauFormes, tableauIdees, tableauJournee, tableauMonde, tableauOutils, tableauSante, tableauSouvenirs, type ActiviteDuJour, type EntreesBudget, type Relances, type Tableau } from "./tableaux";
@@ -73,6 +74,8 @@ export interface EntreesEspaces {
   meteo?: LectureMeteo | null;
   /** Les titres des fils d'actualité (ADR 0024) ; absents : non lus. */
   actualite?: Actualite | null;
+  /** Les bornes de recharge proches (ADR 0028) ; null sans base, absentes : non lues. */
+  bornes?: LectureBornes | null;
   /** Les lectures du jour (journal d'accès), la plus récente d'abord ; null sans base. */
   lectures?: readonly { ts: Date; lecteur: string; outil: string }[] | null;
   /** Ce qu'elle a fait aujourd'hui, compté, et ses dernières vérifications ; null sans base, absent : non lus. */
@@ -174,20 +177,20 @@ export function contenuEspaces(e: EntreesEspaces): Record<IdEspace, ContenuEspac
           phrase: "La météo d'Environnement Canada, à l'heure de son observation, et les titres du jour.",
           dit: ditMeteo(e.meteo.meteo),
           vide: false,
-          tableau: tableauMonde(e.meteo, e.actualite ?? null),
+          tableau: tableauMonde(e.meteo, e.actualite ?? null, e.bornes),
         }
       : e.actualite?.titres.length
         ? {
             phrase: "Les derniers titres de l'actualité, à l'heure de leur publication.",
             dit: "J'ai lu les derniers titres de l'actualité.",
             vide: false,
-            tableau: tableauMonde(e.meteo ?? null, e.actualite),
+            tableau: tableauMonde(e.meteo ?? null, e.actualite, e.bornes),
           }
         : {
             phrase: "Pas encore de source pour la météo ni l'actualité.",
             dit: "Je n'ai encore ni météo ni actualité.",
             vide: true,
-            tableau: tableauMonde(e.meteo ?? null, e.actualite ?? null),
+            tableau: tableauMonde(e.meteo ?? null, e.actualite ?? null, e.bornes),
           },
     budget: e.budget
       ? {

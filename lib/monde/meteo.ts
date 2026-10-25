@@ -41,6 +41,8 @@ interface Prevision {
 
 export interface Meteo {
   ville: string;
+  /** Le point de la ville que rend ECCC (sa `geometry`), pour les bornes proches (ADR 0028) ; `null` : absent. */
+  position: { lat: number; lon: number } | null;
   /** L'heure d'observation des conditions, ISO. */
   observeLe: string;
   temperature: number | null;
@@ -83,8 +85,12 @@ export function lireMeteoEccc(json: unknown): Meteo | null {
       const classe = fr(t.class);
       return [{ periode, resume, temperature: valeur !== null && (classe === "high" || classe === "low") ? { valeur, genre: classe === "high" ? "max" : "min" } : null }];
     });
+  const [lon, lat] = (Array.isArray(objet(objet(json).geometry).coordinates) ? objet(objet(json).geometry).coordinates : []) as unknown[];
+  const la = nombre(lat);
+  const lo = nombre(lon);
   return {
     ville,
+    position: la !== null && lo !== null && Math.abs(la) <= 90 && Math.abs(lo) <= 180 ? { lat: la, lon: lo } : null,
     observeLe: new Date(observeLe).toISOString(),
     temperature: nombre(fr(objet(cc.temperature).value)),
     condition: texte(fr(cc.condition)),

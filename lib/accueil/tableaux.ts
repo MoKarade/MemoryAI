@@ -11,6 +11,7 @@ import { FUSEAU } from "@/lib/fuseau";
 import { heureQuebec, libelleLecteur } from "@/lib/memoire/acces";
 import { SOURCE_METEO, type LectureMeteo } from "@/lib/monde/meteo";
 import { SOURCE_ACTUALITE, type Actualite } from "@/lib/monde/actualite";
+import { RAYON_KM, SOURCE_BORNES, type LectureBornes, type Parc } from "@/lib/monde/bornes";
 
 /** Les noms des tracés de `components/IconeEspace.tsx` employés ici (lib ne dépend pas des composants). */
 type IconeTuile = "globe" | "eye" | "cal" | "target" | "shield" | "bulb" | "grid" | "chart" | "croix" | "tool" | "lock" | "spark" | "search" | "star" | "coin" | "clock" | "layers" | "pie" | "bell"
@@ -531,10 +532,34 @@ const HEURE = new Intl.DateTimeFormat("fr-CA", { timeZone: FUSEAU, hour: "2-digi
 const TITRES_TUILE = 5;
 const degres = (v: number) => `${String(v).replace(".", ",")} °C`;
 
-/** `meteo` : `null` quand la page ne l'a pas lue (sans base) ; sinon ce qu'ECCC a rendu, ou pourquoi rien. */
-export function tableauMonde(meteo: LectureMeteo | null = null, actualite: Actualite | null = null): Tableau {
+const km = (d: number) => `${d < 10 ? d.toFixed(1).replace(".", ",") : Math.round(d)} km`;
+const kw = (v: number) => `${String(v).replace(".", ",")} kW`;
+const JOUR_DU_FICHIER = new Intl.DateTimeFormat("fr-CA", { timeZone: FUSEAU, day: "numeric", month: "short" });
+
+/** Un parc en une ligne : « Parc fictif · à 1,2 km », et « Niveau 2, 7,2 kW · 2 bornes ». */
+function ligneParc(p: Parc): { libelle: string; detail: string } {
+  const quoi = [p.niveaux.join(", "), p.puissanceMaxKw === null ? null : kw(p.puissanceMaxKw)].filter(Boolean).join(", ");
+  const combien = `${p.bornes} borne${p.bornes > 1 ? "s" : ""}`;
+  return { libelle: `${p.parc} · à ${km(p.distanceKm)}`, detail: quoi ? `${quoi} · ${combien}` : combien };
+}
+
+/** Bornes proches (ADR 0028) : `undefined` non lues, `null` sans base, sinon ce que le fichier a rendu ou pourquoi rien. */
+function corpsBornes(b: LectureBornes | null | undefined): Corps[] {
+  if (b === undefined) return [vide("Aucune source de bornes de recharge branchée.")];
+  if (b === null) return [vide("La base ne répond pas : les bornes ne sont pas lisibles.")];
+  if (!b.ok) return [vide(b.raison === "sans-position" ? "Pas de bornes : la ville de la météo n'a pas de position." : "Bornes indisponibles : le Circuit électrique ne répond pas.")];
+  const reseau = `Réseau du Circuit électrique seulement.${b.bornes.fichierLe ? ` Fichier du ${JOUR_DU_FICHIER.format(new Date(b.bornes.fichierLe))}` : ""}`;
+  if (b.bornes.parcs.length === 0) return [vide(`Aucune borne du Circuit électrique à moins de ${RAYON_KM} km de ta ville.`)];
+  return [{ genre: "liste", elements: b.bornes.parcs.map(ligneParc) }, { genre: "texte", texte: `Les plus proches de ta ville, à vol d'oiseau. ${reseau}` }];
+}
+
+/**
+ * `meteo` : `null` quand la page ne l'a pas lue (sans base) ; sinon ce qu'ECCC a rendu, ou pourquoi rien.
+ * `bornes` : les bornes proches (ADR 0028), mêmes conventions que `corpsBornes`.
+ */
+export function tableauMonde(meteo: LectureMeteo | null = null, actualite: Actualite | null = null, bornes?: LectureBornes | null): Tableau {
   const m = meteo?.ok ? meteo.meteo : null;
-  const sources = [...(m ? [SOURCE_METEO] : []), ...(actualite?.titres.length ? [SOURCE_ACTUALITE] : [])];
+  const sources = [...(m ? [SOURCE_METEO] : []), ...(actualite?.titres.length ? [SOURCE_ACTUALITE] : []), ...(bornes?.ok ? [SOURCE_BORNES] : [])];
   const absente = meteo && !meteo.ok && meteo.raison === "non-reglee" ? "Pas de météo : aucune ville réglée." : meteo ? "Météo indisponible : Environnement Canada ne répond pas." : "Pas de météo : aucune source branchée.";
   return {
     question: "Ce que LIA regarde dans le monde",
@@ -573,7 +598,7 @@ export function tableauMonde(meteo: LectureMeteo | null = null, actualite: Actua
         titre: "Sept jours",
         corps: m?.previsions.length ? [{ genre: "liste", elements: m.previsions.map((p) => ({ libelle: p.periode, detail: p.resume })) }] : [vide("Les sept prochains jours viendront avec la météo.")],
       },
-      { cle: "bornes", largeur: 6, icone: "target", titre: "Bornes proches", repliee: true, corps: [vide("Aucune source de bornes de recharge branchée.")] },
+      { cle: "bornes", largeur: 6, icone: "target", titre: "Bornes proches", repliee: true, corps: corpsBornes(bornes) },
       { cle: "sources", largeur: 6, icone: "shield", titre: "Sources", repliee: true, corps: sources.length ? sources.map((s): Corps => ({ genre: "texte", texte: `${s}.` })) : [vide("Aucune source du monde n'est branchée pour l'instant.")] },
     ],
   };

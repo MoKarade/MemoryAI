@@ -26,10 +26,11 @@ import { contenuEspaces } from "../lib/accueil/espaces";
 const fr = <T,>(v: T) => ({ en: v, fr: v });
 
 /** La forme d'une réponse d'ECCC (collection `citypageweather-realtime`), avec des valeurs inventées. */
-function reponseEccc(o: { ville?: string; alerte?: string; resume?: string } = {}) {
+function reponseEccc(o: { ville?: string; alerte?: string; resume?: string; coordonnees?: unknown } = {}) {
   return {
     type: "Feature",
     id: "zz-1",
+    ...(o.coordonnees !== undefined && { geometry: { type: "Point", coordinates: o.coordonnees } }),
     properties: {
       identifier: "zz-1",
       name: fr(o.ville ?? "Villefictive"),
@@ -54,6 +55,7 @@ describe("la lecture de la réponse d'ECCC", () => {
   it("rend la ville, l'heure, les conditions et les prévisions avec leur max ou min", () => {
     expect(lireMeteoEccc(reponseEccc())).toEqual({
       ville: "Villefictive",
+      position: null,
       observeLe: "2026-10-24T19:00:00.000Z",
       temperature: 7.5,
       condition: "Nuageux",
@@ -63,6 +65,13 @@ describe("la lecture de la réponse d'ECCC", () => {
         { periode: "Ce soir et cette nuit", resume: "Dégagé. Minimum moins 1.", temperature: { valeur: -1, genre: "min" } },
       ],
     });
+  });
+
+  it("garde le point de la ville que rend ECCC (bornes proches, ADR 0028), et rien s'il est hors limites", () => {
+    // Coordonnées FICTIVES : un point quelconque, pas la ville de Marc.
+    expect(lireMeteoEccc(reponseEccc({ coordonnees: [-70.5, 47.25] }))?.position).toEqual({ lat: 47.25, lon: -70.5 });
+    expect(lireMeteoEccc(reponseEccc({ coordonnees: [-70.5, 147] }))?.position).toBeNull();
+    expect(lireMeteoEccc(reponseEccc({ coordonnees: "pas un point" }))?.position).toBeNull();
   });
 
   it("⚠ un texte du monde sort sans balise, sur une ligne, coupé à 200 caractères", () => {

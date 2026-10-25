@@ -20,6 +20,7 @@ import { accesDonnees } from "@/lib/pageDonnees";
 import { requireSession } from "@/lib/session";
 import { sourceMeteoEccc } from "@/lib/monde/meteo";
 import { sourceActualite } from "@/lib/monde/actualite";
+import { sourceBornes } from "@/lib/monde/bornes";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +36,7 @@ export default async function MaisonDeLia() {
   let relances: EntreesEspaces["relances"] = null;
   let meteo: EntreesEspaces["meteo"] = null;
   let actualite: EntreesEspaces["actualite"] = null;
+  let bornes: EntreesEspaces["bornes"] = null;
   if (acces.ok) {
     const admin = depotAdminDrizzle(acces.db);
     const accueil = depotAccueilDrizzle(acces.db);
@@ -52,7 +54,9 @@ export default async function MaisonDeLia() {
     // Le monde (ADR 0024) : servi du cache en base, ECCC relu au plus toutes les 30 minutes.
     meteo = await sourceMeteoEccc(acces.db, process.env.MEMORYAI_METEO_VILLE).lire(new Date());
     actualite = await sourceActualite(acces.db).lire(new Date());
+    // Les bornes proches (ADR 0028) : depuis le point de la ville de la météo, jamais une adresse.
+    bornes = await sourceBornes(acces.db).lire(new Date(), meteo.ok ? (meteo.meteo.position ?? null) : null);
   }
-  const contenus = contenuEspaces({ budget, appels, lectures, activite, relances, meteo, actualite, outils: [...OUTILS_LIA_HUB], formes: TYPES_BLOCS });
+  const contenus = contenuEspaces({ budget, appels, lectures, activite, relances, meteo, actualite, bornes, outils: [...OUTILS_LIA_HUB], formes: TYPES_BLOCS });
   return <AccueilClient contenus={contenus} />;
 }

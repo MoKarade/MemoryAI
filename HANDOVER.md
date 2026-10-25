@@ -54,6 +54,14 @@ l'onglet Mémoire montre « Tranché par LIA » (`corpsTranche`, compte des papi
 **Reste** : mesurer la file en production (« fini » = moins de 50 faits `propose`) ; si trop de faits sont sensibles ou
 sans source lisible ici, le dire à Marc chiffres à l'appui (ADR 0025, « Ce qui reste ouvert »).
 
+## 25/10/2026 : les bornes de recharge proches (MemoryAI#234, ADR 0028)
+
+`lib/monde/bornes.ts` : le CSV ouvert du Circuit électrique (Données Québec, CC BY 4.0, sans clé), lu en entier côté
+serveur, sans paramètre ; distance calculée localement depuis le point de la ville de la météo (`Meteo.position`, la
+`geometry` d'ECCC). Les 5 parcs les plus proches à 25 km, cache d'un jour dans `monde_cache` (`bornes|lat,lon`), délai
+10 s, panne = « indisponible ». Tuile « Bornes proches » : distance, niveau, puissance, date du fichier, attribution ;
+pas de coût affiché ; « Réseau du Circuit électrique seulement ». Rien n'est rendu à un modèle.
+
 ## ✅ 24/10/2026 : LIA lit la météo et l'actualité (MemoryAI#189, ADR 0024)
 
 Outil `monde_meteo` (chat et hub, hors du MCP) : Environnement Canada (`api.weather.gc.ca`, gratuit, sans clé,
