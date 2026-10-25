@@ -49,6 +49,7 @@ La pile écarte les papiers « vrai » et met les doutes en tête (`papiersEnTet
 **Reste** (#219) : DriveAI envoie sa seconde lecture (tranche de 50 d'abord, coût remesuré).
 **Marc ne juge plus rien** (25/10, #231, amendement de l'ADR 0026) : l'accueil n'a plus de pastille, de bulle ni de lien « à juger » ;
 l'onglet Mémoire montre « Tranché par LIA » (`corpsTranche`, compte des papiers vrais par LIA). **Reste** : la pile (`en_pile`, `/questions`) et `GET /api/etat`.
+**Sa journée** (25/10, #232) : « Son temps » compte ce qu'elle a fait aujourd'hui (lectures, appels au modèle par poste, faits relus, papiers en seconde lecture) et « Ce qu'elle surveille » donne la dernière heure de chaque vérification (`activiteDuJour`, des comptes et des heures, rien de déchiffré). **Reste** : les relances (lire les échéances = un nouveau lecteur de valeurs, ADR d'abord) et l'agenda (#236, attend DriveAI).
 **Reste** : mesurer la file en production (« fini » = moins de 50 faits `propose`) ; si trop de faits sont sensibles ou
 sans source lisible ici, le dire à Marc chiffres à l'appui (ADR 0025, « Ce qui reste ouvert »).
 

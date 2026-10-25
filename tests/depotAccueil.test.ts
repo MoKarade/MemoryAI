@@ -66,3 +66,36 @@ describe("depenseParModeleDepuis", () => {
     ]);
   });
 });
+
+describe("activiteDuJour (tâche MemoryAI 232)", () => {
+  it("compte les appels du jour par poste et rend la dernière heure de chaque vérification", async () => {
+    await db.insert(schema.depensesChat).values([
+      { jour: "2026-10-24", modele: "claude-sonnet-5", coutUsd: 0.01, poste: "chat", creeLe: new Date("2026-10-24T15:00:00Z") },
+      { jour: "2026-10-24", modele: "claude-sonnet-5", coutUsd: 0.01, poste: "chat", creeLe: new Date("2026-10-24T16:00:00Z") },
+      { jour: "2026-10-24", modele: "claude-haiku-5", coutUsd: 0.01, poste: "apprentissage", creeLe: new Date("2026-10-24T17:00:00Z") },
+    ]);
+    await db.insert(schema.mondeCache).values([
+      { cle: "meteo|ville-fictive", corps: "{}", luLe: new Date("2026-10-24T18:00:00Z") },
+      { cle: "actualite|fil-fictif", corps: "{}", luLe: new Date("2026-10-24T18:30:00Z") },
+    ]);
+    const a = await depotAccueilDrizzle(db).activiteDuJour("2026-10-24");
+    expect(a.jour).toBe("2026-10-24");
+    expect(a.appels).toEqual({ chat: 2, apprentissage: 1 });
+    expect(a.faitsRelus).toBe(0);
+    expect(a.papiersRelus).toBe(0);
+    expect(a.dernieres.meteo).toEqual(new Date("2026-10-24T18:00:00Z"));
+    expect(a.dernieres.actualite).toEqual(new Date("2026-10-24T18:30:00Z"));
+    // Les dépenses des tests plus haut portent `cree_le` = maintenant : la dernière est la plus récente de toutes.
+    expect(a.dernieres.budget?.getTime()).toBeGreaterThan(new Date("2026-10-24T17:00:00Z").getTime());
+    expect(a.dernieres.lectures).toEqual(new Date("2026-10-04T12:00:00Z"));
+    // Rien relu : « jamais », pas une date inventée.
+    expect(a.dernieres.faits).toBeNull();
+    expect(a.dernieres.papiers).toBeNull();
+  });
+
+  it("un jour sans rien : des zéros, pas une erreur", async () => {
+    const a = await depotAccueilDrizzle(db).activiteDuJour("2027-01-01");
+    expect(a.appels).toEqual({ chat: 0, apprentissage: 0 });
+    expect(a.faitsRelus + a.papiersRelus).toBe(0);
+  });
+});

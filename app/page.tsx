@@ -2,7 +2,7 @@
 // maquette v5 validée par Marc le 22/10/2026 ; « Memory ai est toujours pas en refonte », 23/10).
 //
 // La conversation complète a déménagé à `/chat` (section « Parler ») ; toucher LIA ouvre ici une
-// discussion légère (`lia-ui`, `POST /api/lia/ask`). Cette page LIT seulement : la dépense du jour et les plafonds, les trente derniers jours et les modèles, les appels du mois par outil. Ce que montre chaque espace est composé par
+// discussion légère (`lia-ui`, `POST /api/lia/ask`). Cette page LIT seulement : la dépense du jour et les plafonds, les trente derniers jours et les modèles, les appels du mois par outil, ce qu'elle a fait aujourd'hui et ses dernières vérifications. Ce que montre chaque espace est composé par
 // `contenuEspaces` (pur, `tests/accueil.test.ts`) : sans source réelle, un espace le dit.
 //
 // ⚠️ `requireSession()` comme partout (`tests/gardePages.test.ts`), et `force-dynamic` : sans
@@ -31,6 +31,7 @@ export default async function MaisonDeLia() {
   let budget: EntreesEspaces["budget"] = null;
   let appels: EntreesEspaces["appels"] = null;
   let lectures: EntreesEspaces["lectures"] = null;
+  let activite: EntreesEspaces["activite"] = null;
   let meteo: EntreesEspaces["meteo"] = null;
   let actualite: EntreesEspaces["actualite"] = null;
   if (acces.ok) {
@@ -45,10 +46,11 @@ export default async function MaisonDeLia() {
     };
     appels = await accueil.appelsParOutilDepuis(debutDuMoisQuebec(new Date()));
     lectures = await accueil.lecturesDepuis(minuitQuebec(jour), LECTURES_DU_JOUR_MAX);
+    activite = await accueil.activiteDuJour(jour);
     // Le monde (ADR 0024) : servi du cache en base, ECCC relu au plus toutes les 30 minutes.
     meteo = await sourceMeteoEccc(acces.db, process.env.MEMORYAI_METEO_VILLE).lire(new Date());
     actualite = await sourceActualite(acces.db).lire(new Date());
   }
-  const contenus = contenuEspaces({ budget, appels, lectures, meteo, actualite, outils: [...OUTILS_LIA_HUB], formes: TYPES_BLOCS });
+  const contenus = contenuEspaces({ budget, appels, lectures, activite, meteo, actualite, outils: [...OUTILS_LIA_HUB], formes: TYPES_BLOCS });
   return <AccueilClient contenus={contenus} />;
 }

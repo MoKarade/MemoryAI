@@ -7,7 +7,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { PanneauEspace } from "@/components/PanneauEspace";
 import { MAX_BLOCS, TYPES_BLOCS } from "@/lib/lia/blocs";
 import { contenuEspaces, ESPACES, type IdEspace } from "@/lib/accueil/espaces";
-import { debutDuMoisQuebec, finDuMois, jourMoins, tableauBudget, tableauFormes, tableauIdees, tableauJournee, tableauMonde, LECTURES_DU_JOUR_MAX, minuitQuebec, tableauOutils, tableauSante, tableauSouvenirs } from "@/lib/accueil/tableaux";
+import { debutDuMoisQuebec, finDuMois, jourMoins, quandQuebec, tableauBudget, type ActiviteDuJour, tableauFormes, tableauIdees, tableauJournee, tableauMonde, LECTURES_DU_JOUR_MAX, minuitQuebec, tableauOutils, tableauSante, tableauSouvenirs } from "@/lib/accueil/tableaux";
 
 vi.mock("next/link", async () => {
   const { createElement: ce } = await import("react");
@@ -276,6 +276,70 @@ describe("Souvenirs, Santé et Sa journée, comme la maquette", () => {
       ],
     });
     expect(tableauJournee(Array.from({ length: LECTURES_DU_JOUR_MAX }, () => lectures[0]!)).tuiles[0]?.corps[0]).toMatchObject({ resume: expect.stringMatching(/^Au moins /) });
+  });
+
+  // Données FICTIVES (dépôt public) : des comptes et des heures inventés pour le test.
+  const activite: ActiviteDuJour = {
+    jour: "2026-10-24",
+    appels: { chat: 4, apprentissage: 2 },
+    faitsRelus: 0,
+    papiersRelus: 8,
+    dernieres: {
+      meteo: new Date("2026-10-24T19:12:00Z"),
+      actualite: new Date("2026-10-23T13:05:00Z"),
+      budget: new Date("2026-10-24T13:40:00Z"),
+      faits: null,
+      papiers: new Date("2026-10-24T14:00:00Z"),
+      lectures: new Date("2026-10-24T19:12:00Z"),
+    },
+  };
+
+  it("Sa journée : son temps, compté dans ses journaux, une barre par genre d'action (tâche 232)", () => {
+    const t = tableauJournee([{ ts: new Date("2026-10-24T19:12:00Z"), lecteur: "lia-maison", outil: "memoryai_chercher" }], activite);
+    const temps = t.tuiles.find((x) => x.cle === "temps")?.corps[0];
+    if (temps?.genre !== "barres") throw new Error("barres attendues");
+    expect(temps.barres.map((b) => [b.libelle, b.valeur])).toEqual([
+      ["Lectures de ta mémoire", "1"],
+      ["Appels au modèle pour parler", "4"],
+      ["Appels au modèle pour apprendre", "2"],
+      ["Faits relus", "0"],
+      ["Papiers en seconde lecture", "8"],
+    ]);
+    expect(temps.barres[4]?.part).toBe(1);
+    expect(temps.barres[3]?.part).toBe(0);
+  });
+
+  it("Sa journée : ce qu'elle surveille, chaque vérification avec sa dernière heure (Québec)", () => {
+    const s = tableauJournee([], activite).tuiles.find((x) => x.cle === "surveille")?.corps[0];
+    expect(s).toEqual({
+      genre: "liste",
+      elements: [
+        { libelle: "La météo (Environnement Canada)", detail: "aujourd'hui, 15 h 12" },
+        { libelle: "L'actualité (Radio-Canada)", detail: "le 23 oct., 9 h 05" },
+        { libelle: "Sa dépense du jour", detail: "aujourd'hui, 9 h 40" },
+        { libelle: "La relecture des faits", detail: "pas encore" },
+        { libelle: "La seconde lecture des papiers", detail: "aujourd'hui, 10 h 00" },
+        { libelle: "Qui lit ta mémoire", detail: "aujourd'hui, 15 h 12" },
+      ],
+    });
+  });
+
+  it("Sa journée : rien fait aujourd'hui, la tuile le dit ; sans base, la panne ; non lu, l'attente", () => {
+    const zero: ActiviteDuJour = { ...activite, appels: { chat: 0, apprentissage: 0 }, papiersRelus: 0 };
+    const temps = (a: ActiviteDuJour | null | undefined) => tableauJournee([], a).tuiles.find((x) => x.cle === "temps")?.corps[0];
+    expect(temps(zero)).toEqual({ genre: "vide", texte: "Elle n'a encore rien fait aujourd'hui." });
+    expect(temps(null)).toEqual({ genre: "vide", texte: "La base ne répond pas : le journal du jour n'est pas lisible." });
+    expect(temps(undefined)?.genre).toBe("vide");
+    expect(tableauJournee([], null).tuiles.find((x) => x.cle === "surveille")?.corps[0]?.genre).toBe("vide");
+    // Le plafond des lectures atteint : « au moins », jamais un compte exact faux.
+    const plein = tableauJournee(Array.from({ length: LECTURES_DU_JOUR_MAX }, () => ({ ts: new Date("2026-10-24T19:12:00Z"), lecteur: "chat", outil: "memoryai_etat" })), zero).tuiles.find((x) => x.cle === "temps")?.corps[0];
+    expect(plein).toMatchObject({ genre: "barres", barres: [{ valeur: `au moins ${LECTURES_DU_JOUR_MAX}` }, {}, {}, {}, {}] });
+  });
+
+  it("quandQuebec : aujourd'hui, un autre jour, ou pas encore", () => {
+    expect(quandQuebec(null, "2026-10-24")).toBe("pas encore");
+    expect(quandQuebec(new Date("2026-10-25T03:30:00Z"), "2026-10-24")).toBe("aujourd'hui, 23 h 30");
+    expect(quandQuebec(new Date("2026-10-25T04:30:00Z"), "2026-10-24")).toBe("le 25 oct., 0 h 30");
   });
 
   it("minuit à Québec, en instant", () => {
