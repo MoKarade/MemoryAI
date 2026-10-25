@@ -31,3 +31,4 @@
 | 0024 | LIA lit la météo et l'actualité, de sources publiques gratuites et sans clé | proposé (demande de Marc, 24/10 18:41Z) ; code après l'OK de Marc | MemoryAI#189 |
 | 0025 | LIA valide seule un fait que deux signaux confirment, Marc ne voit que les doutes | proposé (option « double signal + doutes », carte close sur l’option recommandée après le « Fais tout » de Marc, 24/10 19:21Z) | MemoryAI#184 |
 | 0026 | Un papier se juge seul quand une seconde lecture de DriveAI concorde avec la première | proposé (carte de Marc, 24/10 21:55Z, « Seconde lecture par DriveAI ») | MemoryAI#219 |
+| 0027 | Les idées de LIA pour tes apps viennent de ce qu'elle compte, pas d'un modèle | proposé (demande de Marc, 25/10 20:21Z) ; code après l'OK de Marc | MemoryAI#233 |
