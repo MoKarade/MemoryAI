@@ -83,6 +83,20 @@ export function lireFilRss(xml: string, fil: string): { titres: Titre[]; retires
   return { titres: titres.slice(0, TITRES_PAR_FIL), retires };
 }
 
+/**
+ * Un même article publié dans deux fils (« À la une » ET « International ») ne compte qu'une fois :
+ * le premier fil de `FILS` le garde. PURE. Relevé du PC, 25/10 1 h 15 : un titre affiché deux fois.
+ */
+export function sansDoublons(titres: readonly Titre[]): Titre[] {
+  const vus = new Set<string>();
+  return titres.filter((t) => {
+    const cle = t.titre.toLocaleLowerCase("fr-CA");
+    if (vus.has(cle)) return false;
+    vus.add(cle);
+    return true;
+  });
+}
+
 /** Le texte rendu au modèle. PURE. Les titres seulement, jamais les liens. */
 export function baliserActualite(a: Actualite): string {
   if (a.titres.length === 0) return a.enPanne.length ? "Actualité indisponible : les fils ne répondent pas." : "Aucun titre d'actualité pour l'instant.";
@@ -126,7 +140,7 @@ export function sourceActualite(db: Base, lireUrl: (url: string, signal: AbortSi
         resultat.titres.push(...lu.titres);
         resultat.retires += lu.retires;
       }
-      resultat.titres.sort((a, b) => (b.le ?? "").localeCompare(a.le ?? ""));
+      resultat.titres = sansDoublons(resultat.titres).sort((a, b) => (b.le ?? "").localeCompare(a.le ?? ""));
       return resultat;
     },
   };
