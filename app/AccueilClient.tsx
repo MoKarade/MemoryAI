@@ -29,7 +29,7 @@ import { heureQuebec } from "@/lib/memoire/acces";
 /** Ce qui peut être ouvert dans la maison : un espace, ou « Parler » (écart A7). */
 type Ouvert = IdEspace | "parler";
 
-export function AccueilClient({ contenus, aJuger }: { contenus: Record<IdEspace, ContenuEspace>; aJuger: { titre: string; detail: string } | null }) {
+export function AccueilClient({ contenus }: { contenus: Record<IdEspace, ContenuEspace> }) {
   const [monde, setMonde] = useState<HTMLDivElement | null>(null);
   const toile = useRef<HTMLCanvasElement>(null);
   const satellites = useRef<(HTMLButtonElement | null)[]>([]);
@@ -155,7 +155,7 @@ export function AccueilClient({ contenus, aJuger }: { contenus: Record<IdEspace,
   }, []);
 
   // Ce qu'elle dit seule (écart A3) : le salut de l'heure de Québec, puis ce que les espaces disent
-  // de vrai (à juger, dépense du jour), à tour de rôle. Rien d'autre : le reste, elle parle d'elle.
+  // de vrai (la dépense du jour), à tour de rôle. Rien d'autre : le reste, elle parle d'elle.
   const tour = useRef(0);
   const parleSeule = useCallback(
     (motif: MotifParole) => parleSeuleMaison(motif, contenus, heureQuebec(new Date()), tour.current++),
@@ -178,12 +178,6 @@ export function AccueilClient({ contenus, aJuger }: { contenus: Record<IdEspace,
       <header className="maison-tete">
         <LogoMemoire />
         <h1 className="maison-nom">LIA</h1>
-        {aJuger && (
-          <Link href="/questions" className="pastille-juger" aria-label={`${aJuger.titre} : ${aJuger.detail}`}>
-            <span className="pastille-point" aria-hidden="true" />
-            {aJuger.titre}
-          </Link>
-        )}
       </header>
       {/* Un seul bouton à droite, comme la maquette : les autres sections passent par la Mémoire,
           les liens des espaces et la touche `/`. */}

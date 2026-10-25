@@ -47,6 +47,8 @@ Porte (ADR 0026) : `POST /api/pieces/relecture`, écrivain DriveAI, 50 au plus ;
 niveau ≥ 2, canari, inactif, vide : jamais jugés seuls ; trace `relectures_pieces` (0031), empreintes seulement, 5 doutes/jour.
 La pile écarte les papiers « vrai » et met les doutes en tête (`papiersEnTete`), la carte et la fiche disent la relecture, l'onglet Apprentissage compte les vrais.
 **Reste** (#219) : DriveAI envoie sa seconde lecture (tranche de 50 d'abord, coût remesuré).
+**Marc ne juge plus rien** (25/10, #231, amendement de l'ADR 0026) : l'accueil n'a plus de pastille, de bulle ni de lien « à juger » ;
+l'onglet Mémoire montre « Tranché par LIA » (`corpsTranche`, compte des papiers vrais par LIA). **Reste** : la pile (`en_pile`, `/questions`) et `GET /api/etat`.
 **Reste** : mesurer la file en production (« fini » = moins de 50 faits `propose`) ; si trop de faits sont sensibles ou
 sans source lisible ici, le dire à Marc chiffres à l'appui (ADR 0025, « Ce qui reste ouvert »).
 

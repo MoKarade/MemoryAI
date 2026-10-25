@@ -1,5 +1,5 @@
 // lib/memoire/tuilesMemoire.ts — les tuiles de l'onglet Mémoire autour du réseau (maquette v5,
-// écart C) : Thèmes, Sources, Croissance, Les plus reliés, À valider et Papiers ; et À confirmer (Accès). PUR : la page lit la base, ce module compose, `CorpsTuile` dessine.
+// écart C) : Thèmes, Sources, Croissance, Les plus reliés, Tranché par LIA et Papiers ; et À confirmer (Accès). PUR : la page lit la base, ce module compose, `CorpsTuile` dessine.
 //
 // ⚠️ Des COMPTES et des dates, jamais une valeur de fait : comme le réseau, ces tuiles montrent la
 // forme de la mémoire, pas son contenu.
@@ -7,7 +7,6 @@
 import type { Corps } from "@/lib/accueil/tableaux";
 import type { SOURCES } from "@/lib/db/schema";
 import { jourQuebec } from "@/lib/coutChat";
-import type { GenreCarte } from "@/lib/pile/composer";
 import { domaineDe } from "./reseau";
 
 type Source = (typeof SOURCES)[number];
@@ -84,20 +83,16 @@ export function corpsPlusRelies(faits: readonly { id: string; predicat: string }
   };
 }
 
-const A_JUGER: Record<GenreCarte, [string, string, string]> = {
-  piece: ["Papiers lus", "papier lu", "papiers lus"],
-  fait: ["Déductions", "déduction", "déductions"],
-  question: ["Questions", "question", "questions"],
-};
+/** La règle de Marc (25/10/2026, tâche MemoryAI 231) : il ne juge plus rien, LIA tranche seule. */
+export const NE_JUGE_PLUS = "Tu ne juges plus rien : LIA tranche seule, quand une seconde lecture de DriveAI concorde.";
 
-/** À valider : ce que la pile « vrai / faux » attend de toi, par genre, et le lien pour juger. */
-export function corpsAValider(reste: Readonly<Record<GenreCarte, number>>): Corps[] {
-  const genres = (["piece", "fait", "question"] as const).filter((g) => reste[g] > 0);
-  if (genres.length === 0) return [{ genre: "vide", texte: "Rien à juger : la pile est vide." }];
-  const total = genres.reduce((t, g) => t + reste[g], 0);
+/** Tranché par LIA : la règle, puis le compte réel des papiers qu'elle a jugés vrais. Jamais de lien vers une pile. */
+export function corpsTranche(vrais: number): Corps[] {
   return [
-    { genre: "liste", elements: genres.map((g) => ({ libelle: A_JUGER[g][0], detail: `${reste[g]} ${A_JUGER[g][reste[g] > 1 ? 2 : 1]} à juger` })) },
-    { genre: "texte", texte: `${total} à juger en tout.`, lien: { href: "/questions", libelle: "Juger maintenant" } },
+    { genre: "texte", texte: NE_JUGE_PLUS },
+    vrais > 0
+      ? { genre: "texte", texte: `${vrais} ${vrais > 1 ? "papiers jugés vrais" : "papier jugé vrai"} par LIA.` }
+      : { genre: "vide", texte: "Aucun papier encore confirmé par une seconde lecture." },
   ];
 }
 

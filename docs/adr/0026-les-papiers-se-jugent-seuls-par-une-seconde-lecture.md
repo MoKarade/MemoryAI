@@ -56,3 +56,19 @@ prouverait rien. Seul DriveAI tient le document.
   grande, la pile ne descendra pas sous 50, et il faudra le dire à Marc, chiffres à l'appui.
 - [À vérifier] Les papiers sans texte OCR (photos) : la seconde lecture doit alors passer par la
   vision avec un AUTRE modèle que la première, ou bien le papier reste à Marc.
+
+## Amendement du 25/10/2026 : Marc ne juge plus rien
+
+Marc, 25/10/2026 à 20:21Z : « jveux plus jamais juger des déductions de lia de memory ou autre ».
+Tâche : MemoryAI#231. Cet amendement remplace ce qui, plus haut, « laisse à Marc » un papier :
+
+- **Rien n'est plus posé à Marc** : ni pastille « N à juger », ni bulle de LIA, ni lien « Juger
+  maintenant », ni doutes en tête de la pile. Le point 6 (cinq doutes par jour) est abandonné.
+- **Un papier sans concordance** (discordance, pas encore relu, niveau 2 ou 3, canari) reste
+  « non confirmé ». Il n'est jamais dit « vrai par LIA ». Seule une concordance (point 1) le
+  confirme. Ce que LIA fait d'un papier non confirmé dans ses réponses (le citer comme tel, ou
+  l'écarter) suit le choix de Marc sur la carte du 25/10.
+- **Les verrous ne bougent pas** : trancher seule ne baisse aucun verrou de niveau (ADR 0007).
+- **Par étapes** : l'accueil et l'onglet Mémoire cessent de dire « à juger » d'abord. La pile
+  (`en_pile`, `/questions`) et le compte « à juger par Marc » de `GET /api/etat` suivent dans une
+  PR à part.

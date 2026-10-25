@@ -14,11 +14,11 @@ vi.mock("next/link", async () => {
   return { default: ({ href, children, ...reste }: { href: string; children?: unknown }) => ce("a", { href, ...reste }, children as never) };
 });
 
-const entrees = { aJuger: null, budget: null, outils: [], formes: [] };
+const entrees = { budget: null, outils: [], formes: [] };
 
-function rendre(id: IdEspace, aJuger: { total: number; titre: string } | null = null) {
+function rendre(id: IdEspace) {
   const espace = ESPACES.find((e) => e.id === id) ?? null;
-  const contenu = contenuEspaces({ ...entrees, aJuger })[id];
+  const contenu = contenuEspaces(entrees)[id];
   return renderToStaticMarkup(createElement(PanneauEspace, { espace, contenu, choisir: () => undefined, fermer: () => undefined }));
 }
 
@@ -42,24 +42,20 @@ describe("Monde, comme la maquette", () => {
 
 describe("Idées, comme la maquette", () => {
   it("a les quatre tuiles de la maquette, « Refusées » repliée", () => {
-    const t = tableauIdees(null);
+    const t = tableauIdees();
     expect(t.tuiles.map((x) => x.titre)).toEqual(["Boîte à idées", "Où elles en sont", "Utilité estimée", "Refusées, jamais reproposées"]);
     expect(t.tuiles.find((x) => x.cle === "refusees")?.repliee).toBe(true);
   });
 
-  it("rien à juger : la boîte le dit vide, sans lien", () => {
-    const boite = tableauIdees(null).tuiles[0];
+  it("la boîte le dit vide, sans lien", () => {
+    const boite = tableauIdees().tuiles[0];
     expect(boite?.corps).toEqual([{ genre: "vide", texte: "Elle ne propose pas encore d'idées pour tes apps." }]);
   });
 
-  it("des faits à juger : la boîte mène à /questions, avec le vrai compte", () => {
-    const boite = tableauIdees({ total: 3, titre: "3 à juger" }).tuiles[0];
-    expect(boite?.corps[0]).toEqual({
-      genre: "texte",
-      texte: "3 à juger : ce qu'elle a déduit ou lu attend ton avis.",
-      lien: { href: "/questions", libelle: "Juger maintenant" },
-    });
-    expect(rendre("idees", { total: 3, titre: "3 à juger" })).toContain('href="/questions"');
+  it("plus jamais « Juger maintenant » ni de lien vers la pile (tâche MemoryAI 231)", () => {
+    const html = rendre("idees");
+    expect(html).not.toContain('href="/questions"');
+    expect(html).not.toMatch(/à juger|Juger maintenant/);
   });
 });
 

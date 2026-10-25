@@ -13,7 +13,6 @@ vi.mock("next/link", async () => {
 });
 
 const contenus = contenuEspaces({
-  aJuger: { total: 2, titre: "2 à juger" },
   budget: { depense: { chat: 0.25, apprentissage: 0 }, plafonds: { chat: 1, apprentissage: 2 } },
   outils: ["memoryai_etat"],
   formes: ["carte"],
