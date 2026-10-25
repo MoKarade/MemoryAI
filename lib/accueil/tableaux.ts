@@ -310,15 +310,80 @@ export function ligneLecture(l: { ts: Date; lecteur: string; outil: string }): {
   return { libelle: `${HEURE_MINUTE.format(l.ts).replace(":", " h ")} · ${libelleOutil(l.outil)}`, detail: libelleLecteur(l.lecteur) };
 }
 
+/** Ce qu'elle vérifie elle-même, dans l'ordre de la tuile « Ce qu'elle surveille » (tâche MemoryAI 232). */
+const VERIFICATIONS = ["meteo", "actualite", "budget", "faits", "papiers", "lectures"] as const;
+type Verification = (typeof VERIFICATIONS)[number];
+
+const LIBELLE_VERIFICATION: Record<Verification, string> = {
+  meteo: "La météo (Environnement Canada)",
+  actualite: "L'actualité (Radio-Canada)",
+  budget: "Sa dépense du jour",
+  faits: "La relecture des faits",
+  papiers: "La seconde lecture des papiers",
+  lectures: "Qui lit ta mémoire",
+};
+
 /**
- * Sa journée : ses lectures du jour (journal d'accès, le plus récent d'abord ; `null` sans base).
- * Le reste (son temps, ses relances, ton agenda, ce qu'elle surveille) n'a pas encore de source.
+ * Ce que LIA a fait aujourd'hui, COMPTÉ dans ses journaux (aucun texte, rien de déchiffré), et la
+ * dernière fois que chaque vérification a tourné (`null` : jamais). Les lectures du jour viennent à
+ * part (`lectures`), elles servent aussi l'histogramme.
  */
-export function tableauJournee(lectures: readonly { ts: Date; lecteur: string; outil: string }[] | null): Tableau {
+export interface ActiviteDuJour {
+  /** Jour de Québec, `AAAA-MM-JJ`. */
+  jour: string;
+  /** Les appels au modèle du jour, par poste (`depenses_chat`). */
+  appels: Record<Poste, number>;
+  /** Les faits relus par LIA ce jour (`validations_lia`). */
+  faitsRelus: number;
+  /** Les papiers passés en seconde lecture ce jour (`relectures_pieces`). */
+  papiersRelus: number;
+  dernieres: Record<Verification, Date | null>;
+}
+
+const JOUR_MOIS = new Intl.DateTimeFormat("fr-CA", { timeZone: FUSEAU, day: "numeric", month: "short" });
+
+/** « aujourd'hui, 9 h 05 », « le 24 oct., 9 h 05 », ou « pas encore » : la dernière fois, à Québec. */
+export function quandQuebec(ts: Date | null, jour: string): string {
+  if (ts === null) return "pas encore";
+  const heure = HEURE_MINUTE.format(ts).replace(":", " h ");
+  return jourQuebec(ts) === jour ? `aujourd'hui, ${heure}` : `le ${JOUR_MOIS.format(ts)}, ${heure}`;
+}
+
+/** Son temps : une barre par genre d'action, dans un ordre fixe ; tout à zéro, la tuile le dit. */
+function corpsTemps(nLectures: number, a: ActiviteDuJour): Corps {
+  const lignes = [
+    { libelle: "Lectures de ta mémoire", n: nLectures, auMoins: nLectures >= LECTURES_DU_JOUR_MAX },
+    { libelle: "Appels au modèle pour parler", n: a.appels.chat, auMoins: false },
+    { libelle: "Appels au modèle pour apprendre", n: a.appels.apprentissage, auMoins: false },
+    { libelle: "Faits relus", n: a.faitsRelus, auMoins: false },
+    { libelle: "Papiers en seconde lecture", n: a.papiersRelus, auMoins: false },
+  ];
+  const max = Math.max(...lignes.map((l) => l.n));
+  if (max === 0) return vide("Elle n'a encore rien fait aujourd'hui.");
+  return {
+    genre: "barres",
+    barres: lignes.map((l) => ({ libelle: l.libelle, valeur: `${l.auMoins ? "au moins " : ""}${l.n}`, part: l.n / max })),
+    resume: "Ce qu'elle a fait aujourd'hui, compté dans ses journaux (heure du Québec).",
+  };
+}
+
+/**
+ * Sa journée : ses lectures du jour (journal d'accès, le plus récent d'abord ; `null` sans base),
+ * puis son temps et ce qu'elle surveille (`activite` ; `null` sans base, absent : non lus).
+ * Les relances et ton agenda n'ont pas encore de source.
+ */
+export function tableauJournee(lectures: readonly { ts: Date; lecteur: string; outil: string }[] | null, activite?: ActiviteDuJour | null): Tableau {
   const panne = vide("La base ne répond pas : le journal du jour n'est pas lisible.");
   const rien = vide("Aucune lecture aujourd'hui.");
   const parHeure = Array.from({ length: 24 }, (_, h) => (lectures ?? []).filter((l) => heureQuebec(l.ts) === h).length);
   const attend = vide("Elle ne tient pas encore le journal de son temps : il viendra quand elle agira seule.");
+  const temps = activite === undefined ? attend : activite === null || lectures === null ? panne : corpsTemps(lectures.length, activite);
+  const surveille: Corps =
+    activite === undefined
+      ? vide("Elle ne surveille encore aucune app.")
+      : activite === null
+        ? panne
+        : { genre: "liste", elements: VERIFICATIONS.map((v) => ({ libelle: LIBELLE_VERIFICATION[v], detail: quandQuebec(activite.dernieres[v], activite.jour) })) };
   return {
     question: "Qu'a fait LIA aujourd'hui ?",
     tuiles: [
@@ -346,10 +411,10 @@ export function tableauJournee(lectures: readonly { ts: Date; lecteur: string; o
               ? [{ genre: "liste", elements: lectures.slice(0, LIGNES_JOURNAL).map(ligneLecture) }]
               : [rien],
       },
-      { cle: "temps", largeur: 12, icone: "globe", titre: "Son temps", repliee: true, corps: [attend] },
-      { cle: "relances", largeur: 5, icone: "bell", titre: "Relances", repliee: true, corps: [vide("Aucune relance pour l'instant.")] },
+      { cle: "temps", largeur: 12, icone: "globe", titre: "Son temps", repliee: true, corps: [temps] },
+      { cle: "relances", largeur: 5, icone: "bell", titre: "Relances", repliee: true, corps: [vide("Aucune relance : elle ne lit pas encore tes échéances.")] },
       { cle: "aujourdhui", largeur: 6, icone: "cal", titre: "Aujourd'hui", corps: [vide("Ton agenda du jour viendra avec l'agenda.")] },
-      { cle: "surveille", largeur: 6, icone: "eye", titre: "Ce qu'elle surveille", repliee: true, corps: [vide("Elle ne surveille encore aucune app.")] },
+      { cle: "surveille", largeur: 6, icone: "eye", titre: "Ce qu'elle surveille", repliee: true, corps: [surveille] },
     ],
   };
 }

@@ -9,7 +9,7 @@ import type { Poste } from "@/lib/coutChat";
 import { MAX_BLOCS } from "@/lib/lia/blocs";
 import type { LectureMeteo, Meteo } from "@/lib/monde/meteo";
 import type { Actualite } from "@/lib/monde/actualite";
-import { LIBELLE_OUTIL, tableauBudget, tableauFormes, tableauIdees, tableauJournee, tableauMonde, tableauOutils, tableauSante, tableauSouvenirs, type EntreesBudget, type Tableau } from "./tableaux";
+import { LECTURES_DU_JOUR_MAX, LIBELLE_OUTIL, tableauBudget, tableauFormes, tableauIdees, tableauJournee, tableauMonde, tableauOutils, tableauSante, tableauSouvenirs, type ActiviteDuJour, type EntreesBudget, type Tableau } from "./tableaux";
 
 export const IDS_ESPACES = ["souvenirs", "sante", "journee", "idees", "monde", "budget", "outils", "formes"] as const;
 export type IdEspace = (typeof IDS_ESPACES)[number];
@@ -75,6 +75,8 @@ export interface EntreesEspaces {
   actualite?: Actualite | null;
   /** Les lectures du jour (journal d'accès), la plus récente d'abord ; null sans base. */
   lectures?: readonly { ts: Date; lecteur: string; outil: string }[] | null;
+  /** Ce qu'elle a fait aujourd'hui, compté, et ses dernières vérifications ; null sans base, absent : non lus. */
+  activite?: ActiviteDuJour | null;
 }
 
 const LIBELLE_POSTE: Record<Poste, string> = { chat: "Parler", apprentissage: "Apprendre" };
@@ -115,6 +117,29 @@ function ditBudget(b: NonNullable<EntreesEspaces["budget"]>): string {
   return `${dollars(total)} aujourd'hui, ${suite}`;
 }
 
+/** Sa journée : ce qu'elle a fait aujourd'hui, compté dans ses journaux (tâche MemoryAI 232). */
+function journee(e: EntreesEspaces): ContenuEspace {
+  const tableau = tableauJournee(e.lectures ?? null, e.activite);
+  const a = e.activite;
+  if (a === undefined) {
+    return { phrase: "Elle ne tient pas encore le journal de sa journée. Il viendra quand elle agira seule.", dit: "Je ne tiens pas encore le journal de ma journée.", vide: true, tableau };
+  }
+  if (a === null || e.lectures == null) {
+    return { phrase: "La base ne répond pas : sa journée n'est pas lisible.", dit: "Je n'arrive pas à relire ma journée.", vide: true, tableau };
+  }
+  const lectures = `${e.lectures.length >= LECTURES_DU_JOUR_MAX ? "au moins " : ""}${e.lectures.length}`;
+  const appels = a.appels.chat + a.appels.apprentissage;
+  if (e.lectures.length + appels + a.faitsRelus + a.papiersRelus === 0) {
+    return { phrase: "Elle n'a encore rien fait aujourd'hui.", dit: "Je n'ai encore rien fait aujourd'hui.", vide: true, tableau };
+  }
+  return {
+    phrase: `Aujourd'hui, elle a lu ta mémoire ${lectures} fois et appelé le modèle ${appels} fois.`,
+    dit: `Aujourd'hui, j'ai lu ta mémoire ${lectures} fois et appelé le modèle ${appels} fois.`,
+    vide: false,
+    tableau,
+  };
+}
+
 export function contenuEspaces(e: EntreesEspaces): Record<IdEspace, ContenuEspace> {
   return {
     souvenirs: {
@@ -133,12 +158,7 @@ export function contenuEspaces(e: EntreesEspaces): Record<IdEspace, ContenuEspac
       vide: true,
       tableau: tableauSante(),
     },
-    journee: {
-      phrase: "Elle ne tient pas encore le journal de sa journée. Il viendra quand elle agira seule.",
-      dit: "Je ne tiens pas encore le journal de ma journée.",
-      vide: true,
-      tableau: tableauJournee(e.lectures ?? null),
-    },
+    journee: journee(e),
     // Marc ne juge plus JAMAIS ce que LIA déduit ou lit (25/10/2026, tâche MemoryAI 231) : plus
     // de « N à juger », ni pastille, ni remarque, ni lien vers la pile. LIA tranche seule.
     idees: {

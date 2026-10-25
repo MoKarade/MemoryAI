@@ -77,6 +77,20 @@ describe("les espaces", () => {
     }
   });
 
+  it("Sa journée se remplit de ce qu'elle a fait aujourd'hui, compté, et dit « rien » quand c'est vrai (tâche MemoryAI 232)", () => {
+    // Données FICTIVES (dépôt public).
+    const dernieres = { meteo: null, actualite: null, budget: null, faits: null, papiers: null, lectures: null };
+    const activite = { jour: "2026-10-24", appels: { chat: 3, apprentissage: 1 }, faitsRelus: 0, papiersRelus: 0, dernieres };
+    const lectures = [{ ts: new Date("2026-10-24T19:12:00Z"), lecteur: "chat", outil: "memoryai_etat" }];
+    const j = contenuEspaces({ ...ENTREES, lectures, activite }).journee;
+    expect(j.vide).toBe(false);
+    expect(j.phrase).toBe("Aujourd'hui, elle a lu ta mémoire 1 fois et appelé le modèle 4 fois.");
+    expect(j.remarque).toBeUndefined();
+    const rien = contenuEspaces({ ...ENTREES, lectures: [], activite: { ...activite, appels: { chat: 0, apprentissage: 0 } } }).journee;
+    expect(rien).toMatchObject({ vide: true, phrase: "Elle n'a encore rien fait aujourd'hui." });
+    expect(contenuEspaces({ ...ENTREES, lectures: null, activite: null }).journee.phrase).toBe("La base ne répond pas : sa journée n'est pas lisible.");
+  });
+
   it("sans base, le budget ne devine pas un zéro", () => {
     const c = contenuEspaces(ENTREES);
     expect(c.budget.vide).toBe(true);
