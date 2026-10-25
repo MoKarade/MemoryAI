@@ -3,6 +3,8 @@
 // Mêmes gardes que `ecrireLotPieces`, puis par papier : la pièce de l'exemplaire principal, sa
 // lecture déchiffrée EN MÉMOIRE, `deciderPapier`, et des EMPREINTES seulement en base.
 // ⚠️ Le MÊME extracteur referait la même erreur au même endroit : refusé, jamais une concordance.
+// ⚠️ Le même CANAL aussi (deux lectures du même texte OCR, ou deux visions du même modèle) :
+// l'erreur d'OCR tromperait les deux lectures de la même façon (DriveAI, 25/10).
 
 import { empreinte, type Cle } from "../chiffrement";
 import { jourQuebec } from "../coutChat";
@@ -12,7 +14,7 @@ import { EcriturePiecesRetireeError } from "./ecrire";
 import { APPS_PIECES } from "./lignee";
 import type { DepotRelecture } from "./depotRelecture";
 import { ouvrirFacette } from "./lecture";
-import { CHAMPS_COMPARES, deciderPapier, forme, LOT_MAX_RELECTURES, schemaRelecture, type Lecture } from "./secondeLecture";
+import { CHAMPS_COMPARES, deciderPapier, forme, lecturesIndependantes, LOT_MAX_RELECTURES, schemaRelecture, type Lecture } from "./secondeLecture";
 
 /** Les doutes qui passent en tête de la pile de Marc, par jour (ADR 0026 §6). */
 export const DOUTES_PAR_JOUR = 5;
@@ -24,7 +26,7 @@ export class LotRelecturesTropGrandError extends Error {
   }
 }
 
-type CodeRefusRelecture = "invalide" | "inconnu" | "meme_extracteur";
+type CodeRefusRelecture = "invalide" | "inconnu" | "meme_extracteur" | "meme_canal";
 
 export interface ResultatRelectures {
   recus: number;
@@ -69,6 +71,10 @@ export async function relireLot(
     }
     if (p.extracteur === e.extracteur) {
       r.refusees.push({ index, code: "meme_extracteur" });
+      continue;
+    }
+    if (!lecturesIndependantes(p.extracteur, e.extracteur)) {
+      r.refusees.push({ index, code: "meme_canal" });
       continue;
     }
     // Le même chemin que l'écran : la facette d'un niveau 0 est scellée, sauf ancienne ligne.

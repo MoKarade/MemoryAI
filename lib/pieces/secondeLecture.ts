@@ -35,6 +35,24 @@ export const schemaRelecture = z
   })
   .strict();
 
+/** Le canal d'une lecture : l'image du papier (« vision » dans l'étiquette) ou son texte OCR. */
+function canalLecture(extracteur: string): "vision" | "texte" {
+  return /vision/i.test(extracteur) ? "vision" : "texte";
+}
+
+/**
+ * Deux lectures sont-elles INDÉPENDANTES (ADR 0026 §1, amendement du 25/10) ? Deux lectures sur le
+ * même texte OCR héritent de la même erreur d'OCR : jamais. Deux lectures par la vision le sont
+ * seulement avec deux modèles différents (le premier mot de l'étiquette : `haiku`, `sonnet`…).
+ */
+export function lecturesIndependantes(premiere: string, seconde: string): boolean {
+  const [a, b] = [canalLecture(premiere), canalLecture(seconde)];
+  if (a !== b) return true;
+  if (a === "texte") return false;
+  const modele = (x: string) => x.split("-")[0]?.toLowerCase() ?? "";
+  return modele(premiere) !== modele(seconde);
+}
+
 /** Sans casse, sans accents, mots triés ; c'est elle qu'on empreinte : concorder = même empreinte. */
 export function forme(v: string): string {
   return v
