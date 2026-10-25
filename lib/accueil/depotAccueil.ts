@@ -1,12 +1,12 @@
 // lib/accueil/depotAccueil.ts — les lectures des panneaux de la maison qui n'existaient nulle part
-// ailleurs (maquette v5, écart B). Des SOMMES, des COMPTES et des HEURES : aucun texte, aucune
-// valeur de fait, rien de déchiffré.
+// ailleurs (maquette v5, écart B). Des SOMMES, des COMPTES, des HEURES et des colonnes en clair par
+// conception (les échéances) : aucun texte, aucune valeur de fait, rien de déchiffré.
 
-import { count, desc, eq, gte, like, max, sum } from "drizzle-orm";
+import { and, asc, between, count, desc, eq, gte, isNull, like, max, sql, sum } from "drizzle-orm";
 import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
 import * as schema from "@/lib/db/schema";
 import { POSTES, type Poste } from "@/lib/coutChat";
-import type { ActiviteDuJour } from "./tableaux";
+import type { ActiviteDuJour, Relances } from "./tableaux";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Base = PgDatabase<PgQueryResultHKT, any>;
@@ -20,6 +20,12 @@ export interface DepotAccueil {
   appelsParOutilDepuis(depuis: Date): Promise<{ outil: string; n: number }[]>;
   /** Ce qu'elle a fait ce jour (`AAAA-MM-JJ` de Québec), compté, et ses dernières vérifications (tâche MemoryAI 232). */
   activiteDuJour(jour: string): Promise<ActiviteDuJour>;
+  /**
+   * Les échéances des papiers vivants entre deux jours (`AAAA-MM-JJ`, inclus), la plus ancienne
+   * d'abord, et leur total (tâche MemoryAI 232). La date et le dossier sont en clair par
+   * conception : rien n'est déchiffré.
+   */
+  echeancesEntre(jour: string, du: string, au: string, limite: number): Promise<Relances>;
 }
 
 /** Un `max` de colonne horodatée : une date, ou `null` quand la table n'a rien. */
@@ -69,6 +75,23 @@ export function depotAccueilDrizzle(db: Base): DepotAccueil {
           papiers: date(second?.t),
           lectures: date(lu?.t),
         },
+      };
+    },
+    async echeancesEntre(jour, du, au, limite) {
+      const p = schema.pieces;
+      const vivantes = and(
+        isNull(p.supprimeLe),
+        eq(p.statut, "active"),
+        // Une date du monde se compare en texte ; une valeur hors de la forme `AAAA-MM-JJ` n'est pas une échéance.
+        sql`${p.dateEcheance} ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'`,
+        between(p.dateEcheance, du, au),
+      );
+      const echeances = await db.select({ dateEcheance: p.dateEcheance, domaine: p.domaine }).from(p).where(vivantes).orderBy(asc(p.dateEcheance), asc(p.id)).limit(limite);
+      const [total] = await db.select({ n: count() }).from(p).where(vivantes);
+      return {
+        jour,
+        echeances: echeances.flatMap((e) => (e.dateEcheance ? [{ dateEcheance: e.dateEcheance, domaine: e.domaine }] : [])),
+        total: Number(total?.n ?? 0),
       };
     },
   };

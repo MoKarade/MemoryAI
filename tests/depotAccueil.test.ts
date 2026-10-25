@@ -99,3 +99,44 @@ describe("activiteDuJour (tâche MemoryAI 232)", () => {
     expect(a.faitsRelus + a.papiersRelus).toBe(0);
   });
 });
+
+describe("echeancesEntre (tâche MemoryAI 232)", () => {
+  // Données FICTIVES (dépôt public) : des papiers minimaux, des dates et des dossiers inventés.
+  const papier = (id: string, dateEcheance: string | null, domaine: string | null = "99 · Essai") => ({
+    id,
+    sujet: "marc",
+    niveau: 1,
+    resumeEnClair: true,
+    extracteur: "fictif-v1",
+    empreinte: `empreinte-echeance-${id}`,
+    dateEcheance,
+    domaine,
+  });
+
+  it("rend les échéances vivantes de la fenêtre, la plus ancienne d'abord, et leur total", async () => {
+    await db.insert(schema.pieces).values([
+      papier("e1", "2026-11-02"),
+      papier("e2", "2026-10-20", null),
+      papier("e3", "2026-12-31"), // hors fenêtre
+      papier("e4", null),
+      papier("e5", "2026-10-30"),
+      papier("e6", "bientôt"), // pas une date : ignorée
+      papier("e7", "2026-10-25"),
+    ]);
+    await db.insert(schema.pieces).values({ ...papier("e8", "2026-10-26"), supprimeLe: new Date("2026-10-01T00:00:00Z") });
+    const r = await depotAccueilDrizzle(db).echeancesEntre("2026-10-24", "2026-10-17", "2026-12-23", 3);
+    expect(r).toEqual({
+      jour: "2026-10-24",
+      echeances: [
+        { dateEcheance: "2026-10-20", domaine: null },
+        { dateEcheance: "2026-10-25", domaine: "99 · Essai" },
+        { dateEcheance: "2026-10-30", domaine: "99 · Essai" },
+      ],
+      total: 4,
+    });
+  });
+
+  it("aucune échéance dans la fenêtre : zéro, pas une erreur", async () => {
+    expect(await depotAccueilDrizzle(db).echeancesEntre("2030-01-01", "2029-12-25", "2030-03-01", 6)).toEqual({ jour: "2030-01-01", echeances: [], total: 0 });
+  });
+});
