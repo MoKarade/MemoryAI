@@ -11,7 +11,7 @@ import { PGlite } from "@electric-sql/pglite";
 import { drizzle } from "drizzle-orm/pglite";
 import * as schema from "../lib/db/schema";
 import { deriverCle } from "../lib/chiffrement";
-import { baliserActualite, FILS, lireFilRss, SOURCE_ACTUALITE, sourceActualite, type SourceActualite } from "../lib/monde/actualite";
+import { baliserActualite, FILS, lireFilRss, sansDoublons, SOURCE_ACTUALITE, sourceActualite, type SourceActualite } from "../lib/monde/actualite";
 import { ENTETE_MONDE, FRAICHEUR_MS } from "../lib/monde/meteo";
 import { OUTIL_ACTUALITE, tourDeChat, type ClientModele, type ReponseModele } from "../lib/chat/agent";
 import { depotAdminDrizzle } from "../lib/depotAdmin";
@@ -90,13 +90,25 @@ afterAll(async () => {
   await pg.close();
 });
 
+describe("un article publié dans deux fils", () => {
+  it("ne sort qu'une fois, sous le premier fil, même avec une autre casse", () => {
+    const t = (fil: string, titre: string) => ({ fil, titre, le: "2026-10-25T01:19:00.000Z" });
+    expect(sansDoublons([t("rc-une", "Brésil : un titre fictif"), t("rc-international", "brésil : un titre FICTIF"), t("rc-international", "Un autre titre fictif")])).toEqual([
+      t("rc-une", "Brésil : un titre fictif"),
+      t("rc-international", "Un autre titre fictif"),
+    ]);
+  });
+});
+
 describe("les fils derrière leur cache (PGlite)", () => {
   it("⚠ chaque fil de la liste fermée est lu au plus toutes les 30 minutes", async () => {
     const urls: string[] = [];
     const source = sourceActualite(db as never, async (u) => (urls.push(u), XML));
     const a = await source.lire(T0);
     expect(urls).toEqual(FILS.map((f) => f.url));
-    expect(a.titres).toHaveLength(3 * FILS.length);
+    // Les deux fils rendent ici les MÊMES articles : chacun ne sort qu'une fois, sous le premier fil.
+    expect(a.titres).toHaveLength(3);
+    expect(new Set(a.titres.map((t) => t.fil))).toEqual(new Set([FILS[0].id]));
     expect(a.retires).toBe(FILS.length);
     await source.lire(new Date(T0.getTime() + FRAICHEUR_MS - 1000));
     expect(urls).toHaveLength(FILS.length);
