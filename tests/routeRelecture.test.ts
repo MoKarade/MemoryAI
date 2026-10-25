@@ -5,7 +5,7 @@
 
 import { describe, it, expect, afterEach } from "vitest";
 import { randomBytes } from "node:crypto";
-import { POST } from "../app/api/pieces/relecture/route";
+import { GET, POST } from "../app/api/pieces/relecture/route";
 
 const JETON_ECRITURE = "jeton-driveai-ecriture-0123456789";
 const JETON_LECTURE = "jeton-claude-lecture-000123456789";
@@ -70,5 +70,30 @@ describe("POST /api/pieces/relecture — les refus, dans l'ordre", () => {
       expect(r.status, JSON.stringify(corps)).toBe(400);
       expect(r.headers.get("cache-control")).toBe("no-store");
     }
+  });
+});
+
+describe("GET /api/pieces/relecture — ce qu'il reste à relire (25/10)", () => {
+  const lire = (requete: string, jeton: string | null = JETON_ECRITURE) =>
+    GET(new Request(`http://memoryai.test/api/pieces/relecture${requete}`, { headers: jeton ? { authorization: `Bearer ${jeton}` } : {} }));
+
+  it("401 sans jeton, avec un faux, ou avec un jeton de LECTURE", async () => {
+    configurer();
+    for (const j of [null, "faux-jeton-0123456789abcdefgh", JETON_LECTURE]) {
+      const r = await lire("?canal=texte", j);
+      expect(r.status, String(j)).toBe(401);
+      expect(await r.json()).toEqual({ error: "non_autorise" });
+    }
+  });
+
+  it("400 sans canal valide ou avec une limite hors bornes ; 503 sans base", async () => {
+    configurer();
+    for (const q of ["", "?canal=ocr", "?canal=texte&limite=0", "?canal=texte&limite=51", "?canal=vision&limite=2.5"]) {
+      const r = await lire(q);
+      expect(r.status, q).toBe(400);
+      expect(r.headers.get("cache-control")).toBe("no-store");
+    }
+    delete process.env.DATABASE_URL;
+    expect((await (await lire("?canal=texte")).json()).error).toBe("base_absente");
   });
 });

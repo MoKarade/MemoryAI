@@ -1,7 +1,10 @@
 // app/api/pieces/relecture/route.ts — la seconde lecture des papiers par DriveAI (ADR 0026).
 //
 // Jumelle de `POST /api/pieces`, mêmes refus dans le même ordre ; hors du middleware de session.
-//   200 { recus, vrais, doutes, exclus, dejaRelus, refusees: [{ index, code }] }
+//   POST 200 { recus, vrais, doutes, exclus, dejaRelus, refusees: [{ index, code }] }
+//   GET  200 { aRelire: [{ file_id, extracteur }], parExtracteur: { <étiquette>: n } }
+//        ?canal=texte|vision (le canal de la seconde lecture), ?limite=1..50 : ce qu'il reste à
+//        relire, pour que DriveAI ne paie pas des lectures que la porte refuserait (25/10).
 // ⚠️ Rien que des nombres et des codes fermés : rendre la première lecture, même pour dire où
 // elle diverge, la donnerait à l'appelant, et la seconde ne serait plus aveugle.
 
@@ -10,10 +13,11 @@ import { baseConfiguree, db } from "@/lib/db";
 import { estGele, reponseGelee } from "@/lib/gel";
 import { ecrivainAutorise, refusJeton } from "@/lib/jetons";
 import { assurerMigrations } from "@/lib/migrations";
-import { depotRelectureDrizzle } from "@/lib/pieces/depotRelecture";
+import { aRelireParExtracteur, depotRelectureDrizzle, papiersARelire } from "@/lib/pieces/depotRelecture";
 import { EcriturePiecesRetireeError } from "@/lib/pieces/ecrire";
 import { APPS_PIECES } from "@/lib/pieces/lignee";
 import { LotRelecturesTropGrandError, relireLot } from "@/lib/pieces/relire";
+import { LOT_MAX_RELECTURES } from "@/lib/pieces/secondeLecture";
 import { reponseSauvetage, SauvetageEnCoursError } from "@/lib/sauvetage/porte";
 
 export const dynamic = "force-dynamic";
@@ -60,4 +64,27 @@ export async function POST(request: Request): Promise<Response> {
     if (err instanceof EcriturePiecesRetireeError) return refusJeton();
     throw err;
   }
+}
+
+/**
+ * Ce qu'il reste à relire. Le même jeton d'écrivain que le POST : un lecteur n'a rien à relire.
+ * ⚠️ Le gel ne bloque pas ce GET : il n'écrit rien (comme `GET /api/etat`).
+ */
+export async function GET(request: Request): Promise<Response> {
+  const ecrivain = ecrivainAutorise(request.headers.get("authorization"), APPS_PIECES);
+  if (!ecrivain) return refusJeton();
+  if (!baseConfiguree()) return erreur(503, "base_absente", "DATABASE_URL manquante : rien n'est lu.");
+
+  const url = new URL(request.url);
+  const canal = url.searchParams.get("canal");
+  if (canal !== "texte" && canal !== "vision") return erreur(400, "canal_invalide", "canal=texte ou canal=vision : le canal de la seconde lecture.");
+  const brut = url.searchParams.get("limite");
+  const limite = brut === null ? LOT_MAX_RELECTURES : Number(brut);
+  if (!Number.isInteger(limite) || limite < 1 || limite > LOT_MAX_RELECTURES) {
+    return erreur(400, "limite_invalide", `limite entre 1 et ${LOT_MAX_RELECTURES}.`);
+  }
+
+  await assurerMigrations();
+  const [lignes, parExtracteur] = await Promise.all([papiersARelire(db, canal, limite), aRelireParExtracteur(db)]);
+  return Response.json({ aRelire: lignes.map((l) => ({ file_id: l.fileId, extracteur: l.extracteur })), parExtracteur }, { headers: NO_STORE });
 }
