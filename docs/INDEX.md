@@ -2,7 +2,7 @@
 
 <!-- GÉNÉRÉ par `node .github/ci/generer-index.mjs` : ne pas modifier à la main (`--verifier` échoue si ce fichier est périmé). -->
 
-46 document(s). Ancien titre -> nouveau chemin : [correspondance.md](correspondance.md).
+47 document(s). Ancien titre -> nouveau chemin : [correspondance.md](correspondance.md).
 
 ## docs/
 
@@ -41,6 +41,7 @@
 - [ADR 0025 — LIA valide seule un fait que deux signaux confirment, Marc ne voit que les doutes](adr/0025-lia-valide-seule-ce-que-deux-signaux-confirment.md) — `docs/adr/0025-lia-valide-seule-ce-que-deux-signaux-confirment.md`
 - [ADR 0026 — Un papier se juge seul quand une seconde lecture de DriveAI concorde avec la première](adr/0026-les-papiers-se-jugent-seuls-par-une-seconde-lecture.md) — `docs/adr/0026-les-papiers-se-jugent-seuls-par-une-seconde-lecture.md`
 - [ADR 0027 — Les idées de LIA pour tes apps viennent de ce qu'elle compte, pas d'un modèle](adr/0027-les-idees-de-lia-viennent-de-ce-qu-elle-compte.md) — `docs/adr/0027-les-idees-de-lia-viennent-de-ce-qu-elle-compte.md`
+- [ADR 0028 — LIA montre les bornes de recharge proches de ta ville, d'après le fichier ouvert du Circuit électrique](adr/0028-lia-montre-les-bornes-de-recharge-proches.md) — `docs/adr/0028-lia-montre-les-bornes-de-recharge-proches.md`
 - [Registre des numéros d'ADR](adr/NUMEROS.md) — `docs/adr/NUMEROS.md`
 
 ## docs/claude/
