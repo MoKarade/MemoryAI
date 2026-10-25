@@ -33,6 +33,16 @@ export interface EtatPublic {
     lus: number;
     importesSeulement: number;
   };
+  /**
+   * Marc ne juge plus rien (25/10/2026, tâche MemoryAI 231) : `aJugerParMarc` vaut TOUJOURS 0, et
+   * ce que LIA a tranché seule se compte (faits validés par sa relecture, papiers « vrai par LIA »
+   * par la seconde lecture de DriveAI). Le reste n'est ni vrai ni posé à Marc : « non confirmé ».
+   */
+  jugement: {
+    aJugerParMarc: 0;
+    faitsParLia: number;
+    papiersParLia: number;
+  };
   informations: number | null;
   gele: boolean;
 }
@@ -59,6 +69,7 @@ export function composerEtatPublic(
   papiers: { total: number },
   extracteurs: { lus: number; nonLus: number },
   gele: boolean,
+  parLia: { faits: number; papiers: number },
 ): EtatPublic {
   const valides = faits.parStatut.valide ?? 0;
   return {
@@ -75,6 +86,7 @@ export function composerEtatPublic(
       lus: extracteurs.lus,
       importesSeulement: extracteurs.nonLus,
     },
+    jugement: { aJugerParMarc: 0, faitsParLia: parLia.faits, papiersParLia: parLia.papiers },
     informations: totalInformations({ faits: valides, papiers: papiers.total }),
     gele,
   };

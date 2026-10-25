@@ -72,6 +72,9 @@ Tâche : MemoryAI#231. Cet amendement remplace ce qui, plus haut, « laisse à M
 - **Par étapes** : l'accueil et l'onglet Mémoire cessent de dire « à juger » d'abord. La pile
   (`en_pile`, `/questions`) et le compte « à juger par Marc » de `GET /api/etat` suivent dans une
   PR à part.
+- **Seconde étape (25/10)** : `/questions` ne montre plus que les questions de LIA (ce qu'elle ne
+  sait pas), jamais un papier ni une déduction à juger ; `GET /api/etat` publie
+  `jugement.aJugerParMarc` = 0 et les comptes tranchés par LIA.
 
 ## Amendement du 25/10/2026 : un autre canal, et la liste de ce qui reste à relire
 

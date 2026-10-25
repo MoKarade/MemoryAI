@@ -19,7 +19,7 @@ import type { AvisEnVigueur, CandidatPiece, GenreCarte, Verdict } from "./compos
 type Base = PgDatabase<PgQueryResultHKT, any>;
 
 /** La remarque d'un « faux » : courte, parce que c'est un pense-bête et pas un formulaire. */
-export const LONGUEUR_MAX_REMARQUE = 200;
+const LONGUEUR_MAX_REMARQUE = 200;
 /** Niveau de l'AAD de la remarque : elle peut citer un numéro de passeport, donc N3. */
 const NIVEAU_REMARQUE = 3;
 const aadRemarque = (refId: string) => `avis|${refId}`;
