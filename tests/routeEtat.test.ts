@@ -113,9 +113,10 @@ describe("composerEtatPublic — ce qui sort, et ce qui ne sort pas", () => {
   };
   const papiers = { total: 2748 };
   const extracteurs = { lus: 590, nonLus: 2158 };
+  const parLia = { faits: 12, papiers: 34 };
 
   it("publie les deux unités SÉPARÉMENT et leur somme", () => {
-    const e = composerEtatPublic(faits, papiers, extracteurs, false);
+    const e = composerEtatPublic(faits, papiers, extracteurs, false, parLia);
     expect(e.faits.valides).toBe(343);
     expect(e.papiers.total).toBe(2748);
     // La somme est celle de la source unique, jamais une seconde addition écrite ici.
@@ -123,7 +124,7 @@ describe("composerEtatPublic — ce qui sort, et ce qui ne sort pas", () => {
   });
 
   it("distingue LU de IMPORTÉ — la demande de Marc du 23/09, mot pour mot", () => {
-    const e = composerEtatPublic(faits, papiers, extracteurs, false);
+    const e = composerEtatPublic(faits, papiers, extracteurs, false, parLia);
     expect(e.papiers.lus).toBe(590);
     expect(e.papiers.importesSeulement).toBe(2158);
     // Les deux se somment au total : un papier est lu ou il ne l'est pas.
@@ -131,23 +132,31 @@ describe("composerEtatPublic — ce qui sort, et ce qui ne sort pas", () => {
   });
 
   it("publie les faits MIGRÉS — sans eux, une chute de 94 % ressemble à une perte de données", () => {
-    const e = composerEtatPublic(faits, papiers, extracteurs, false);
+    const e = composerEtatPublic(faits, papiers, extracteurs, false, parLia);
     expect(e.faits.migresEnPiece).toBe(2646);
   });
 
   it("un statut absent vaut 0, jamais `undefined` qui casserait une addition chez l'appelant", () => {
-    const e = composerEtatPublic({ ...faits, parStatut: {} }, papiers, extracteurs, false);
+    const e = composerEtatPublic({ ...faits, parStatut: {} }, papiers, extracteurs, false, parLia);
     expect(e.faits.valides).toBe(0);
     expect(e.faits.aValider).toBe(0);
   });
 
   it("le gel est PUBLIÉ, pas appliqué", () => {
-    expect(composerEtatPublic(faits, papiers, extracteurs, true).gele).toBe(true);
-    expect(composerEtatPublic(faits, papiers, extracteurs, false).gele).toBe(false);
+    expect(composerEtatPublic(faits, papiers, extracteurs, true, parLia).gele).toBe(true);
+    expect(composerEtatPublic(faits, papiers, extracteurs, false, parLia).gele).toBe(false);
+  });
+
+  it("Marc ne juge plus rien : « à juger par Marc » vaut 0, ce que LIA a tranché se compte (tâche MemoryAI 231)", () => {
+    const e = composerEtatPublic(faits, papiers, extracteurs, false, parLia);
+    expect(e.jugement).toEqual({ aJugerParMarc: 0, faitsParLia: 12, papiersParLia: 34 });
+    // Même avec des faits proposés, rien n'est posé à Marc.
+    expect(e.faits.aValider).toBe(4);
+    expect(e.jugement.aJugerParMarc).toBe(0);
   });
 
   it("AUCUN contenu ne sort : pas de valeur, pas de prédicat, pas de nom de fichier", () => {
-    const e = composerEtatPublic(faits, papiers, extracteurs, false);
+    const e = composerEtatPublic(faits, papiers, extracteurs, false, parLia);
     // Le contrôle porte sur la FORME de ce qui est publié : tout doit être un nombre, un
     // booléen, ou l'horodatage de traitement. Un champ texte ajouté demain le fait rougir,
     // et c'est exactement le moment où quelqu'un doit se demander s'il traverse la frontière.
@@ -158,5 +167,6 @@ describe("composerEtatPublic — ce qui sort, et ce qui ne sort pas", () => {
       expect(typeof v === "number" || v === faits.dernierValideLe).toBe(true);
     }
     for (const v of Object.values(e.papiers)) expect(typeof v).toBe("number");
+    for (const v of Object.values(e.jugement)) expect(typeof v).toBe("number");
   });
 });
