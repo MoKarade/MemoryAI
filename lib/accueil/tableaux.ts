@@ -367,12 +367,55 @@ function corpsTemps(nLectures: number, a: ActiviteDuJour): Corps {
   };
 }
 
+/** La fenêtre des relances : les échéances passées depuis 7 jours au plus, et celles d'ici 60 jours. */
+export const RELANCES_JOURS_PASSES = 7;
+export const RELANCES_JOURS_A_VENIR = 60;
+/** Combien d'échéances la tuile montre, la plus ancienne d'abord. */
+export const LIGNES_RELANCES = 6;
+
+/**
+ * Les échéances lues dans les papiers (tâche MemoryAI 232). Ce sont des colonnes EN CLAIR par
+ * conception (`lib/db/schema.ts` : la date et le dossier), les mêmes que la pile lit déjà pour son
+ * ordre : rien n'est déchiffré, ni le type ni l'émetteur.
+ */
+export interface Relances {
+  /** Jour de Québec, `AAAA-MM-JJ` : celui d'où se comptent les jours. */
+  jour: string;
+  echeances: { dateEcheance: string; domaine: string | null }[];
+  /** Toutes les échéances de la fenêtre, même au-delà des lignes montrées. */
+  total: number;
+}
+
+const JOUR_MS = 86_400_000;
+const jourUtc = (jour: string) => Date.parse(`${jour}T12:00:00Z`);
+
+/** « aujourd'hui », « demain », « le 3 nov., dans 9 jours », « passée depuis 2 jours (le 23 oct.) ». */
+export function quandEcheance(echeance: string, jour: string): string {
+  const n = Math.round((jourUtc(echeance) - jourUtc(jour)) / JOUR_MS);
+  const date = JOUR_MOIS.format(new Date(jourUtc(echeance)));
+  if (n === 0) return "aujourd'hui";
+  if (n === 1) return "demain";
+  if (n < 0) return `passée depuis ${-n} jour${n < -1 ? "s" : ""} (le ${date})`;
+  return `le ${date}, dans ${n} jours`;
+}
+
+function corpsRelances(r: Relances | null | undefined): Corps[] {
+  if (r === undefined) return [vide("Aucune relance : elle ne lit pas encore tes échéances.")];
+  if (r === null) return [vide("La base ne répond pas : tes échéances ne sont pas lisibles.")];
+  if (r.total === 0) return [vide(`Aucune échéance dans tes papiers : rien de passé depuis ${RELANCES_JOURS_PASSES} jours, rien d'ici ${RELANCES_JOURS_A_VENIR} jours.`)];
+  const montrees = r.echeances.length < r.total ? ` (les ${r.echeances.length} premières)` : "";
+  return [
+    { genre: "liste", elements: r.echeances.map((e) => ({ libelle: quandEcheance(e.dateEcheance, r.jour), detail: e.domaine ?? "Sans dossier" })) },
+    { genre: "texte", texte: `${r.total} échéance${r.total > 1 ? "s" : ""} lue${r.total > 1 ? "s" : ""} dans tes papiers${montrees}, dans l'ordre des dates.` },
+  ];
+}
+
 /**
  * Sa journée : ses lectures du jour (journal d'accès, le plus récent d'abord ; `null` sans base),
- * puis son temps et ce qu'elle surveille (`activite` ; `null` sans base, absent : non lus).
- * Les relances et ton agenda n'ont pas encore de source.
+ * puis son temps et ce qu'elle surveille (`activite` ; `null` sans base, absent : non lus), et les
+ * relances (`relances`, mêmes conventions). Ton agenda n'a pas encore de source.
  */
-export function tableauJournee(lectures: readonly { ts: Date; lecteur: string; outil: string }[] | null, activite?: ActiviteDuJour | null): Tableau {
+export function tableauJournee(lectures: readonly { ts: Date; lecteur: string; outil: string }[] | null, activite?: ActiviteDuJour | null, relances?: Relances | null): Tableau {
   const panne = vide("La base ne répond pas : le journal du jour n'est pas lisible.");
   const rien = vide("Aucune lecture aujourd'hui.");
   const parHeure = Array.from({ length: 24 }, (_, h) => (lectures ?? []).filter((l) => heureQuebec(l.ts) === h).length);
@@ -412,7 +455,7 @@ export function tableauJournee(lectures: readonly { ts: Date; lecteur: string; o
               : [rien],
       },
       { cle: "temps", largeur: 12, icone: "globe", titre: "Son temps", repliee: true, corps: [temps] },
-      { cle: "relances", largeur: 5, icone: "bell", titre: "Relances", repliee: true, corps: [vide("Aucune relance : elle ne lit pas encore tes échéances.")] },
+      { cle: "relances", largeur: 5, icone: "bell", titre: "Relances", repliee: true, corps: corpsRelances(relances) },
       { cle: "aujourdhui", largeur: 6, icone: "cal", titre: "Aujourd'hui", corps: [vide("Ton agenda du jour viendra avec l'agenda.")] },
       { cle: "surveille", largeur: 6, icone: "eye", titre: "Ce qu'elle surveille", repliee: true, corps: [surveille] },
     ],
