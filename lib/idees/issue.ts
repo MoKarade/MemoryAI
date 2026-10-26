@@ -2,7 +2,7 @@
 // de GitHub, préremplie avec l'idée. PUR : aucun réseau.
 //
 // ⚠️ AUCUN JETON, AUCUNE ÉCRITURE. LIA ne crée jamais l'issue : Marc ouvre la page, relit le texte et
-// la crée lui-même sur GitHub. Le texte préremplit la demande telle que Marc l'a faite au hub, donc
+// la crée lui-même sur GitHub. Le texte reprend la demande telle que Marc l'a faite au hub, donc
 // il se relit avant d'être envoyé (un dépôt public le montrerait à tout le monde).
 
 const PROPRIETAIRE = "MoKarade";
@@ -28,7 +28,7 @@ export function urlNouvelleIssue(e: { app: string; titre: string; detail: string
   if (!depot) return null;
   const titre = [...`Idée de LIA : ${e.titre}`].slice(0, TITRE_MAX).join("");
   const corps = [
-    `**Avant** : ${e.titre}, ${e.detail}.`,
+    `**Avant** : ${e.titre} (${e.detail})`,
     "**Après** : à préciser avant de prendre la tâche.",
     "**Fini quand** : à écrire comme une commande vérifiable en production.",
     "**Fichiers touchés** : non déterminés",
