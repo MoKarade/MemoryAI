@@ -1,6 +1,7 @@
 // tests/ideesTuiles.test.ts — les tuiles de l'espace « Idées » (ADR 0027, tâche MemoryAI 233) : ce que
 // l'écran dit selon ce que la base répond. La règle et la passe ont leur fichier
-// (`tests/ideesPasse.test.ts`). Données FICTIVES : noms, apps et jours inventés.
+// (`tests/ideesPasse.test.ts`), les gestes aussi (`tests/ideesGestes.test.ts`). Données FICTIVES :
+// noms, apps et jours inventés.
 
 import { describe, expect, it } from "vitest";
 import { contenuEspaces } from "../lib/accueil/espaces";
@@ -47,14 +48,13 @@ describe("les tuiles de l'espace « Idées »", () => {
       idee({ id: "e" }),
     ]);
     const [boite, etapes, utilite, refusees] = t.tuiles;
-    expect(boite?.corps[0]).toEqual({
-      genre: "liste",
-      elements: [
-        { libelle: "Revoir la tuile « Budget fictif » dans le hub", detail: "Retenue · demandé 3 jours sur 30, la dernière fois le 24 oct." },
-        { libelle: "Revoir la tuile « Budget fictif » dans le hub", detail: "demandé 3 jours sur 30, la dernière fois le 24 oct." },
-        { libelle: "Revoir la tuile « Petit fictif » dans le hub", detail: "demandé 3 jours sur 30, la dernière fois le 24 oct." },
-      ],
-    });
+    const liste = boite?.corps[0];
+    if (liste?.genre !== "liste") throw new Error("liste attendue");
+    expect(liste.elements.map((e) => [e.libelle, e.detail, e.idee?.id, e.idee?.retenue])).toEqual([
+      ["Revoir la tuile « Budget fictif » dans le hub", "Retenue · demandé 3 jours sur 30, la dernière fois le 24 oct.", "b", true],
+      ["Revoir la tuile « Budget fictif » dans le hub", "demandé 3 jours sur 30, la dernière fois le 24 oct.", "e", false],
+      ["Revoir la tuile « Petit fictif » dans le hub", "demandé 3 jours sur 30, la dernière fois le 24 oct.", "a", false],
+    ]);
     expect(etapes?.corps[0]).toMatchObject({
       genre: "barres",
       barres: [
@@ -71,6 +71,26 @@ describe("les tuiles de l'espace « Idées »", () => {
     // L'utilité se dit estimation : jamais présentée comme une mesure.
     expect(utilite?.corps[1]).toMatchObject({ genre: "texte", texte: expect.stringContaining("Estimation, pas une mesure") });
     expect(refusees?.corps).toEqual([{ genre: "liste", elements: [{ libelle: "Revoir le bouton « Écarté fictif » dans JobAI", detail: "Écartée : elle ne la reproposera pas." }] }]);
+  });
+
+  it("chaque idée en attente porte ses gestes : son id, si elle est retenue, et le lien vers la bonne issue", () => {
+    const t = tableauIdeesLues([idee({ id: "a" }), idee({ id: "b", etat: "retenue", app: "batchchef" }), idee({ id: "c", app: "inconnue" })]);
+    const liste = t.tuiles[0]?.corps[0];
+    if (liste?.genre !== "liste") throw new Error("liste attendue");
+    const parId = Object.fromEntries(liste.elements.map((e) => [e.idee?.id ?? "?", e.idee]));
+    expect(parId.a).toMatchObject({ id: "a", retenue: false });
+    expect(parId.a?.tache).toMatch(/^https:\/\/github\.com\/MoKarade\/Hubperso\/issues\/new\?title=/);
+    expect(parId.b).toMatchObject({ id: "b", retenue: true });
+    expect(parId.b?.tache).toMatch(/^https:\/\/github\.com\/MoKarade\/batchchef-\/issues\/new\?/);
+    // Une app hors du parc n'a pas de dépôt : le geste de lien manque, jamais un dépôt deviné.
+    expect(parId.c).toMatchObject({ id: "c", retenue: false, tache: null });
+  });
+
+  it("la tuile des écartées ne porte aucun geste : une écartée ne revient pas", () => {
+    const t = tableauIdeesLues([idee({ id: "a", etat: "ecartee" })]);
+    const liste = t.tuiles[3]?.corps[0];
+    if (liste?.genre !== "liste") throw new Error("liste attendue");
+    expect(liste.elements.every((e) => e.idee === undefined)).toBe(true);
   });
 
   it("au-delà de huit idées en attente, la boîte dit combien d'autres suivent", () => {
