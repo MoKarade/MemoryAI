@@ -129,7 +129,8 @@ describe("la tuile « Ce qu'elle a fait seule »", () => {
     const u = seule(avecJournalLia(tableauJournee([]), journal({ frein: { enPause: true, changeLe: new Date("2026-10-26T14:05:00Z") } })));
     const c = u.corps[0];
     expect(c).toMatchObject({ genre: "texte", lien: { href: "/regler", libelle: "Lever le frein" } });
-    expect(c.genre === "texte" ? c.texte : "").toMatch(/Frein posé \(aujourd'hui, 10\s*h\s*05\)/);
+    const texte = c?.genre === "texte" ? c.texte : "";
+    expect(texte).toMatch(/Frein posé \(aujourd'hui, 10\s*h\s*05\)/);
   });
 
   it("une ligne dit l'heure, l'action, l'issue, le compte et la raison écrite une fois", () => {
