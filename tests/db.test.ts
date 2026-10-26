@@ -108,6 +108,8 @@ describe("les trente tables", () => {
       "evenement_personnes",
       "evenements",
       "faits",
+      // [ADR 0027] Les idées de LIA pour les apps, nées des demandes du hub (migration 0033).
+      "idees",
       // [L35] Les lectures tentées sans résultat (migration 0016, ADR 0007).
       "lectures_tentees",
       // [CONTRAT-etat-lia] L'état PARTAGÉ de LIA : une ligne, des nombres et des verbes (migration 0025).
