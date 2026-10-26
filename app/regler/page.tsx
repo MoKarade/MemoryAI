@@ -84,6 +84,7 @@ import { jourQuebec } from "@/lib/coutChat";
 import { estGele } from "@/lib/gel";
 import { appsConnues } from "@/lib/jetons";
 import { n2Autorise } from "@/lib/lecture";
+import { LIBELLE_NIVEAU, outilsDeLia } from "@/lib/lia/catalogueOutils";
 import { lireEnvMcp } from "@/lib/mcp/oauth";
 import { accesDonnees, MESSAGES_MANQUE } from "@/lib/pageDonnees";
 import { depotSauvetageDrizzle } from "@/lib/sauvetage/depot";
@@ -164,6 +165,8 @@ export default async function ReglerPage({ searchParams }: { searchParams: Promi
     papiers: acces.ok && papiers ? papiers.total : null,
   };
   const total = totalInformations(postes);
+  // Tâche MemoryAI 282 : la liste des outils de LIA vient du catalogue, pas d'un texte écrit ici.
+  const outilsLia = outilsDeLia();
 
   /** Un chiffre ou un tiret HONNÊTE : « — » dit « pas mesuré », jamais « zéro ». */
   const n = (x: number | null | undefined) => (acces.ok && x !== null && x !== undefined ? String(x) : "—");
@@ -391,6 +394,29 @@ export default async function ReglerPage({ searchParams }: { searchParams: Promi
           <Link href="/apps" className="bouton bouton-second">
             Régler les périmètres…
           </Link>
+        </details>
+
+        {/* Tâche MemoryAI 282 — ce que LIA sait faire. La liste est le CATALOGUE (`lib/lia/
+            catalogueOutils.ts`) : rien d'écrit à la main ici, donc rien qui puisse diverger de ce que
+            l'agent offre vraiment au modèle. Des noms d'outils et des phrases fixes, jamais un fait. */}
+        <details className="repli">
+          <summary>
+            Ce que LIA sait faire — <strong>{outilsLia.length}</strong> outil(s)
+          </summary>
+          <p className="hint">
+            Chaque outil porte son niveau de risque : il lit seulement, il écrit dans MemoryAI, ou il sort de
+            MemoryAI. Un outil sans niveau n’est jamais offert au modèle.
+          </p>
+          <dl className="attributs">
+            {outilsLia.map((o) => (
+              <div key={o.nom}>
+                <dt>{o.nom}</dt>
+                <dd>
+                  {LIBELLE_NIVEAU[o.niveau]} · {o.fait}
+                </dd>
+              </div>
+            ))}
+          </dl>
         </details>
 
         <details className="repli">
