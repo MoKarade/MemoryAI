@@ -1,6 +1,7 @@
 // tests/memoireReseau.test.ts — le réseau de la page Mémoire (MemoryAI#74). Faits FICTIFS.
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { construireReseau, domaineDe, filtrerVisibles, JETON_NIVEAU, type FaitReseau, type LienReseau } from "@/lib/memoire/reseau";
+import { construireReseau, domaineDe, filtrerVisibles, JETON_NIVEAU, voisinsDe, type FaitReseau, type LienReseau } from "@/lib/memoire/reseau";
 
 const faits: FaitReseau[] = [
   { id: "f1", predicat: "emploi.employeur", niveau: 1 },
@@ -59,6 +60,40 @@ describe("construireReseau", () => {
     expect(construireReseau(faits, liens)).toEqual(construireReseau([...faits].reverse(), liens));
     expect(construireReseau([], [])).toEqual({ noeuds: [], aretes: [], domaines: [], omis: 0 });
     expect(domaineDe("sans_point")).toBe("sans_point");
+  });
+});
+
+describe("voisinsDe", () => {
+  const r = construireReseau(faits, liens);
+  const rang = (id: string) => r.noeuds.findIndex((n) => n.id === id);
+
+  it("liste les faits reliés, du lien le plus fort au plus faible, sans les fils vers les domaines (tâche MemoryAI 323)", () => {
+    const v = voisinsDe(r, rang("f1"));
+    expect(v.map((x) => [x.etiquette, x.domaine, x.poids])).toEqual([
+      ["poste", "emploi", 1],
+      ["ville", "logement", 0.5],
+    ]);
+    // Chaque voisin pointe son vrai rang dans le réseau : un clic sur la carte le choisit.
+    for (const x of v) expect(r.noeuds[x.index]?.etiquette).toBe(x.etiquette);
+    // Le lien se lit dans les deux sens.
+    expect(voisinsDe(r, rang("f2")).map((x) => x.etiquette)).toEqual(["employeur"]);
+  });
+
+  it("un fait sans lien, un centre de domaine et un rang hors du réseau n'ont aucun voisin", () => {
+    expect(voisinsDe(r, rang("f4"))).toEqual([]);
+    expect(voisinsDe(r, 0)).toEqual([]);
+    expect(voisinsDe(r, 999)).toEqual([]);
+    expect(voisinsDe(r, -1)).toEqual([]);
+  });
+});
+
+describe("la carte d'un fait", () => {
+  it("ne renvoie plus à l'ancienne fiche /fait/[id], et ne montre aucune valeur (tâche MemoryAI 323)", () => {
+    const s = readFileSync("app/memoire/MemoireClient.tsx", "utf8");
+    expect(s).not.toMatch(/href=\{?[`"']\/fait\//);
+    expect(s).not.toContain("Ouvrir la fiche");
+    // La carte lit la structure du réseau, jamais une valeur.
+    expect(s).toMatch(/voisinsDe\(/);
   });
 });
 
