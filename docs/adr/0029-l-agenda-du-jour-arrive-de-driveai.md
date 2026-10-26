@@ -10,8 +10,14 @@
 ## Contexte
 
 Le bloc « Aujourd'hui » de « Sa journée » dit « Ton agenda du jour viendra avec l'agenda ». MemoryAI
-ne détient aucun jeton Google et n'en demandera pas. DriveAI lit déjà Google pour Marc et pousse à
+ne détient aucun jeton Google et n'en demandera pas. DriveAI détient l'accès Google et pousse déjà à
 MemoryAI avec son propre jeton (roté le 24/10).
+
+⚠️ **DriveAI ne lit pas l'agenda aujourd'hui** : son moteur ne fait qu'y créer des événements, et sa
+règle lui interdit de le lire (ADR 0022 de DriveAI, verrou de test). Son scope `calendar.events`
+permettrait la lecture, mais l'ouvrir renverse cette règle : c'est une décision de Marc, posée par
+le fil DriveAI (lecture étroite du jour : titre, heure, durée). Cet ADR ne fixe que ce que MemoryAI
+reçoit ; il ne vaut rien sans ce oui côté DriveAI.
 
 La seule porte d'événements, `POST /api/evenements`, est faite pour un export Messenger
 (`{ source: "messenger", file_id, html }`) : elle lit du HTML et en tire des faits. Un agenda n'est
@@ -87,6 +93,6 @@ une donnée de niveau 3 (un rendez-vous médical ou d'immigration) et il peut re
 
 ## Ce qui reste ouvert
 
-- Côté DriveAI : la lecture de l'agenda, son scope Google et le rythme d'envoi (au matin, puis à
-  chaque changement), suivis dans DriveAI#679.
+- Côté DriveAI : le droit de lire l'agenda (décision de Marc, qui renverse l'ADR 0022 de DriveAI),
+  puis le rythme d'envoi (au matin, puis à chaque changement), suivis dans DriveAI#679.
 - L'agenda de demain dans le bloc, si Marc le veut : le contrat le permet déjà (`jour` = demain).
