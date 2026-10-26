@@ -215,7 +215,7 @@ describe("l'outil memoryai_sorties", () => {
     expect(r.texte).toContain("Soupe aux légumes d'exemple");
     expect(r.texte).not.toContain("Recharge fictive");
     expect(r.texte).not.toContain("Relevé fictif");
-    expect(r.texte).toContain("1 sortie(s) de niveau 2 massquée(s)".replace("massquée", "masquée"));
+    expect(r.texte).toContain("1 sortie(s) de niveau 2 masquée(s)");
     expect(r.texte).toContain("1 sortie(s) de niveau 3 masquée(s)");
     expect(r.texte).toContain("inclure_n2");
   });
