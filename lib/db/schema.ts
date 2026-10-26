@@ -458,8 +458,9 @@ export const messages = pgTable(
 );
 
 /**
- * Les cinq règles de liens de la v1 (ADR 0002 §5.3). FERMÉE et versionnée comme le
- * vocabulaire : un type inconnu n'entre pas en base.
+ * Les règles de liens (ADR 0002 §5.3) : les cinq de la v1, et quatre de plus le 26/10 pour un
+ * réseau plus relié (tâche MemoryAI 186). FERMÉE comme le vocabulaire : un type inconnu n'entre
+ * pas en base. La colonne est un `text` sans CHECK : en ajouter ne demande aucune migration.
  */
 export const TYPES_LIEN = [
   "meme-document",
@@ -467,6 +468,10 @@ export const TYPES_LIEN = [
   "remplacement",
   "meme-domaine-meme-entite",
   "cause-declaree",
+  "meme-source",
+  "meme-valeur",
+  "meme-emetteur",
+  "dates-proches",
 ] as const;
 /** Une règle POSE, un modèle DEVINE. Les deux ne se confondent jamais à l'écran (ADR §5.3). */
 export const ORIGINES_LIEN = ["regle", "modele"] as const;

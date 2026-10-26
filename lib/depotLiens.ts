@@ -98,12 +98,20 @@ async function lireEtCalculer(db: Base, cle: Cle) {
     .from(schema.faits)
     .where(and(isNull(schema.faits.supprimeLe), inArray(schema.faits.statut, ["valide", "propose"])));
 
+  // Les sources de chaque fait, pour la règle `meme-source` : des identifiants, jamais lus.
+  const sources = new Map<string, string[]>();
+  for (const p of await db.select({ faitId: schema.provenances.faitId, ref: schema.provenances.sourceRef }).from(schema.provenances)) {
+    const liste = sources.get(p.faitId);
+    if (liste) liste.push(p.ref);
+    else sources.set(p.faitId, [p.ref]);
+  }
+
   const faits: FaitPourGraphe[] = [];
   let illisibles = 0;
   for (const f of rows) {
     const p = pourGraphe(f, cle);
     if (p === null) illisibles++;
-    else faits.push(p);
+    else faits.push({ ...p, sources: sources.get(f.id) ?? [] });
   }
 
   // Seules les questions RÉPONDUES portent un lien de cause : une question ouverte n'a encore
