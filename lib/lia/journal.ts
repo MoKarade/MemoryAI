@@ -9,10 +9,10 @@
 // ⚠️ Des COMPTES seulement : aucune valeur de fait, aucun contenu n'entre ici.
 
 import { randomUUID } from "node:crypto";
-import { eq, lt, sql } from "drizzle-orm";
+import { desc, eq, lt, sql } from "drizzle-orm";
 import { boolean, check, index, integer, pgTable, text, timestamp, type PgDatabase, type PgQueryResultHKT } from "drizzle-orm/pg-core";
 import { jourQuebec } from "../coutChat";
-import { ligneJournal, RETENTION_JOURNAL_JOURS, type CleAction, type Issue } from "./autonomie";
+import { estAction, estIssue, ligneJournal, RETENTION_JOURNAL_JOURS, type CleAction, type EtatFrein, type Issue, type LigneLue } from "./autonomie";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Base = PgDatabase<PgQueryResultHKT, any>;
@@ -50,11 +50,29 @@ const freinLia = pgTable(
 );
 
 const JOUR_MS = 86_400_000;
+/** Combien de lignes du jour la page lit, les plus récentes d'abord (trois actions par passe : large). */
+const LIGNES_DU_JOUR_MAX = 30;
+
+/** Le frein tel qu'il est en base : absent, LIA est en marche et personne ne l'a touché. */
+export async function lireEtatFrein(db: Base): Promise<EtatFrein> {
+  const [r] = await db.select({ pause: freinLia.enPause, le: freinLia.changeLe }).from(freinLia).where(eq(freinLia.id, "frein"));
+  return { enPause: r?.pause ?? false, changeLe: r?.le ?? null };
+}
 
 /** Vrai : le frein est posé, rien ne part seul. */
 export async function lireFrein(db: Base): Promise<boolean> {
-  const [r] = await db.select({ pause: freinLia.enPause }).from(freinLia).where(eq(freinLia.id, "frein"));
-  return r?.pause ?? false;
+  return (await lireEtatFrein(db)).enPause;
+}
+
+/**
+ * Pose ou lève le frein : un geste de Marc, jamais de LIA. UNE ligne, créée au premier geste. Ce geste n'entre pas
+ * au journal des actions de LIA : ce n'est pas une action d'elle, et l'heure du dernier geste est dans la ligne.
+ */
+export async function poserFrein(db: Base, enPause: boolean, maintenant: Date): Promise<void> {
+  await db
+    .insert(freinLia)
+    .values({ id: "frein", enPause, changeLe: maintenant })
+    .onConflictDoUpdate({ target: freinLia.id, set: { enPause, changeLe: maintenant } });
 }
 
 /** Une ligne au journal. Ne lève jamais : l'action a eu lieu (ou non) quoi que dise le journal. */
@@ -64,6 +82,20 @@ export async function consigner(db: Base, maintenant: Date, action: CleAction, i
   } catch (err) {
     console.error("[autonomie] journal non écrit", err instanceof Error ? err.name : "erreur");
   }
+}
+
+/**
+ * Ce que LIA a fait seule ce jour (`AAAA-MM-JJ` de Québec), le plus récent d'abord. Une ligne dont l'action ou
+ * l'issue n'est pas connue du code est écartée : on ne montre pas ce qu'on ne sait pas nommer.
+ */
+export async function lireJournalDuJour(db: Base, jour: string): Promise<LigneLue[]> {
+  const lignes = await db
+    .select({ instant: actionsLia.instant, action: actionsLia.action, raison: actionsLia.raison, n: actionsLia.n, issue: actionsLia.issue })
+    .from(actionsLia)
+    .where(eq(actionsLia.jour, jour))
+    .orderBy(desc(actionsLia.instant))
+    .limit(LIGNES_DU_JOUR_MAX);
+  return lignes.flatMap((l) => (estAction(l.action) && estIssue(l.issue) ? [{ instant: l.instant, action: l.action, raison: l.raison, n: l.n, issue: l.issue }] : []));
 }
 
 /**

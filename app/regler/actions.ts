@@ -1,5 +1,6 @@
 "use server";
 // app/regler/actions.ts — [L27] « Comment Lia te parle » : Marc écrit la VOIX de Lia (ADR 0005 A4).
+// Et le FREIN de son autonomie (ADR 0032, tâche MemoryAI 283) : Marc le pose et le lève, LIA jamais.
 //
 // ⚠️ Chaque Server Action revérifie la session ET passe par le dépôt, qui valide (`nettoyerVoix` :
 // 600 caractères, ni balise ni URL). L'écran ne valide rien à lui seul : un appel direct de
@@ -12,11 +13,15 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { depotAdminDrizzle } from "@/lib/depotAdmin";
+import { poserFrein } from "@/lib/lia/journal";
 import { accesDonnees } from "@/lib/pageDonnees";
 import { requireSession } from "@/lib/session";
 
 /** Les issues possibles, lues par la page. Liste fermée. */
 export type IssueVoix = "ok" | "efface" | "trop_long" | "balise" | "url" | "refus";
+
+/** Ce qu'un geste sur le frein a fait, lu par la page. Liste fermée. */
+export type IssueFrein = "pose" | "leve";
 
 function codeDuRefus(raison: string): IssueVoix {
   if (raison.startsWith("plus de")) return "trop_long";
@@ -38,4 +43,21 @@ export async function reglerVoixAction(fd: FormData): Promise<void> {
 
   revalidatePath("/regler");
   redirect(`/regler?voix=${r.effacee ? "efface" : "ok"}`);
+}
+
+/** Pose (`pause` = "1") ou lève ("0") le frein de l'autonomie de LIA. Toute autre valeur est refusée. */
+export async function freinLiaAction(fd: FormData): Promise<void> {
+  await requireSession();
+  const brut = fd.get("pause");
+  if (brut !== "0" && brut !== "1") throw new Error("pause manquante");
+
+  const acces = await accesDonnees();
+  if (!acces.ok) throw new Error(acces.manque === "base" ? "base absente" : "clé absente");
+
+  await poserFrein(acces.db, brut === "1", new Date());
+
+  const issue: IssueFrein = brut === "1" ? "pose" : "leve";
+  revalidatePath("/regler");
+  revalidatePath("/");
+  redirect(`/regler?frein=${issue}`);
 }
