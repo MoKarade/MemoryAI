@@ -1,10 +1,11 @@
 # ADR 0031 — Tout ce qui sort des apps arrive chez LIA, par une porte à jeton par app
 
-- **Statut** : **proposé** (26/10/2026, fil MemoryAI). Il répond à la demande de Marc du 26/10 à
+- **Statut** : **accepté** (26/10/2026, fil MemoryAI ; OK de Marc le 26/10 à 18:18Z, carte « Oui, tel
+  quel », planchers de niveau et rétention compris). Il répond à la demande de Marc du 26/10 à
   14:46Z (« accès à littéralement tout ce qui sort des apps ») et à sa carte de 14:50Z (LIA voit tout,
   FinanceAI incluse en niveau 3 verrouillé, et agit aussi dans les apps). Tâche : MemoryAI#281, dans la
-  mission .github#575. Le code attend l'OK de Marc sur ce texte (protocole, `docs/claude/11-protocole.md`) :
-  ce sont des données de Marc qui entrent, et la frontière d'écriture s'élargit.
+  mission .github#575. Ce sont des données de Marc qui entrent et la frontière d'écriture s'élargit :
+  c'est pourquoi le texte a attendu son OK (protocole, `docs/claude/11-protocole.md`).
 - **Amont** : ADR 0001 (frontière, niveaux), ADR 0007 et 0011 (niveau 3 sous deux verrous), ADR 0015
   (le jeton dit qui écrit), ADR 0029 (l'agenda, même forme de porte), ADR 0019 (sauvetage).
 
@@ -68,7 +69,7 @@ une instruction.
      plancher de l'app)`. Une app ne descend jamais un niveau.
    - **Rien d'autre** : une clé en trop est ignorée et nommée dans `ignores`. Un événement hors forme
      est refusé seul, compté dans `refuses` avec son index et un code fermé ; les autres passent.
-3. **Planchers de niveau par app** [À valider par Marc, à ajuster sur sa réponse] :
+3. **Planchers de niveau par app** (validés par Marc le 26/10 à 18:18Z) :
 
    | app | plancher | pourquoi |
    |---|---|---|
@@ -85,8 +86,8 @@ une instruction.
      Un texte qui ne se déchiffre pas est compté, jamais montré.
    - `sorties_refus` : `jour`, `code`, `n`. C'est le compteur de refus et de dépassements de taille ;
      il ne garde ni texte ni app.
-   - **Rétention** [À valider par Marc] : 180 jours et 2 000 sorties par app ; la plus ancienne part
-     la première. Le passage quotidien existant (cron d'apprentissage) purge.
+   - **Rétention** (validée par Marc le 26/10 à 18:18Z) : 180 jours et 2 000 sorties par app ; la plus
+     ancienne part la première. Le passage quotidien existant (cron d'apprentissage) purge.
    - **Ni dans `faits`, ni dans l'apprentissage.** Une sortie est un événement daté, pas un fait
      durable : aucun modèle n'en tire de fait dans ce lot.
 5. **La réponse 200** : `{ recus, ecrits, doublons, refuses: [{ index, code }], ignores: [noms de clés] }`.
@@ -123,4 +124,3 @@ une instruction.
 - Côté chaque app : l'envoi lui-même (quoi pousser, à quel rythme), une tâche par dépôt, après le
   déploiement de la porte.
 - Un chemin d'oubli (Hubperso#450) viderait aussi `sorties` pour une app ou un type, à la demande de Marc.
-- Les planchers et la rétention du §3 et du §4, à ajuster sur sa réponse.
