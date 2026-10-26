@@ -174,6 +174,7 @@ export function tableauBudget(b: EntreesBudget | null): Tableau {
           },
         ],
       },
+      // Plus de lien vers la page Dépenses (Marc, 26/10, tâche MemoryAI 320) : l'histogramme suffit.
       {
         cle: "trente",
         largeur: 12,
@@ -187,7 +188,6 @@ export function tableauBudget(b: EntreesBudget | null): Tableau {
                 resume: `Dépense de chacun des ${trente.length} derniers jours qui en portent une.`,
                 unite: "$ US",
               },
-              { genre: "texte", texte: "Le détail, jour par jour et poste par poste :", lien: { href: "/depenses", libelle: "Toutes les dépenses" } },
             ]
           : [vide("Aucune dépense enregistrée pour l'instant.")],
       },
@@ -234,7 +234,6 @@ export function tableauBudget(b: EntreesBudget | null): Tableau {
               { libelle: "0 $ met en pause", detail: "un plafond existe toujours, il ne se désactive pas" },
             ],
           },
-          { genre: "texte", texte: "Les plafonds se règlent dans Dépenses.", lien: { href: "/depenses", libelle: "Régler les plafonds" } },
         ],
       },
     ],
