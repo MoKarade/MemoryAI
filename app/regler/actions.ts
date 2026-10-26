@@ -20,6 +20,9 @@ import { requireSession } from "@/lib/session";
 /** Les issues possibles, lues par la page. Liste fermée. */
 export type IssueVoix = "ok" | "efface" | "trop_long" | "balise" | "url" | "refus";
 
+/** Ce qu'un geste sur le frein a fait, lu par la page. Liste fermée. */
+export type IssueFrein = "pose" | "leve";
+
 function codeDuRefus(raison: string): IssueVoix {
   if (raison.startsWith("plus de")) return "trop_long";
   if (raison === "balise") return "balise";
@@ -53,7 +56,8 @@ export async function freinLiaAction(fd: FormData): Promise<void> {
 
   await poserFrein(acces.db, brut === "1", new Date());
 
+  const issue: IssueFrein = brut === "1" ? "pose" : "leve";
   revalidatePath("/regler");
   revalidatePath("/");
-  redirect(`/regler?frein=${brut === "1" ? "pose" : "leve"}`);
+  redirect(`/regler?frein=${issue}`);
 }
