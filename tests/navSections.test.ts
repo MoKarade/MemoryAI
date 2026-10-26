@@ -34,8 +34,16 @@ const fichiersApp = execSync("git ls-files --cached --others --exclude-standard 
  * absence est un oubli. ⚠️ Contrôle ANTI-FANTÔME plus bas : une exemption qui ne correspond
  * plus à rien doit rougir, sinon la liste survit à son objet.
  */
+const ANCIENNE_PAGE =
+  "page d'avant la maison de LIA : retirée du menu par Marc le 26/10 (tâche MemoryAI 320), elle reste ouverte par son adresse";
+
 const HORS_BARRE: Record<string, string> = {
   fait: "une FICHE s'ouvre depuis n'importe où : elle n'est pas une section, donc elle n'allume rien",
+  chercher: ANCIENNE_PAGE,
+  pieces: ANCIENNE_PAGE,
+  avancement: ANCIENNE_PAGE,
+  depenses: ANCIENNE_PAGE,
+  conversations: ANCIENNE_PAGE,
 };
 
 /** Les `href` réellement écrits dans `SECTIONS`. */

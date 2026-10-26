@@ -89,6 +89,13 @@ que s'il y a des cartes. En bas : deux ou trois suggestions et la saisie. Pas de
 
 `/graphe` disparaît (`[L26c]`). Les explications longues passent derrière un « ? » (`[L26d]`).
 
+> **Mis à jour le 26/10/2026 (Marc, tâche MemoryAI 320) :** le menu livré n'a que cinq entrées —
+> Lia, Parler, Mémoire, Questions, Réglages (`SECTIONS` dans `components/Nav.tsx`). « Ce qu'elle
+> sait », « Lecture des papiers », « Dépenses » et « Anciennes conversations » n'y sont plus, et la
+> maison de LIA (Souvenirs, Budget) ne renvoie plus vers leurs pages. Les pages `/pieces`,
+> `/avancement`, `/depenses` et `/conversations` existent toujours, ouvertes par leur adresse.
+> Le tableau ci-dessus est le brief d'origine, gardé pour l'historique.
+
 ## 5. Les contraintes qui ne bougent pas (et leurs gardes)
 
 - `tests/gardePages.test.ts` : toute page appelle `requireSession()` et déclare
