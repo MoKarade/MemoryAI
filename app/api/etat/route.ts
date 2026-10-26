@@ -1,6 +1,6 @@
 // app/api/etat/route.ts — CE QUE LA MÉMOIRE SAIT, EN CHIFFRES, POUR UNE APP QUI L'ALIMENTE.
 //
-// ── POURQUOI CETTE ROUTE EXISTE ───────────────────────────────────────────────────────────
+// ── POURQUOI CETTE ROUTE EXISTE ───────────────────────────────────────────────────────────────────
 //
 // Marc, le 23/09/2026, devant l'onglet « Lecture » de DriveAI : « manque aussi des infos sur
 // la vitesse, sur ce qu'il reste, sur ce qui est validé SÉPARÉMENT par driveai et memory ai —
@@ -11,7 +11,7 @@
 // laisse croire que l'autre n'existe pas. Cette route donne à l'appelant l'autre moitié —
 // et rien d'autre.
 //
-// ── CE QUI SORT, ET CE QUI NE SORT PAS ────────────────────────────────────────────────────
+// ── CE QUI SORT, ET CE QUI NE SORT PAS ─────────────────────────────────────────────────────────────
 //
 // Des NOMBRES. Aucun fait, aucun papier, aucun nom de fichier, aucun domaine, aucune date de
 // document. La frontière de l'ADR 0001 n'est pas élargie d'un pouce : on publie des comptes
@@ -44,6 +44,7 @@ import { comptesAgenda } from "@/lib/agenda/depot";
 import { jourQuebec } from "@/lib/coutChat";
 import { papiersVraisParLia } from "@/lib/pieces/depotRelecture";
 import { valideesParLia } from "@/lib/relectureLia";
+import { comptesSorties } from "@/lib/sorties/retention";
 
 export const dynamic = "force-dynamic";
 
@@ -73,8 +74,10 @@ export async function GET(request: Request): Promise<Response> {
   const parLia = { faits: await valideesParLia(db), papiers: await papiersVraisParLia(db) };
   // L'agenda du jour (ADR 0029) : un compte, jamais un titre.
   const agenda = await comptesAgenda(db, jourQuebec(new Date()));
+  // Ce qui sort des apps (ADR 0031) : deux nombres globaux, jamais par app.
+  const sorties = await comptesSorties(db, new Date());
 
   // ⚠️ La composition est PURE et vit dans `lib/etatPublic.ts` : c'est elle que les tests
   // perturbent, sans base. Une seconde mise en forme écrite ici serait « une règle et demie ».
-  return Response.json(composerEtatPublic(faits, papiers, extracteurs, estGele(), parLia, agenda), { headers: NO_STORE });
+  return Response.json(composerEtatPublic(faits, papiers, extracteurs, estGele(), parLia, agenda, sorties), { headers: NO_STORE });
 }

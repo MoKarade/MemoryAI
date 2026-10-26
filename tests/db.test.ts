@@ -141,6 +141,8 @@ describe("les trente tables", () => {
       "sauvetage_etat",
       // [ADR 0031] Ce qui sort des apps, une ligne par événement, titre et résumé chiffrés (migration 0035).
       "sorties",
+      // [ADR 0031] Ce que la porte des sorties a refusé, un nombre par jour et par code (migration 0036).
+      "sorties_refus",
       "sujets",
       // [ADR 0025] La trace des relectures de LIA (migration 0030).
       "validations_lia",

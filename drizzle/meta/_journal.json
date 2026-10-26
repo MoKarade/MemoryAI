@@ -253,6 +253,13 @@
       "when": 1791158400035,
       "tag": "0035_sorties",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1791158400036,
+      "tag": "0036_sorties_refus",
+      "breakpoints": true
     }
   ]
 }
