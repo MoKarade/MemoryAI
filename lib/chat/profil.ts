@@ -30,6 +30,8 @@ const VALEUR_MAX_CARACTERES = 160;
  * puis ses goûts. Tous de niveau 0 ou 1 dans le vocabulaire (`tests/profil.test.ts` le vérifie).
  */
 export const PREDICATS_PROFIL: readonly string[] = [
+  // ADR 0023 : déduit des papiers ; au niveau 1, LIA le dit partout (« Niveau de l'âge »).
+  "profil.age",
   "preference.communication",
   "preference.langue",
   "preference.horaire",

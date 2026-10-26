@@ -41,6 +41,8 @@ export const PREDICATS_JAMAIS_DEMANDES: ReadonlySet<string> = new Set([
   "relation.lien",
   "famille.enfant",
   "logement.adresse",
+  // Déduit des papiers par une règle (ADR 0023) : le demander ferait taper à Marc ce qu'on calcule.
+  "profil.age",
 ]);
 
 /** Santé, famille, goûts d'abord (décision de Marc) ; le reste suit dans l'ordre du vocabulaire. */

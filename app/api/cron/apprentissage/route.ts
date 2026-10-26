@@ -25,6 +25,7 @@ import { passeApprentissage, passeVide, MOTIFS_FIN_PASSE, type ResultatPasse } f
 import { depotConversationsDrizzle } from "@/lib/conversations/depot";
 import { MODELE_DEFAUT } from "@/lib/coutChat";
 import { comptesParPredicatValides, depotAdminDrizzle } from "@/lib/depotAdmin";
+import { passeDeduction, sourcesDeduction, type ResultatDeduction } from "@/lib/deductionPasse";
 import { depotDrizzle } from "@/lib/depotFaits";
 import { depotLectureDrizzle } from "@/lib/depotLecture";
 import { depotQuestionsDrizzle } from "@/lib/depotQuestions";
@@ -46,8 +47,8 @@ function memeSecret(a: string, b: string): boolean {
   return timingSafeEqual(ha, hb);
 }
 
-function rendre(r: ResultatPasse, banc: FinPasseBanc | "echec" | null = null): Response {
-  return Response.json({ ...r, motif: MOTIFS_FIN_PASSE[r.fin], banc }, { status: 200, headers: NO_STORE });
+function rendre(r: ResultatPasse, banc: FinPasseBanc | "echec" | null = null, deduction: ResultatDeduction | "echec" | null = null): Response {
+  return Response.json({ ...r, motif: MOTIFS_FIN_PASSE[r.fin], banc, deduction }, { status: 200, headers: NO_STORE });
 }
 
 export async function POST(req: Request): Promise<Response> {
@@ -87,8 +88,25 @@ export async function POST(req: Request): Promise<Response> {
     banc = "echec";
   }
 
+  // Les faits déduits (ADR 0023, tâche MemoryAI 185) : une règle, aucun modèle, donc AVANT la clé
+  // Anthropic aussi. Même contrat que le banc : un échec se voit (`deduction: "echec"`), il ne
+  // bloque rien. Une passe par jour suffit : l'âge ne change qu'une fois par an.
+  let deduction: ResultatDeduction | "echec";
+  try {
+    deduction = await passeDeduction({
+      sources: sourcesDeduction(acces.db, depotPiecesLectureDrizzle(acces.db), acces.cle),
+      faits: depotDrizzle(acces.db),
+      admin: depotAdminDrizzle(acces.db),
+      cle: acces.cle,
+      maintenant: new Date(),
+    });
+  } catch (err) {
+    console.error("[deduction] passe impossible", err);
+    deduction = "echec";
+  }
+
   const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
-  if (!apiKey) return rendre(passeVide("cle-absente"), banc);
+  if (!apiKey) return rendre(passeVide("cle-absente"), banc, deduction);
 
   const anthropic = new Anthropic({ apiKey });
   const r = await passeApprentissage({
@@ -135,7 +153,7 @@ export async function POST(req: Request): Promise<Response> {
     // ADR 0025 : LIA valide seule ce que deux signaux confirment ; ses comptes sortent dans la réponse.
     relecture: depotRelectureDrizzle(acces.db),
   });
-  return rendre(r, banc);
+  return rendre(r, banc, deduction);
 }
 
 /**
