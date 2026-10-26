@@ -1,6 +1,7 @@
 # ADR 0029 — L'agenda du jour arrive de DriveAI, par une porte à lui, et ne garde que deux jours
 
-- **Statut** : **proposé** (26/10/2026, fil MemoryAI). Il répond à la demande de Marc du 25/10 à
+- **Statut** : **proposé** (26/10/2026, fil MemoryAI) ; **OK de Marc côté MemoryAI** le 26/10 à
+  12:15Z (carte « Je code l'agenda du jour comme dans l'ADR 0029 ? » → « Oui, comme proposé »). Il répond à la demande de Marc du 25/10 à
   20:21Z (« Jveux tout ça », capture « Aujourd'hui »). Tâches : MemoryAI#236 et sa jumelle
   DriveAI#679. Le code des deux côtés attend l'OK de Marc (protocole, `docs/claude/11-protocole.md`) :
   c'est une donnée de Marc qui entre.
@@ -77,9 +78,14 @@ une donnée de niveau 3 (un rendez-vous médical ou d'immigration) et il peut re
    idempotent.
 4. **La réponse 200** : `{ jour, recus, ecrits, refuses: [{ index, code }], ignores: [noms de clés],
    remplaces }`. Que des nombres et des codes : aucun titre ne revient.
-5. **Le stockage** : une table `agenda` (migration additive) avec `jour`, `debut`, `duree_min`,
-   `journee_entiere`, `titre` **chiffré au niveau 2** (AAD `agenda|<jour>|<index>`), `lu_le`, `recu_le`
-   et `app`.
+5. **Le stockage** (migration additive 0032, précisée au code le 26/10) : deux tables.
+   - `agenda_envois` : une ligne par jour (`jour`, `envoi`, `app`, `nombre`, `lu_le`, `recu_le`).
+     C'est le point de bascule : le pilote HTTP de Neon n'a pas de transaction, donc les événements
+     du nouvel envoi entrent d'abord, puis la ligne du jour bascule sur lui, puis l'ancien envoi
+     s'efface. Coupé au milieu, l'agenda reste celui d'avant.
+   - `agenda_evenements` : `envoi`, `jour`, `position`, `debut`, `duree_min`, `journee_entiere` et le
+     `titre` **chiffré au niveau 2** (AAD `agenda|<envoi>|<position>`). Un titre qui ne se déchiffre
+     pas est compté, jamais montré.
    - **Deux jours au plus** : chaque envoi efface les jours antérieurs à la veille. Un agenda n'est pas
      une mémoire ; il ne va ni dans `faits`, ni dans l'apprentissage, ni dans la recherche.
    - `GET /api/etat` rend seulement le compte et `lu_le` du jour, jamais un titre.
