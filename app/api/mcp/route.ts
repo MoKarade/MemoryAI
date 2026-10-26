@@ -30,6 +30,7 @@ import { traiterMessage, type MessageJsonRpc } from "@/lib/mcp/protocole";
 import { assurerMigrations } from "@/lib/migrations";
 import { depotBancDrizzle } from "@/lib/banc/passe";
 import { depotPiecesLectureDrizzle } from "@/lib/pieces/depotLecture";
+import { depotSortiesDrizzle } from "@/lib/sorties/lecture";
 
 export const dynamic = "force-dynamic";
 
@@ -91,6 +92,7 @@ export async function POST(request: Request): Promise<Response> {
     questions: depotQuestionsDrizzle(db),
     conversations: depotConversationsDrizzle(db),
     notes: depotNotesLiaDrizzle(db, cle),
+    sorties: depotSortiesDrizzle(db, cle),
     cle,
     env: process.env,
     lecteur: "claude-ai",

@@ -74,7 +74,8 @@ function nettoyerLigne(v: unknown, min: number, max: number): string | null {
   return t.length >= min && t.length <= max ? t : null;
 }
 
-function instant(v: unknown): Date | null {
+/** Un instant ISO AVEC décalage, ou `null`. Une seule définition : la porte d'écriture et l'outil de lecture s'en servent. PURE. */
+export function instant(v: unknown): Date | null {
   if (typeof v !== "string" || !INSTANT.test(v)) return null;
   const d = new Date(v);
   return Number.isNaN(d.getTime()) ? null : d;
