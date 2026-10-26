@@ -73,6 +73,8 @@ export const ROUTES_A_AUTH_PROPRE = [
    * manque côté serveur, 401 s'il est faux : la distinction EST le diagnostic.
    */
   "/api/cron/apprentissage",
+  /** L'horloge du réseau (tâche MemoryAI 186) : même secret dédié, même garde, mêmes codes. */
+  "/api/cron/reseau",
   /**
    * LIA répond au hub, et par lui à toutes les apps (ADR 0016). `x-hub-token` seul, en temps
    * constant ; propriétaire seul (`proprietaire: true` dit par le hub), niveaux 0 et 1, outils

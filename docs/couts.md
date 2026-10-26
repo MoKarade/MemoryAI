@@ -20,6 +20,7 @@ Règle : ajouter ou accélérer un cron = mettre ce tableau à jour dans la mêm
 - `ci.yml` : audit hebdomadaire (`0 12 * * 1`).
 - `apprentissage.yml` : `0 */3 * * *` (8 passages par jour). Fonctionnel (la mémoire apprend des conversations) : NON modifié par cette PR, décision de Marc requise pour le réduire.
 - `vercel.json` : `/api/cron/apprentissage` à 09:00 (fonctionnel), inchangé.
+- `vercel.json` : `/api/cron/reseau` à 10:27 UTC (26/10, tâche MemoryAI 186 B) : recalcul des liens et liens devinés. Le modèle (≈ 280 Mo) tourne dans la fonction : aucun appel payant, seulement son téléchargement depuis Hugging Face (gratuit) et le temps de la fonction, dans le plan gratuit.
 
 ## Quota Claude
 - Taille du CLAUDE.md : 36 lignes, 3,4 Ko (plafond 60 lignes, 10 Ko), contre 864 lignes et 74 Ko avant (le détail est dans `docs/claude/`). Chaque session le charge : économie directe de quota.

@@ -462,7 +462,7 @@ export const messages = pgTable(
  * réseau plus relié (tâche MemoryAI 186). FERMÉE comme le vocabulaire : un type inconnu n'entre
  * pas en base. La colonne est un `text` sans CHECK : en ajouter ne demande aucune migration.
  */
-export const TYPES_LIEN = [
+export const TYPES_LIEN_REGLE = [
   "meme-document",
   "meme-periode",
   "remplacement",
@@ -473,6 +473,11 @@ export const TYPES_LIEN = [
   "meme-emetteur",
   "dates-proches",
 ] as const;
+/**
+ * Tous les types : ceux des règles, et celui que pose le petit modèle (tâche MemoryAI 186, partie
+ * B), toujours avec `origine: "modele"`.
+ */
+export const TYPES_LIEN = [...TYPES_LIEN_REGLE, "sens-proche"] as const;
 /** Une règle POSE, un modèle DEVINE. Les deux ne se confondent jamais à l'écran (ADR §5.3). */
 export const ORIGINES_LIEN = ["regle", "modele"] as const;
 /** Ce que l'extrémité B désigne : un autre fait, ou la question qui a produit celui-ci. */

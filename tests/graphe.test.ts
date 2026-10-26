@@ -17,7 +17,7 @@ import {
   JOURS_PROCHES,
   type FaitPourGraphe,
 } from "../lib/graphe";
-import { TYPES_LIEN } from "../lib/db/schema";
+import { TYPES_LIEN_REGLE } from "../lib/db/schema";
 
 function fait(p: Partial<FaitPourGraphe> & { id: string }): FaitPourGraphe {
   return {
@@ -55,7 +55,8 @@ describe("les types de lien du code et ceux de la base disent la même chose", (
     );
     // Toutes les règles sont atteignables par ce corpus : si l'une cessait de
     // l'être, on la croirait vivante sans qu'aucun test ne la joue.
-    expect([...calcules].sort()).toEqual([...TYPES_LIEN].sort());
+    // `sens-proche` n'est pas une règle d'ici : `tests/sensProche.test.ts` le joue.
+    expect([...calcules].sort()).toEqual([...TYPES_LIEN_REGLE].sort());
   });
 });
 

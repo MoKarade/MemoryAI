@@ -43,4 +43,17 @@ describe("cron d'apprentissage : la méthode que Vercel emploie", () => {
     expect((await route.GET(faux)).status).toBe(401);
     expect((await route.GET(new Request(url))).status).toBe(401);
   });
+
+  it("l'horloge du réseau porte la même garde (tâche MemoryAI 186)", async () => {
+    const route = await import("../app/api/cron/reseau/route");
+    const url = "https://memoryai.hubperso.com/api/cron/reseau";
+
+    vi.stubEnv("CRON_SECRET", "");
+    expect((await route.GET(new Request(url))).status).toBe(503);
+
+    vi.stubEnv("CRON_SECRET", "le-bon");
+    const faux = new Request(url, { headers: { authorization: "Bearer le-mauvais" } });
+    expect((await route.GET(faux)).status).toBe(401);
+    expect((await route.POST(new Request(url))).status).toBe(401);
+  });
 });
