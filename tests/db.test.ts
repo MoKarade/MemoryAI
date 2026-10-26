@@ -134,7 +134,7 @@ describe("les trente tables", () => {
       "predicats_refuses",
       "provenances",
       "questions",
-      // [ADR 0026] Les secondes lectures des pièces par DriveAI (migration 0031).
+      // [ADR 0026] Les secondes lectures des papiers par DriveAI (migration 0031).
       "relectures_pieces",
       // [ADR 0019] Les échecs du sauvetage (des raisons, jamais une valeur) et son état.
       "sauvetage_echecs",
