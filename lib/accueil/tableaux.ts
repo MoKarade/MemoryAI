@@ -6,6 +6,7 @@
 // place, avec son titre et son icône. ⚠️ NO FAKE DATA : une tuile sans donnée réelle se dessine
 // VIDE (`genre: "vide"`), avec une ligne qui dit ce qui manque ; jamais un chiffre de la maquette.
 
+import type { AgendaDuJour } from "@/lib/agenda/depot";
 import { jourQuebec, POSTES, type Poste } from "@/lib/coutChat";
 import { FUSEAU } from "@/lib/fuseau";
 import { heureQuebec, libelleLecteur } from "@/lib/memoire/acces";
@@ -410,12 +411,51 @@ function corpsRelances(r: Relances | null | undefined): Corps[] {
   ];
 }
 
+/** L'agenda tel que la page le lit : reçu, pas reçu aujourd'hui, `null` sans base, absent : non lu. */
+export type LectureAgenda = AgendaDuJour | "non-recu";
+
+/** Au-delà, la tuile dit combien d'autres événements suivent. */
+export const LIGNES_AGENDA = 8;
+
+/** « 45 min », « 2 h », « 1 h 30 », « sans durée ». */
+export function dureeAgenda(min: number): string {
+  if (min <= 0) return "sans durée";
+  if (min < 60) return `${min} min`;
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return m ? `${h} h ${String(m).padStart(2, "0")}` : `${h} h`;
+}
+
+function corpsAgenda(a: LectureAgenda | null | undefined): Corps[] {
+  if (a === undefined) return [vide("Ton agenda du jour n'est pas encore lu ici.")];
+  if (a === null) return [vide("La base ne répond pas : ton agenda n'est pas lisible.")];
+  if (a === "non-recu") return [vide("DriveAI n'a pas envoyé ton agenda aujourd'hui.")];
+  const lu: Corps = {
+    genre: "texte",
+    texte: `Lu par DriveAI ${quandQuebec(a.luLe, a.jour)}.${a.illisibles ? ` ${a.illisibles} titre${a.illisibles > 1 ? "s" : ""} illisible${a.illisibles > 1 ? "s" : ""}, non montré${a.illisibles > 1 ? "s" : ""}.` : ""}`,
+  };
+  if (a.evenements.length === 0) return [vide("Rien de prévu aujourd'hui."), lu];
+  const reste = a.evenements.length - LIGNES_AGENDA;
+  const elements: { libelle: string; detail?: string }[] = a.evenements.slice(0, LIGNES_AGENDA).map((e) =>
+    e.journeeEntiere
+      ? { libelle: `Toute la journée · ${e.titre}` }
+      : { libelle: `${HEURE_MINUTE.format(e.debut).replace(":", " h ")} · ${e.titre}`, detail: dureeAgenda(e.dureeMin) },
+  );
+  if (reste > 0) elements.push({ libelle: `Et ${reste} autre${reste > 1 ? "s" : ""}` });
+  return [{ genre: "liste", elements }, lu];
+}
+
 /**
  * Sa journée : ses lectures du jour (journal d'accès, le plus récent d'abord ; `null` sans base),
  * puis son temps et ce qu'elle surveille (`activite` ; `null` sans base, absent : non lus), et les
- * relances (`relances`, mêmes conventions). Ton agenda n'a pas encore de source.
+ * relances (`relances`, mêmes conventions) et l'agenda du jour envoyé par DriveAI (`agenda`, ADR 0029).
  */
-export function tableauJournee(lectures: readonly { ts: Date; lecteur: string; outil: string }[] | null, activite?: ActiviteDuJour | null, relances?: Relances | null): Tableau {
+export function tableauJournee(
+  lectures: readonly { ts: Date; lecteur: string; outil: string }[] | null,
+  activite?: ActiviteDuJour | null,
+  relances?: Relances | null,
+  agenda?: LectureAgenda | null,
+): Tableau {
   const panne = vide("La base ne répond pas : le journal du jour n'est pas lisible.");
   const rien = vide("Aucune lecture aujourd'hui.");
   const parHeure = Array.from({ length: 24 }, (_, h) => (lectures ?? []).filter((l) => heureQuebec(l.ts) === h).length);
@@ -456,7 +496,7 @@ export function tableauJournee(lectures: readonly { ts: Date; lecteur: string; o
       },
       { cle: "temps", largeur: 12, icone: "globe", titre: "Son temps", repliee: true, corps: [temps] },
       { cle: "relances", largeur: 5, icone: "bell", titre: "Relances", repliee: true, corps: corpsRelances(relances) },
-      { cle: "aujourdhui", largeur: 6, icone: "cal", titre: "Aujourd'hui", corps: [vide("Ton agenda du jour viendra avec l'agenda.")] },
+      { cle: "aujourdhui", largeur: 6, icone: "cal", titre: "Aujourd'hui", corps: corpsAgenda(agenda) },
       { cle: "surveille", largeur: 6, icone: "eye", titre: "Ce qu'elle surveille", repliee: true, corps: [surveille] },
     ],
   };

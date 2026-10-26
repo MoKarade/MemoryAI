@@ -9,7 +9,7 @@ import type { Poste } from "@/lib/coutChat";
 import { MAX_BLOCS } from "@/lib/lia/blocs";
 import type { LectureMeteo, Meteo } from "@/lib/monde/meteo";
 import type { Actualite } from "@/lib/monde/actualite";
-import { LECTURES_DU_JOUR_MAX, LIBELLE_OUTIL, tableauBudget, tableauFormes, tableauIdees, tableauJournee, tableauMonde, tableauOutils, tableauSante, tableauSouvenirs, type ActiviteDuJour, type EntreesBudget, type Relances, type Tableau } from "./tableaux";
+import { LECTURES_DU_JOUR_MAX, LIBELLE_OUTIL, tableauBudget, tableauFormes, tableauIdees, tableauJournee, tableauMonde, tableauOutils, tableauSante, tableauSouvenirs, type ActiviteDuJour, type EntreesBudget, type LectureAgenda, type Relances, type Tableau } from "./tableaux";
 
 export const IDS_ESPACES = ["souvenirs", "sante", "journee", "idees", "monde", "budget", "outils", "formes"] as const;
 export type IdEspace = (typeof IDS_ESPACES)[number];
@@ -79,6 +79,8 @@ export interface EntreesEspaces {
   activite?: ActiviteDuJour | null;
   /** Les échéances lues dans les papiers (Relances) ; null sans base, absentes : non lues. */
   relances?: Relances | null;
+  /** L'agenda du jour envoyé par DriveAI (ADR 0029) ; null sans base, absent : non lu. */
+  agenda?: LectureAgenda | null;
 }
 
 const LIBELLE_POSTE: Record<Poste, string> = { chat: "Parler", apprentissage: "Apprendre" };
@@ -121,7 +123,7 @@ function ditBudget(b: NonNullable<EntreesEspaces["budget"]>): string {
 
 /** Sa journée : ce qu'elle a fait aujourd'hui, compté dans ses journaux (tâche MemoryAI 232). */
 function journee(e: EntreesEspaces): ContenuEspace {
-  const tableau = tableauJournee(e.lectures ?? null, e.activite, e.relances);
+  const tableau = tableauJournee(e.lectures ?? null, e.activite, e.relances, e.agenda);
   const a = e.activite;
   if (a === undefined) {
     return { phrase: "Elle ne tient pas encore le journal de sa journée. Il viendra quand elle agira seule.", dit: "Je ne tiens pas encore le journal de ma journée.", vide: true, tableau };
