@@ -95,12 +95,16 @@ export const LIBELLE_STATUT_QUESTION: Record<(typeof STATUTS_QUESTION)[number], 
   ecartee: "Écartées",
 };
 
-/** Comment elle apprend, étape par étape ; chaque étape nomme le code qui la fait. */
+/**
+ * Comment elle apprend, étape par étape ; chaque étape nomme le code qui la fait.
+ * ⚠️ Aucune étape ne demande à Marc de juger (tâche MemoryAI 277) : LIA tranche seule, et ne
+ * lui demande que ce qui manque ou ce qui se contredit.
+ */
 export const ETAPES: readonly { texte: string; ou: string }[] = [
   { texte: "Elle relit les conversations neuves, dès quatre messages non lus.", ou: "lib/apprentissage.ts" },
   { texte: "Elle en tire des faits proposés, jamais validés d'office.", ou: "lib/conversations/extraction.ts" },
   { texte: "Elle relit seule ce qu'elle a proposé face à sa source, et ne valide que ce que le code ET sa relecture confirment.", ou: "lib/relectureLia.ts" },
-  { texte: "Tu juges ses doutes, cinq par jour en tête de la pile, et tout le reste dans « À valider ».", ou: "app/a-valider/page.tsx" },
+  { texte: "Elle tranche seule ses papiers quand deux lectures concordent ; tu n'as rien à juger.", ou: "lib/pieces/depotRelecture.ts" },
   { texte: "Elle te demande ce qui manque encore, ou ce qui se contredit.", ou: "lib/questions/producteur.ts" },
   { texte: "Le banc mesure chaque jour ce qu'elle retrouve, sur les mêmes questions.", ou: "lib/banc/passe.ts" },
 ];

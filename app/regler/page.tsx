@@ -62,6 +62,9 @@
 // ⚠️ **À valider** reste une page : c'est un plan de travail (7 des 12 actions), pas un
 // panneau. **Liens** aussi, mais pour une autre raison : `L26c` le RETIRE après `L30`.
 //
+// ⚠️ Depuis la tâche MemoryAI 277, plus AUCUN lien de cette page ne mène à `/a-valider` : Marc ne
+// juge plus rien, et la section « À valider » ne garde que son chiffre.
+//
 // ⚠️ Et la fusion a révélé trois DOUBLONS que la séparation cachait : `/moi` affichait « À
 // valider », « Niveau 2 » et « claude.ai », que Régler porte déjà dans ses propres sections.
 // Ils ne sont pas recopiés ici — chaque fait a UNE place, et `tests/reglerFusion.test.ts`
@@ -316,9 +319,6 @@ export default async function ReglerPage({ searchParams }: { searchParams: Promi
               ? "Rien n’attend. Le canal DriveAI entre directement en validé, donc cette file reste vide même à plein régime — ce n’est pas un signe d’inactivité."
               : "Ce que la mémoire propose et que tu n’as pas encore tranché, plus les prédicats en quarantaine."}
           </p>
-          <Link href="/a-valider" className="bouton bouton-second">
-            Ouvrir la file
-          </Link>
         </details>
 
         <details className="repli">
