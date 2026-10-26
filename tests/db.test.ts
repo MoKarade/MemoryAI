@@ -87,6 +87,8 @@ describe("les trente tables", () => {
     );
     expect(r.rows.map((x) => x.table_name)).toEqual([
       "acces_journal",
+      // [ADR 0032] Ce que LIA a fait seule : des comptes et des clés fermées, jamais un contenu (migration 0037).
+      "actions_lia",
       // [ADR 0029] L'agenda du jour envoyé par DriveAI : le point de bascule et ses événements (migration 0032).
       "agenda_envois",
       "agenda_evenements",
@@ -114,6 +116,8 @@ describe("les trente tables", () => {
       "lectures_tentees",
       // [CONTRAT-etat-lia] L'état PARTAGÉ de LIA : une ligne, des nombres et des verbes (migration 0025).
       "lia_etat",
+      // [ADR 0032] Le frein de LIA : UNE ligne, absente = en marche (migration 0037).
+      "lia_frein",
       "liens",
       "messages",
       // [ADR 0024] Le cache du monde : la météo déjà lue, et quand (migration 0029).
