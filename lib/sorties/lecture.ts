@@ -17,7 +17,7 @@ type Base = PgDatabase<PgQueryResultHKT, any>;
 /** Combien de lignes au plus sont lues (et déchiffrées) par appel, avant le filtre par mots. */
 export const LECTURE_BASE_MAX = 500;
 
-export interface FiltreSorties {
+interface FiltreSorties {
   app?: string;
   type?: string;
   depuis?: Date;
@@ -40,7 +40,7 @@ export interface SortieRendue {
   recuLe: Date;
 }
 
-export interface LectureSorties {
+interface LectureSorties {
   sorties: SortieRendue[];
   /** Celles qui correspondent aux filtres, avant la limite d'affichage. */
   correspondent: number;
