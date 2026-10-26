@@ -86,6 +86,6 @@ describe("vercel.json — seule la branche principale se déploie", () => {
 
   it("garde l'ignoreCommand et le cron existants", () => {
     expect(conf.ignoreCommand).toBe("node .github/ci/ignore-command.mjs");
-    expect(conf.crons?.map((c) => c.path)).toEqual(["/api/cron/apprentissage"]);
+    expect(conf.crons?.map((c) => c.path)).toEqual(["/api/cron/apprentissage", "/api/cron/reseau"]);
   });
 });

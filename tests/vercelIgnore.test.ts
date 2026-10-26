@@ -13,8 +13,11 @@ describe("vercel.json", () => {
     expect(vercel.ignoreCommand).toBe("node .github/ci/ignore-command.mjs");
   });
 
-  it("garde le cron fonctionnel de l'apprentissage, inchangé", () => {
-    expect(vercel.crons).toEqual([{ path: "/api/cron/apprentissage", schedule: "0 9 * * *" }]);
+  it("garde le cron fonctionnel de l'apprentissage, inchangé, et celui du réseau (tâche MemoryAI 186)", () => {
+    expect(vercel.crons).toEqual([
+      { path: "/api/cron/apprentissage", schedule: "0 9 * * *" },
+      { path: "/api/cron/reseau", schedule: "27 10 * * *" },
+    ]);
   });
 });
 

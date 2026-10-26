@@ -86,7 +86,29 @@ const nextConfig = {
   reactStrictMode: true,
   // Sans cela Next empaquette le SDK Sentry côté serveur et son chargeur de crochets échoue avec
   // « Cannot find package '@sentry/server-runtime-injection' » (constaté sur app-template).
-  serverExternalPackages: ["@sentry/server-runtime-injection"],
+  // Le petit modèle du réseau (tâche MemoryAI 186 B) : sa bibliothèque charge un moteur natif
+  // (`onnxruntime-node`) qu'aucun empaquetage ne doit toucher.
+  serverExternalPackages: ["@sentry/server-runtime-injection", "@huggingface/transformers", "onnxruntime-node"],
+  // ⚠️ La borne d'une fonction Vercel est 250 Mo. `onnxruntime-node` livre les moteurs de TOUS
+  // les systèmes et ses extensions CUDA (≈ 550 Mo) : seul `linux/x64` sans GPU sert ici. Le
+  // modèle lui-même n'est pas embarqué, il se télécharge dans `/tmp` (`lib/plongement.ts`).
+  // ⚠️ La bibliothèque charge ce moteur par `createRequire` : le traçage ne le voit pas, et sans
+  // ces lignes la passe échouerait en production sur un module introuvable (mesuré au build).
+  // On n'inclut QUE le moteur `linux/x64` sans GPU : le paquet entier pèse ≈ 550 Mo (tous les
+  // systèmes, CUDA), plus que la borne de 250 Mo d'une fonction Vercel.
+  outputFileTracingIncludes: {
+    "/api/cron/reseau": [
+      "node_modules/onnxruntime-node/package.json",
+      "node_modules/onnxruntime-node/dist/*.js",
+      "node_modules/onnxruntime-node/bin/napi-v6/linux/x64/libonnxruntime.so.1",
+      "node_modules/onnxruntime-node/bin/napi-v6/linux/x64/libonnxruntime_providers_shared.so",
+      "node_modules/onnxruntime-node/bin/napi-v6/linux/x64/onnxruntime_binding.node",
+    ],
+  },
+  // La version web du moteur ne sert jamais côté serveur.
+  outputFileTracingExcludes: {
+    "/api/cron/reseau": ["node_modules/onnxruntime-web/**"],
+  },
   async headers() {
     return [
       // ⚠️ L'ORDRE COMPTE : Next applique la PREMIÈRE règle qui matche pour une clé donnée.

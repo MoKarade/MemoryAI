@@ -12,13 +12,16 @@
 // graphe qui mélange ce qui est établi et ce qui est deviné n'apprend rien à personne.
 
 import { randomUUID } from "node:crypto";
-import { and, eq, inArray, isNull, or } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, or } from "drizzle-orm";
 import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
 import { dechiffrer, type Cle } from "./chiffrement";
 import * as schema from "./db/schema";
 import type { Lien } from "./db/schema";
 import { calculerLiens, type Abstention, type FaitPourGraphe, type LienCalcule, type QuestionPourGraphe } from "./graphe";
+import type { Plongeur } from "./plongement";
+import { liensDeSens, texteAPlonger } from "./sensProche";
 import type { Attributs } from "./validerFait";
+import { definition } from "./vocabulaire";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Base = PgDatabase<PgQueryResultHKT, any>;
@@ -41,6 +44,11 @@ export interface DepotLiens {
   apercu(cle: Cle): Promise<{ liens: LienCalcule[]; abstentions: Abstention[]; faitsLus: number; illisibles: number }>;
   /** Recalcule TOUS les liens de règle. Rend ce qu'il a fait. */
   recalculer(cle: Cle, maintenant: Date): Promise<Recalcul>;
+  /**
+   * Recalcule les liens DEVINÉS (`origine: "modele"`, tâche MemoryAI 186 B) avec ce plongeur.
+   * `faitsLus` compte les faits qui avaient un texte à comparer. Ne touche jamais aux liens de règle.
+   */
+  recalculerSens(cle: Cle, maintenant: Date, plonger: Plongeur): Promise<Recalcul>;
   /** Les liens en base, bornés. Les deux origines, distinguées par leur colonne. */
   tous(limite: number): Promise<Lien[]>;
   /**
@@ -55,8 +63,10 @@ export interface DepotLiens {
    * son `fait_b` n'est même pas une clé de `faits` (pas de FK sur cette colonne).
    */
   voisinsDe(faitId: string, limite: number): Promise<Lien[]>;
-  /** Combien de liens, par type — pour dire l'état sans tout charger. */
-  comptes(): Promise<{ parType: Record<string, number>; total: number }>;
+  /** Combien de liens, par type, et combien DEVINÉS — pour dire l'état sans tout charger. */
+  comptes(): Promise<{ parType: Record<string, number>; total: number; devines: number }>;
+  /** Les liens devinés en base, les plus forts d'abord, bornés (tâche MemoryAI 186 B). */
+  devines(limite: number): Promise<Lien[]>;
 }
 
 /**
@@ -88,11 +98,8 @@ function pourGraphe(f: schema.Fait, cle: Cle): FaitPourGraphe | null {
   }
 }
 
-/**
- * Lit, déchiffre, calcule. UNE seule implémentation pour l'aperçu et le recalcul : deux
- * chemins finiraient par diverger, et l'écran montrerait un écart qui n'existe pas.
- */
-async function lireEtCalculer(db: Base, cle: Cle) {
+/** Lit et déchiffre les faits vivants, avec leurs sources. Un fait illisible est compté, jamais lu vide. */
+async function lireFaits(db: Base, cle: Cle): Promise<{ faits: FaitPourGraphe[]; illisibles: number }> {
   const rows = await db
     .select()
     .from(schema.faits)
@@ -113,6 +120,15 @@ async function lireEtCalculer(db: Base, cle: Cle) {
     if (p === null) illisibles++;
     else faits.push({ ...p, sources: sources.get(f.id) ?? [] });
   }
+  return { faits, illisibles };
+}
+
+/**
+ * Lit, déchiffre, calcule. UNE seule implémentation pour l'aperçu et le recalcul : deux
+ * chemins finiraient par diverger, et l'écran montrerait un écart qui n'existe pas.
+ */
+async function lireEtCalculer(db: Base, cle: Cle) {
+  const { faits, illisibles } = await lireFaits(db, cle);
 
   // Seules les questions RÉPONDUES portent un lien de cause : une question ouverte n'a encore
   // rien produit, et une écartée n'a rien produit du tout.
@@ -159,6 +175,36 @@ export function depotLiensDrizzle(db: Base): DepotLiens {
       return { faitsLus, illisibles, liensEcrits: aEcrire.length, abstentions };
     },
 
+    async recalculerSens(cle, maintenant, plonger) {
+      const { faits, illisibles } = await lireFaits(db, cle);
+      const aPlonger = faits.flatMap((f) => {
+        const texte = texteAPlonger(f, definition(f.predicat)?.description ?? null);
+        return texte ? [{ id: f.id, texte }] : [];
+      });
+      // Le modèle tourne AVANT toute suppression : s'il échoue, les liens devinés d'hier restent.
+      const vecteurs = aPlonger.length ? await plonger(aPlonger.map((x) => x.texte)) : [];
+      if (vecteurs.length !== aPlonger.length) throw new Error(`le modèle a rendu ${vecteurs.length} vecteurs pour ${aPlonger.length} textes`);
+      const { liens, abstentions } = liensDeSens(aPlonger.map((x, i) => ({ ...x, vecteur: vecteurs[i]! })));
+
+      await db.delete(schema.liens).where(eq(schema.liens.origine, "modele"));
+      const aEcrire = liens.map((l) => ({
+        id: randomUUID(),
+        faitA: l.faitA,
+        faitB: l.faitB,
+        cibleB: l.cibleB,
+        type: l.type,
+        poids: l.poids,
+        origine: "modele" as const,
+        regle: l.regle,
+        pourquoi: l.pourquoi,
+        creeLe: maintenant,
+      }));
+      for (let i = 0; i < aEcrire.length; i += 200) {
+        await db.insert(schema.liens).values(aEcrire.slice(i, i + 200));
+      }
+      return { faitsLus: aPlonger.length, illisibles, liensEcrits: aEcrire.length, abstentions };
+    },
+
     async tous(limite) {
       return db.select().from(schema.liens).limit(limite);
     },
@@ -177,10 +223,18 @@ export function depotLiensDrizzle(db: Base): DepotLiens {
     },
 
     async comptes() {
-      const rows = await db.select({ type: schema.liens.type }).from(schema.liens);
+      const rows = await db.select({ type: schema.liens.type, origine: schema.liens.origine }).from(schema.liens);
       const parType: Record<string, number> = {};
-      for (const r of rows) parType[r.type] = (parType[r.type] ?? 0) + 1;
-      return { parType, total: rows.length };
+      let devines = 0;
+      for (const r of rows) {
+        parType[r.type] = (parType[r.type] ?? 0) + 1;
+        if (r.origine === "modele") devines++;
+      }
+      return { parType, total: rows.length, devines };
+    },
+
+    async devines(limite) {
+      return db.select().from(schema.liens).where(eq(schema.liens.origine, "modele")).orderBy(desc(schema.liens.poids), asc(schema.liens.faitA)).limit(limite);
     },
   };
 }

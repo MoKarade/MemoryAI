@@ -67,6 +67,6 @@ export const config = {
   // Tout est protégé SAUF : l'endpoint du hub (auth par jeton), les routes Auth.js, la
   // page de login et les assets Next. Doit rester aligné avec `isPublicPath`.
   matcher: [
-    "/((?!hub/summary|api/faits$|api/pieces$|api/pieces/file$|api/pieces/relecture$|api/etat$|api/avancement$|api/conversations$|api/evenements$|api/agenda$|api/mcp$|api/cron/apprentissage$|api/ask$|api/etat-lia$|api/demandes$|api/mcp/authorize|api/mcp/token|api/mcp/register|api/mcp/meta/as|api/mcp/meta/pr|\\.well-known/oauth-authorization-server|\\.well-known/oauth-protected-resource|api/auth|login|_next/static|_next/image|favicon.ico|manifest.webmanifest|.*\\.).*)",
+    "/((?!hub/summary|api/faits$|api/pieces$|api/pieces/file$|api/pieces/relecture$|api/etat$|api/avancement$|api/conversations$|api/evenements$|api/agenda$|api/mcp$|api/cron/apprentissage$|api/cron/reseau$|api/ask$|api/etat-lia$|api/demandes$|api/mcp/authorize|api/mcp/token|api/mcp/register|api/mcp/meta/as|api/mcp/meta/pr|\\.well-known/oauth-authorization-server|\\.well-known/oauth-protected-resource|api/auth|login|_next/static|_next/image|favicon.ico|manifest.webmanifest|.*\\.).*)",
   ],
 };
