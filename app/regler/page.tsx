@@ -84,7 +84,9 @@ import { jourQuebec } from "@/lib/coutChat";
 import { estGele } from "@/lib/gel";
 import { appsConnues } from "@/lib/jetons";
 import { n2Autorise } from "@/lib/lecture";
+import type { EtatFrein } from "@/lib/lia/autonomie";
 import { LIBELLE_NIVEAU, outilsDeLia } from "@/lib/lia/catalogueOutils";
+import { lireEtatFrein } from "@/lib/lia/journal";
 import { lireEnvMcp } from "@/lib/mcp/oauth";
 import { accesDonnees, MESSAGES_MANQUE } from "@/lib/pageDonnees";
 import { depotSauvetageDrizzle } from "@/lib/sauvetage/depot";
@@ -93,7 +95,7 @@ import { depotPiecesLectureDrizzle } from "@/lib/pieces/depotLecture";
 import { totalInformations, phraseInformations, type PostesInformations } from "@/lib/totalInformations";
 import { requireSession } from "@/lib/session";
 import { VOIX_MAX_CARACTERES } from "@/lib/chat/voix";
-import { reglerVoixAction, type IssueVoix } from "./actions";
+import { freinLiaAction, reglerVoixAction, type IssueFrein, type IssueVoix } from "./actions";
 import { domaines as domainesDuVocabulaire, VERSION_COURANTE, vocabulaire } from "@/lib/vocabulaire";
 
 export const dynamic = "force-dynamic";
@@ -111,10 +113,17 @@ const MESSAGES_VOIX: Record<IssueVoix, { texte: string; ok: boolean }> = {
   refus: { texte: "Voix refusée. Rien n'a été enregistré.", ok: false },
 };
 
-export default async function ReglerPage({ searchParams }: { searchParams: Promise<{ voix?: string }> }) {
+/** Ce que la page dit après un geste sur le frein de l'autonomie (ADR 0032). */
+const MESSAGES_FREIN: Record<IssueFrein, string> = {
+  pose: "Frein posé : elle n'agit plus seule, dès sa prochaine action.",
+  leve: "Frein levé : elle reprend ses passes quotidiennes.",
+};
+
+export default async function ReglerPage({ searchParams }: { searchParams: Promise<{ voix?: string; frein?: string }> }) {
   await requireSession();
-  const { voix: issueBrute } = await searchParams;
+  const { voix: issueBrute, frein: freinBrut } = await searchParams;
   const issueVoix = issueBrute !== undefined && issueBrute in MESSAGES_VOIX ? MESSAGES_VOIX[issueBrute as IssueVoix] : null;
+  const issueFrein = freinBrut === "pose" || freinBrut === "leve" ? MESSAGES_FREIN[freinBrut] : null;
   const acces = await accesDonnees();
   const gele = estGele();
   const mcp = lireEnvMcp() !== null;
@@ -131,6 +140,15 @@ export default async function ReglerPage({ searchParams }: { searchParams: Promi
     } catch (e) {
       console.error("[regler] état du sauvetage illisible :", e instanceof Error ? e.name : "erreur");
       sauvetage = "inconnu";
+    }
+  }
+  // Le frein de l'autonomie (ADR 0032) : illisible, il est dit tel, jamais « en marche » par défaut.
+  let frein: EtatFrein | null = null;
+  if (acces.ok) {
+    try {
+      frein = await lireEtatFrein(acces.db);
+    } catch (e) {
+      console.error("[regler] frein illisible :", e instanceof Error ? e.name : "erreur");
     }
   }
   const comptes = acces.ok ? await depotLectureDrizzle(acces.db).comptes() : null;
@@ -417,6 +435,31 @@ export default async function ReglerPage({ searchParams }: { searchParams: Promi
               </div>
             ))}
           </dl>
+        </details>
+
+        {/* Tâche MemoryAI 283 (ADR 0032) — le FREIN de ce que LIA fait seule. Marc le pose et le lève ; LIA
+            jamais. Il se lit avant CHAQUE action de la passe quotidienne. Un état illisible est dit tel :
+            ce n'est pas « en marche » par défaut. Ouvert quand on vient d'agir, pour que le message se lise. */}
+        <details className="repli" open={issueFrein !== null}>
+          <summary>
+            Agir seule — <strong>{frein === null ? "état illisible" : frein.enPause ? "frein posé" : "en marche"}</strong>
+          </summary>
+          {issueFrein && <p className="bandeau succes">{issueFrein}</p>}
+          <p className="hint">
+            Chaque jour, LIA relit les faits, déduit ce qui découle de tes papiers et propose des idées, seule. Elle
+            n’efface rien, n’envoie rien hors de MemoryAI, ne touche ni à l’argent ni à un secret. Chaque action est
+            notée dans « Sa journée ». Le frein l’arrête avant sa prochaine action ; tu le lèves quand tu veux.
+          </p>
+          {acces.ok && frein !== null ? (
+            <form action={freinLiaAction} className="pile">
+              <input type="hidden" name="pause" value={frein.enPause ? "0" : "1"} />
+              <button type="submit" className="bouton">
+                {frein.enPause ? "Lever le frein" : "Poser le frein"}
+              </button>
+            </form>
+          ) : (
+            <p className="hint">Le frein n’est pas lisible : rien ne part seul tant qu’il ne l’est pas.</p>
+          )}
         </details>
 
         <details className="repli">
