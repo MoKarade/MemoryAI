@@ -3,8 +3,9 @@
 - **Statut** : **accepté** (26/10/2026). Proposé le 25/10 (fil MemoryAI) en réponse à la demande de
   Marc du 25/10 à 20:21Z (« Jveux tout ça », capture de l'espace « Idées »). **OK de Marc** le
   26/10 à 13:07Z (carte « Oui, tout, dans cet ordre »). Tâche : MemoryAI#233. Premier lot codé le
-  26/10 : la table, la règle, la passe quotidienne et les tuiles (voir « Tel que codé »). Le bouton
-  « En faire une tâche » et le suivi de l'issue (§ 4 à 6) suivent dans le lot suivant.
+  26/10 : la table, la règle, la passe quotidienne et les tuiles (voir « Tel que codé »). Deuxième
+  lot (tâche MemoryAI#338) : les gestes de Marc et le lien « En faire une tâche » (§ 4 et 5, voir
+  « Tel que codé, deuxième lot »). Le suivi de l'issue (§ 6) suit dans un lot à part.
 - **Amont** : ADR 0021 (les demandes du hub), ADR 0001 (frontière, oublis), ADR 0026 et son
   amendement du 25/10 (Marc ne juge plus rien).
 
@@ -101,10 +102,31 @@ d'une demande est une DONNÉE (ADR 0021 §3) et ne doit pas devenir une consigne
   jamais retouchée. Un nom de demande illisible est compté, jamais deviné.
 - **Écran** : `lib/idees/tableau.ts`. Les quatre tuiles gardent leur titre et leur place ; l'utilité
   s'écrit « ≈ n / 100 » avec la mention « Estimation, pas une mesure ».
-- **Pas encore là** : les gestes de Marc (§ 4), le bouton « En faire une tâche » (§ 5), le suivi de
-  l'issue (§ 6), et le retrait d'une idée quand Marc oublie la demande dont elle vient (§ 7,
-  seconde moitié : MemoryAI n'a pas encore de chemin d'oubli pour une demande, il vient avec
-  Hubperso#450).
+
+## Tel que codé (deuxième lot, 26/10/2026, tâche MemoryAI 338)
+
+- **Gestes** : `lib/idees/geste.ts` et les Server Actions de `app/idees/actions.ts`
+  (`retenirIdeeAction`, `ecarterIdeeAction`). Chaque action revérifie la session avant de lire le
+  formulaire. L'écriture est gardée par les états de départ : « retenir » part de `proposee`,
+  « écarter » part de `proposee` ou `retenue`. Un double clic, ou un geste sur une idée qui a déjà
+  changé, ne change rien et ne lève rien : l'écran se recharge à son état réel. Seuls `etat` et
+  `maj_le` bougent (jamais les raisons, l'utilité ni le nom). `faite` n'est jamais un geste : elle
+  suit l'issue liée (§ 6, pas encore là).
+- **Écran** : sous chaque idée en attente de la boîte (seulement la boîte), « Retenir » (absent
+  quand l'idée l'est déjà), « Écarter » et « En faire une tâche ». Une idée écartée sort de la
+  boîte et entre dans « Refusées, jamais reproposées », où elle ne porte aucun geste.
+- **En faire une tâche** : `lib/idees/issue.ts`, pur. C'est un lien (ouvert dans un nouvel onglet)
+  vers la page « nouvelle issue » du dépôt de l'app (hub : Hubperso, financeai : FinanceAI,
+  driveai : DriveAI, batchchef : batchchef-, carai : CarAI, jobai : JobAI, memoryai : MemoryAI),
+  avec un titre et un corps au gabarit des tâches (Avant, Après, Fini quand, Fichiers touchés,
+  Source). Aucun jeton, aucune écriture : Marc relit puis crée l'issue lui-même. ⚠️ Le corps cite
+  le nom de la demande tel que Marc l'a posée au hub : dans un dépôt public, il se relit avant
+  d'être envoyé. Une app inconnue n'a pas de lien. Le titre est coupé à 120 caractères (en
+  caractères, pas en unités UTF-16).
+- **Pas encore là** : le suivi de l'issue (§ 6) et donc `faite` ; l'adresse de l'issue créée n'est
+  pas encore gardée (la colonne `issue` reste vide) ; le retrait d'une idée quand Marc oublie la
+  demande dont elle vient (§ 7, seconde moitié : MemoryAI n'a pas encore de chemin d'oubli pour
+  une demande, il vient avec Hubperso#450).
 
 ## Ce qui reste ouvert
 
@@ -113,3 +135,5 @@ d'une demande est une DONNÉE (ADR 0021 §3) et ne doit pas devenir une consigne
 - Les erreurs récurrentes des apps : il faudrait que le hub pousse un compte par app (un autre ADR,
   côté Hubperso).
 - Une rédaction par un modèle (option 2), si Marc trouve les gabarits trop secs.
+- Garder l'adresse de l'issue créée (pour le suivi du § 6) demande un geste de Marc de plus (coller
+  le lien, ou un champ) : à décider avec lui quand le suivi sera codé.
