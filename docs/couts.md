@@ -17,8 +17,8 @@ Règle : ajouter ou accélérer un cron = mettre ce tableau à jour dans la mêm
 
 ## Crons autorisés
 - `auto-merge.yml` : une fois par jour (`23 9 * * *`), sortie immédiate s'il n'y a aucune PR ouverte. La spec autorise au plus un passage toutes les 6 h ; on ne monte pas (chaque passage coûte au moins une minute).
-- `ci.yml` : audit hebdomadaire (`0 12 * * 1`).
-- `apprentissage.yml` : `0 */3 * * *` (8 passages par jour). Fonctionnel (la mémoire apprend des conversations) : NON modifié par cette PR, décision de Marc requise pour le réduire.
+- `ci.yml` : audit hebdomadaire (`17 12 * * 1`).
+- `apprentissage.yml` : `23 */3 * * *` (8 passages par jour). Fonctionnel (la mémoire apprend des conversations) : NON modifié par cette PR, décision de Marc requise pour le réduire.
 - `vercel.json` : `/api/cron/apprentissage` à 09:00 (fonctionnel), inchangé.
 - `vercel.json` : `/api/cron/reseau` à 10:27 UTC (26/10, tâche MemoryAI 186 B) : recalcul des liens et liens devinés. Le modèle (≈ 280 Mo) tourne dans la fonction : aucun appel payant, seulement son téléchargement depuis Hugging Face (gratuit) et le temps de la fonction, dans le plan gratuit.
 
