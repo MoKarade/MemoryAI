@@ -21,7 +21,7 @@
   "//jose": "Dépendance DIRECTE et épinglée (pas seulement transitive via next-auth) : plan auth-asym-hubperso §3, pour que la version qui vérifie le cookie signé ES256 soit un choix explicite de l'app, pas un hasard de résolution.",
   "//lia-ui": "Épinglé sur un TAG (v0.38.0, 24/10/2026 : les 100 nanobots dessinent eux-mêmes l'animation d'analyse sur l'élément ; v0.37.2 : seuls les 100 nanobots analysent, discussion à côté de l'élément, chat plus grand et plus discret ; v0.34.0 : le clic droit sur un lien étiré vise l'élément dessous, même version que le hub ; v0.33.0 : `surToucher`, toucher LIA ouvre la conversation de la maison ; une seule LIA, mêmes options que le hub ; sa pastille d'humeur est dessinée par le paquet ; son état arrive en 3e argument de ask ; `validerEtat` borne l'état partagé). Chaque version de lia-ui se re-pinne ici : rien ne bouge en prod sans ce bump.",
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.137.0",
+    "@anthropic-ai/sdk": "^1.2.0",
     "@fontsource-variable/outfit": "^5.3.0",
     "@mokarade/hub-contract": "github:MoKarade/hub-contract#v1.5.0",
     "@mokarade/lia-ui": "github:MoKarade/lia-ui#v0.38.0",
