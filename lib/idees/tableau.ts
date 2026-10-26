@@ -31,7 +31,7 @@ const ETAPES: readonly { etat: EtatIdee; libelle: string }[] = [
   { etat: "faite", libelle: "Faites" },
   { etat: "ecartee", libelle: "Écartées" },
 ];
-const JOUR_MOIS = new Intl.DateTimeFormat("fr-CA", { timeZone: "UTC", day: "numeric", month: "short" });
+const MOIS = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juill.", "août", "sept.", "oct.", "nov.", "déc."] as const;
 /** Combien de lignes montrent la boîte et la tuile d'utilité (les plus utiles d'abord). */
 const LIGNES_BOITE = 8;
 const LIGNES_UTILITE = 5;
@@ -39,7 +39,14 @@ const LIGNES_UTILITE = 5;
 const vide = (texte: string): Corps => ({ genre: "vide", texte });
 const appDe = (i: IdeeAffichee) => APP[i.app] ?? i.app;
 const phrase = (i: IdeeAffichee) => `Revoir ${GENRE[i.genre] ?? "l'élément"} « ${i.nom} » dans ${appDe(i)}`;
-const raison = (r: Raisons) => `demandé ${r.jours} jours sur ${r.fenetre}, la dernière fois le ${JOUR_MOIS.format(new Date(`${r.derniere}T12:00:00Z`))}`;
+
+/** « 2026-10-24 » → « 24 oct. ». Le jour est DÉJÀ celui du Québec : on le lit, on ne le convertit pas. */
+function jourMois(jour: string): string {
+  const m = /^\d{4}-(\d{2})-(\d{2})$/.exec(jour);
+  const mois = m ? MOIS[Number(m[1]) - 1] : undefined;
+  return m && mois ? `${Number(m[2])} ${mois}` : jour;
+}
+const raison = (r: Raisons) => `demandé ${r.jours} jours sur ${r.fenetre}, la dernière fois le ${jourMois(r.derniere)}`;
 
 function corpsIdees(idees: readonly IdeeAffichee[]): Record<string, Corps[]> {
   if (idees.length === 0) {
