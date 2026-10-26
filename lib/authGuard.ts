@@ -64,6 +64,13 @@ export const ROUTES_A_AUTH_PROPRE = [
    * lui qui tient l'accès Google ; un envoi remplace le jour, et rien d'autre que l'agenda n'entre.
    */
   "/api/agenda",
+  /**
+   * Ce qui sort des apps (ADR 0031). Jeton d'écrivain d'une app de la liste FERMÉE `APPS_SORTIES`
+   * (BatchChef, CarAI, DriveAI, FinanceAI, JobAI) : l'app vient du jeton, jamais du corps, et le niveau
+   * d'une sortie ne descend jamais sous le plancher de l'app. Des événements bornés, chiffrés ; aucun
+   * texte ne revient dans la réponse.
+   */
+  "/api/sorties",
   /** Connecteur MCP : OAuth 2.1 (`lib/mcp/oauth.ts`), et rien d'autre. */
   "/api/mcp",
   /**
