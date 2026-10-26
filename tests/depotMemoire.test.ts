@@ -46,6 +46,41 @@ describe("faitsParSource", () => {
   });
 });
 
+describe("etatReseau", () => {
+  it("compte les liens de règle et les liens devinés À PART, et rend la dernière passe", async () => {
+    const [a, b] = await db.select().from(schema.faits);
+    const lien = (id: string, type: "meme-source" | "dates-proches", origine: "regle" | "modele", poids: number, creeLe: string) => ({
+      id,
+      faitA: a!.id,
+      faitB: b!.id,
+      type,
+      origine,
+      poids,
+      regle: `${type}-v1`,
+      pourquoi: "Phrase FICTIVE, posée par le test.",
+      creeLe: new Date(creeLe),
+    });
+    await db.insert(schema.liens).values([
+      lien("l1", "meme-source", "regle", 1, "2026-10-20T10:00:00Z"),
+      lien("l2", "dates-proches", "modele", 0.6, "2026-10-25T10:00:00Z"),
+    ]);
+    const r = await depotMemoireDrizzle(db).etatReseau();
+    // Un seul fait est validé (le second reste proposé) : le réseau ne compte que ce qui est servi.
+    expect(r).toMatchObject({ noeuds: 1, domaines: 1, etablis: 1, devines: 1 });
+    expect(r.derniere?.toISOString()).toBe("2026-10-25T10:00:00.000Z");
+    const parType = [...r.parType].sort((x, y) => x.type.localeCompare(y.type));
+    expect(parType.map((t) => [t.type, t.n])).toEqual([
+      ["dates-proches", 1],
+      ["meme-source", 1],
+    ]);
+    // `poids` est un `real` : on compare la force à la précision d'un float, pas à l'octet.
+    expect(parType[0]!.poidsMoyen).toBeCloseTo(0.6, 5);
+    expect(parType[1]!.poidsMoyen).toBe(1);
+    await db.delete(schema.liens);
+    expect(await depotMemoireDrizzle(db).etatReseau()).toMatchObject({ etablis: 0, devines: 0, parType: [], derniere: null });
+  });
+});
+
 describe("nombrePapiers et papiersParDomaine", () => {
   it("rend zéro sans papier", async () => {
     expect(await depotMemoireDrizzle(db).nombrePapiers()).toBe(0);
