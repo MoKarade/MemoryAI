@@ -32,6 +32,7 @@ import { depotQuestionsDrizzle } from "@/lib/depotQuestions";
 import { estGele } from "@/lib/gel";
 import { passeIdees, type ResultatIdees } from "@/lib/idees/depot";
 import { rendreLisible } from "@/lib/lecture";
+import { agirSeule, consigner, lireFrein, purgerJournal } from "@/lib/lia/journal";
 import { accesDonnees } from "@/lib/pageDonnees";
 import { depotPiecesLectureDrizzle } from "@/lib/pieces/depotLecture";
 import { depotRelectureDrizzle } from "@/lib/relectureLia";
@@ -52,8 +53,8 @@ function memeSecret(a: string, b: string): boolean {
 function rendre(
   r: ResultatPasse,
   banc: FinPasseBanc | "echec" | null = null,
-  deduction: ResultatDeduction | "echec" | null = null,
-  idees: ResultatIdees | "echec" | null = null,
+  deduction: ResultatDeduction | "echec" | "frein" | null = null,
+  idees: ResultatIdees | "echec" | "frein" | null = null,
   sorties: ResultatPurge | "echec" | null = null,
 ): Response {
   return Response.json({ ...r, motif: MOTIFS_FIN_PASSE[r.fin], banc, deduction, idees, sorties }, { status: 200, headers: NO_STORE });
@@ -99,15 +100,23 @@ export async function POST(req: Request): Promise<Response> {
   // Les faits déduits (ADR 0023, tâche MemoryAI 185) : une règle, aucun modèle, donc AVANT la clé
   // Anthropic aussi. Même contrat que le banc : un échec se voit (`deduction: "echec"`), il ne
   // bloque rien. Une passe par jour suffit : l'âge ne change qu'une fois par an.
-  let deduction: ResultatDeduction | "echec";
+  // ADR 0032 : c'est une action autonome. Le frein l'arrête (`deduction: "frein"`), et sa ligne va au journal.
+  let deduction: ResultatDeduction | "echec" | "frein";
   try {
-    deduction = await passeDeduction({
-      sources: sourcesDeduction(acces.db, depotPiecesLectureDrizzle(acces.db), acces.cle),
-      faits: depotDrizzle(acces.db),
-      admin: depotAdminDrizzle(acces.db),
-      cle: acces.cle,
-      maintenant: new Date(),
-    });
+    deduction = await agirSeule(
+      acces.db,
+      new Date(),
+      "deduction",
+      () =>
+        passeDeduction({
+          sources: sourcesDeduction(acces.db, depotPiecesLectureDrizzle(acces.db), acces.cle),
+          faits: depotDrizzle(acces.db),
+          admin: depotAdminDrizzle(acces.db),
+          cle: acces.cle,
+          maintenant: new Date(),
+        }),
+      (r) => (r.fin === "ecrit" ? 1 : 0),
+    );
   } catch (err) {
     console.error("[deduction] passe impossible", err);
     deduction = "echec";
@@ -116,9 +125,10 @@ export async function POST(req: Request): Promise<Response> {
   // Les idées de LIA pour tes apps (ADR 0027, tâche MemoryAI 233) : des comptes sur les demandes
   // du hub, aucun modèle, donc AVANT la clé Anthropic. Même contrat : un échec se voit
   // (`idees: "echec"`), il ne bloque rien. La réponse ne porte que des nombres.
-  let idees: ResultatIdees | "echec";
+  // ADR 0032 : action autonome aussi, même frein, même journal.
+  let idees: ResultatIdees | "echec" | "frein";
   try {
-    idees = await passeIdees(acces.db, acces.cle, new Date());
+    idees = await agirSeule(acces.db, new Date(), "idees", () => passeIdees(acces.db, acces.cle, new Date()), (r) => r.creees + r.majs);
   } catch (err) {
     console.error("[idees] passe impossible", err);
     idees = "echec";
@@ -134,8 +144,24 @@ export async function POST(req: Request): Promise<Response> {
     sorties = "echec";
   }
 
+  // Le journal de ce que LIA fait seule garde 90 jours (ADR 0032 § 4). Un échec se lit au journal serveur.
+  try {
+    await purgerJournal(acces.db, new Date());
+  } catch (err) {
+    console.error("[autonomie] purge du journal impossible", err);
+  }
+
   const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
   if (!apiKey) return rendre(passeVide("cle-absente"), banc, deduction, idees, sorties);
+
+  // ADR 0032 : la relecture (ADR 0025) est une action autonome, et le frein se lit AVANT elle. Un frein
+  // illisible la suspend aussi (échec fermé) : elle ne part jamais « faute de savoir ».
+  let freine = true;
+  try {
+    freine = await lireFrein(acces.db);
+  } catch (err) {
+    console.error("[autonomie] frein illisible, relecture suspendue", err);
+  }
 
   const anthropic = new Anthropic({ apiKey });
   const r = await passeApprentissage({
@@ -180,8 +206,11 @@ export async function POST(req: Request): Promise<Response> {
     },
     comptesParPredicat: () => comptesParPredicatValides(acces.db),
     // ADR 0025 : LIA valide seule ce que deux signaux confirment ; ses comptes sortent dans la réponse.
-    relecture: depotRelectureDrizzle(acces.db),
+    // Absente (frein posé), la relecture ne tourne pas : l'extraction, elle, suit son cours.
+    relecture: freine ? undefined : depotRelectureDrizzle(acces.db),
   });
+  if (freine) await consigner(acces.db, new Date(), "relecture", "frein", 0);
+  else if (r.relecture) await consigner(acces.db, new Date(), "relecture", r.relecture.fin === "budget" ? "budget" : "faite", r.relecture.relus);
   return rendre(r, banc, deduction, idees, sorties);
 }
 
