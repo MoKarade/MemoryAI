@@ -4,6 +4,7 @@
 // ⚠️ Aucune couleur ici : les parts prennent la teinte de `globals.css` (`.teinte-*`).
 
 import Link from "next/link";
+import { ecarterIdeeAction, retenirIdeeAction } from "@/app/idees/actions";
 import type { Corps, Tableau } from "@/lib/accueil/tableaux";
 import { Histogramme } from "./Histogramme";
 import { IconeEspace } from "./IconeEspace";
@@ -72,6 +73,39 @@ function Bulles({ c }: { c: Extract<Corps, { genre: "bulles" }> }) {
         </li>
       ))}
     </ul>
+  );
+}
+
+type GestesIdee = NonNullable<Extract<Corps, { genre: "liste" }>["elements"][number]["idee"]>;
+
+/**
+ * Les gestes de Marc sous une idée de la boîte (ADR 0027 §4 et §5) : retenir, écarter (Server Actions,
+ * session revérifiée côté serveur) et « En faire une tâche » (un lien vers la page « nouvelle issue »
+ * de GitHub : rien ne s'écrit sans que Marc la crée lui-même). Le nom accessible dit de quelle idée il s'agit.
+ */
+function Gestes({ idee, libelle }: { idee: GestesIdee; libelle: string }) {
+  return (
+    <div className="maison-liens">
+      {idee.retenue ? null : (
+        <form action={retenirIdeeAction}>
+          <input type="hidden" name="id" value={idee.id} />
+          <button type="submit" className="bouton bouton-second" aria-label={`Retenir : ${libelle}`}>
+            Retenir
+          </button>
+        </form>
+      )}
+      <form action={ecarterIdeeAction}>
+        <input type="hidden" name="id" value={idee.id} />
+        <button type="submit" className="bouton bouton-second" aria-label={`Écarter : ${libelle}`}>
+          Écarter
+        </button>
+      </form>
+      {idee.tache ? (
+        <a href={idee.tache} target="_blank" rel="noreferrer noopener" className="bouton bouton-second" aria-label={`En faire une tâche sur GitHub : ${libelle}`}>
+          En faire une tâche
+        </a>
+      ) : null}
+    </div>
   );
 }
 
@@ -144,9 +178,10 @@ export function CorpsTuile({ c }: { c: Corps }) {
       return (
         <ul className="tab-liste">
           {c.elements.map((e) => (
-            <li key={e.libelle}>
+            <li key={e.idee?.id ?? e.libelle}>
               <span>{e.libelle}</span>
               {e.detail ? <small>{e.detail}</small> : null}
+              {e.idee ? <Gestes idee={e.idee} libelle={e.libelle} /> : null}
             </li>
           ))}
         </ul>

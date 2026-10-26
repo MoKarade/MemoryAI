@@ -4,8 +4,11 @@
 //
 // ⚠️ NO FAKE DATA. Aucune idée : l'écran le dit (« tu n'as encore rien demandé deux fois au hub »).
 // L'utilité s'écrit toujours « ≈ … / 100 » et la tuile dit que c'est une estimation.
+// ⚠️ Les gestes de Marc (retenir, écarter, en faire une tâche) ne sont portés que par la boîte, sur
+// les idées en attente : une écartée ne revient pas, une faite suit son issue.
 
 import { tableauIdees, type Corps, type Tableau } from "../accueil/tableaux";
+import { urlNouvelleIssue } from "./issue";
 import type { EtatIdee, IdeeAffichee, Raisons } from "./regles";
 
 const APP: Readonly<Record<string, string>> = {
@@ -48,6 +51,15 @@ function jourMois(jour: string): string {
 }
 const raison = (r: Raisons) => `demandé ${r.jours} jours sur ${r.fenetre}, la dernière fois le ${jourMois(r.derniere)}`;
 
+/** Une ligne de la boîte : la phrase, pourquoi, et les gestes de Marc (ADR 0027 §4 et §5). */
+function ligneBoite(i: IdeeAffichee) {
+  return {
+    libelle: phrase(i),
+    detail: `${i.etat === "retenue" ? "Retenue · " : ""}${raison(i.raisons)}`,
+    idee: { id: i.id, retenue: i.etat === "retenue", tache: urlNouvelleIssue({ app: i.app, titre: phrase(i), detail: raison(i.raisons), utilite: i.utilite }) },
+  };
+}
+
 function corpsIdees(idees: readonly IdeeAffichee[]): Record<string, Corps[]> {
   if (idees.length === 0) {
     return {
@@ -69,11 +81,11 @@ function corpsIdees(idees: readonly IdeeAffichee[]): Record<string, Corps[]> {
           {
             genre: "liste",
             elements: [
-              ...actives.slice(0, LIGNES_BOITE).map((i) => ({ libelle: phrase(i), detail: `${i.etat === "retenue" ? "Retenue · " : ""}${raison(i.raisons)}` })),
+              ...actives.slice(0, LIGNES_BOITE).map(ligneBoite),
               ...(reste > 0 ? [{ libelle: `Et ${reste} autre${reste > 1 ? "s" : ""}` }] : []),
             ],
           },
-          { genre: "texte", texte: "Nées de tes demandes « Que peut-on changer ici ? » du hub, comptées sans modèle." },
+          { genre: "texte", texte: "Nées de tes demandes « Que peut-on changer ici ? » du hub, comptées sans modèle. Retenir ou écarter est ton geste : elle ne choisit jamais seule." },
         ]
       : [vide("Aucune idée en attente : toutes sont faites ou écartées.")],
     etapes: [

@@ -16,6 +16,8 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["tests/**/*.test.ts"],
+    // Les Server Actions des idées, importées par un composant, tireraient next-auth : voir le fichier.
+    setupFiles: ["tests/setupActions.ts"],
     // 30 s au lieu de 10 s pour les beforeAll/afterAll : sur le PC de Marc chargé (agents en
     // parallèle), une dizaine de suites dépassaient 10 s et la porte de commit bloquait par
     // intermittence (30/09). Aucun seuil touché ; la cause de la lenteur est au BACKLOG.

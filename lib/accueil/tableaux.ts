@@ -30,7 +30,12 @@ export type Corps =
   /** Des lignes « libellé · valeur » avec une barre de remplissage (`part` entre 0 et 1, `null` : pas de barre). */
   | { genre: "jauges"; lignes: { libelle: string; valeur: string; part: number | null; alerte?: boolean }[] }
   | { genre: "histogramme"; barres: { cle: string; etiquette: string; valeur: number; texte: string }[]; resume: string; unite: string }
-  | { genre: "liste"; elements: { libelle: string; detail?: string }[] }
+  /**
+   * Des lignes « libellé, détail ». `idee` : les gestes de Marc sur une idée de LIA (ADR 0027 §4 et §5) ;
+   * `retenue` cache « Retenir », `tache` est l'adresse de la page « nouvelle issue » préremplie (`null` :
+   * l'app n'a pas de dépôt connu, le lien manque).
+   */
+  | { genre: "liste"; elements: { libelle: string; detail?: string; idee?: { id: string; retenue: boolean; tache: string | null } }[] }
   /** Des bulles dont l'aire suit la valeur (les thèmes de la mémoire). */
   | { genre: "bulles"; bulles: { libelle: string; valeur: number }[]; resume: string };
 
