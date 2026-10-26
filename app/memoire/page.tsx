@@ -2,8 +2,8 @@
 // maquette v5 validée par Marc le 22/10/2026, onglet « Mémoire »).
 //
 // ⚠️ LE RÉSEAU NE PORTE QUE DES PRÉDICATS, jamais une valeur (`lib/memoire/reseau.ts`) : la
-// page montre la forme de la mémoire. Une valeur s'ouvre fait par fait, sur sa fiche, qui
-// applique la politique des niveaux. Aucune donnée n'est donc déchiffrée pour dessiner.
+// page montre la forme de la mémoire. La carte d'un point liste ses liens (tâche MemoryAI 323) et
+// ne renvoie plus à l'ancienne fiche `/fait/[id]`. Aucune donnée n'est donc déchiffrée pour dessiner.
 //
 // Les cinq onglets de la maquette sont dans la coque (`components/CoqueMemoire.tsx`) ; chacun est
 // une page à part, avec ses propres lectures.
