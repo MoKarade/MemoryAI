@@ -27,7 +27,7 @@ on:
     # Toutes les trois heures. ⚠️ Pas plus souvent, et la raison n'est pas le coût : GitHub
     # décale les crons planifiés de plusieurs minutes sous charge, et un intervalle plus court
     # que le temps d'une passe ferait se chevaucher deux réveils sur la même base.
-    - cron: "0 */3 * * *"
+    - cron: "23 */3 * * *"
   # Pour pouvoir le déclencher à la main sans attendre trois heures — c'est aussi le seul moyen
   # de VÉRIFIER que les secrets sont bien posés, et de le lire dans le journal du run.
   workflow_dispatch:
