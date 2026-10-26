@@ -46,7 +46,8 @@ describe("les règles — la couche que personne ne modifie", () => {
 
 describe("le ton des réponses (Marc, 24/10)", () => {
   it("court et humain, sans liste de chiffres sauf demande, et sans redire l'écran", () => {
-    expect(REGLES_SYSTEME).toContain("deux à quatre phrases");
+    // Marc, 26/10 (tâche MemoryAI 291) : « deux à quatre phrases » est devenu « au plus deux phrases courtes ».
+    expect(REGLES_SYSTEME).toContain("au plus deux phrases courtes");
     expect(REGLES_SYSTEME).toContain("sauf si Marc en demande");
     expect(REGLES_SYSTEME).toContain("Ne redis pas ce que Marc voit déjà");
     expect(REGLES_SYSTEME).toMatch(/cause, une comparaison, une tendance/);
