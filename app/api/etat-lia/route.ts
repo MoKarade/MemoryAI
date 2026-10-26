@@ -10,7 +10,7 @@
 import { HUB_TOKEN_HEADER, jetonsEgaux } from "@mokarade/hub-contract/endpoint";
 import { baseConfiguree, db } from "@/lib/db";
 import { estGele, reponseGelee } from "@/lib/gel";
-import { depotEtatLiaDrizzle, repondreEcriture, repondreLecture } from "@/lib/lia/depotEtat";
+import { cleDeLaDiscussion, depotEtatLiaDrizzle, repondreEcriture, repondreLecture } from "@/lib/lia/depotEtat";
 import { assurerMigrations } from "@/lib/migrations";
 
 export const dynamic = "force-dynamic";
@@ -34,12 +34,12 @@ async function garde(request: Request): Promise<Response | null> {
 }
 
 export async function GET(request: Request): Promise<Response> {
-  return (await garde(request)) ?? repondreLecture(depotEtatLiaDrizzle(db));
+  return (await garde(request)) ?? repondreLecture(depotEtatLiaDrizzle(db, cleDeLaDiscussion()));
 }
 
 export async function PUT(request: Request): Promise<Response> {
   const r = await garde(request);
   if (r) return r;
   if (estGele()) return reponseGelee();
-  return repondreEcriture(depotEtatLiaDrizzle(db), await request.text());
+  return repondreEcriture(depotEtatLiaDrizzle(db, cleDeLaDiscussion()), await request.text());
 }

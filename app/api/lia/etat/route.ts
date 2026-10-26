@@ -7,7 +7,7 @@
 
 import { baseConfiguree, db } from "@/lib/db";
 import { estGele, reponseGelee } from "@/lib/gel";
-import { depotEtatLiaDrizzle, repondreEcriture, repondreLecture } from "@/lib/lia/depotEtat";
+import { cleDeLaDiscussion, depotEtatLiaDrizzle, repondreEcriture, repondreLecture } from "@/lib/lia/depotEtat";
 import { assurerMigrations } from "@/lib/migrations";
 import { NonAutorise, requireSession } from "@/lib/session";
 
@@ -26,12 +26,12 @@ async function garde(): Promise<Response | null> {
 }
 
 export async function GET(): Promise<Response> {
-  return (await garde()) ?? repondreLecture(depotEtatLiaDrizzle(db));
+  return (await garde()) ?? repondreLecture(depotEtatLiaDrizzle(db, cleDeLaDiscussion()));
 }
 
 export async function PUT(request: Request): Promise<Response> {
   const refus = await garde();
   if (refus) return refus;
   if (estGele()) return reponseGelee();
-  return repondreEcriture(depotEtatLiaDrizzle(db), await request.text());
+  return repondreEcriture(depotEtatLiaDrizzle(db, cleDeLaDiscussion()), await request.text());
 }

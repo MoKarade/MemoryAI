@@ -850,9 +850,12 @@ export const sauvetageEtat = pgTable(
 
 /**
  * L'état PARTAGÉ de LIA (migration 0025, contrat `CONTRAT-etat-lia.md`) : une seule ligne, celle
- * du propriétaire. Aucun contenu de Marc : des nombres, des verbes de LIA, un nom d'humeur
+ * du propriétaire. Le JSON `etat` ne porte aucun contenu de Marc : des nombres, des verbes de LIA, un nom d'humeur
  * (`lib/lia/etatPartage.ts`). `version` sert au contrôle optimiste (une écriture qui ne la
  * dépasse pas est refusée en 409).
+ *
+ * `discussion` (migration 0034, ADR 0030) : la fin de sa discussion avec Marc, CHIFFRÉE (niveau 2, AAD
+ * `lia_etat|discussion|2`), à part du JSON `etat`. `NULL` : aucune discussion gardée.
  */
 export const liaEtat = pgTable(
   "lia_etat",
@@ -861,6 +864,7 @@ export const liaEtat = pgTable(
     version: integer("version").notNull(),
     maj: bigint("maj", { mode: "number" }).notNull(),
     etat: jsonb("etat").notNull(),
+    discussion: text("discussion"),
     modifieLe: timestamp("modifie_le", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [check("lia_etat_une_ligne", sql`${t.id} = 1`)],
