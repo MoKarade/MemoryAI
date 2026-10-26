@@ -378,7 +378,7 @@ describe("le protocole JSON-RPC", () => {
   // n'importe quel modèle connecté : le compte est figé pour que l'ajout soit une DÉCISION,
   // jamais le résidu d'une refacto. Sept → neuf le 16/09 (les PAPIERS, ADR 0004 §6.2), et
   // les deux nouveaux sont en LECTURE SEULE — aucun outil n'écrit une pièce.
-  it("initialize et tools/list annoncent memoryai et ses dix outils (ADR 0022 : les notes de LIA)", async () => {
+  it("initialize et tools/list annoncent memoryai et ses onze outils (ADR 0031 : les sorties des apps)", async () => {
     const i = await traiterMessage({ jsonrpc: "2.0", id: 1, method: "initialize" }, ctx());
     expect((i?.result as { serverInfo: { name: string } }).serverInfo.name).toBe("memoryai");
     const l = await traiterMessage({ jsonrpc: "2.0", id: 2, method: "tools/list" }, ctx());
@@ -394,6 +394,7 @@ describe("le protocole JSON-RPC", () => {
       "memoryai_papiers_facettes",
       "memoryai_papiers_chercher",
       "memoryai_notes_lia",
+      "memoryai_sorties",
     ]);
     for (const o of OUTILS) expect(o.name.startsWith("memoryai_"), o.name).toBe(true);
   });
