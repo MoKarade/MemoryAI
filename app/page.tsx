@@ -13,6 +13,7 @@ import { lireAgendaDuJour } from "@/lib/agenda/depot";
 import { depotAccueilDrizzle } from "@/lib/accueil/depotAccueil";
 import { contenuEspaces, type EntreesEspaces } from "@/lib/accueil/espaces";
 import { debutDuMoisQuebec, jourMoins, LECTURES_DU_JOUR_MAX, LIGNES_RELANCES, minuitQuebec, RELANCES_JOURS_A_VENIR, RELANCES_JOURS_PASSES } from "@/lib/accueil/tableaux";
+import { avecBornes } from "@/lib/accueil/tuileBornes";
 import { jourQuebec } from "@/lib/coutChat";
 import { depotAdminDrizzle } from "@/lib/depotAdmin";
 import { lireIdees } from "@/lib/idees/depot";
@@ -20,6 +21,7 @@ import { OUTILS_LIA_HUB } from "@/lib/lia/ask";
 import { TYPES_BLOCS } from "@/lib/lia/blocs";
 import { accesDonnees } from "@/lib/pageDonnees";
 import { requireSession } from "@/lib/session";
+import { sourceBornes, type LectureBornes } from "@/lib/monde/bornes";
 import { sourceMeteoEccc } from "@/lib/monde/meteo";
 import { sourceActualite } from "@/lib/monde/actualite";
 
@@ -39,6 +41,7 @@ export default async function MaisonDeLia() {
   let idees: EntreesEspaces["idees"] = null;
   let meteo: EntreesEspaces["meteo"] = null;
   let actualite: EntreesEspaces["actualite"] = null;
+  let bornes: LectureBornes | null | undefined;
   if (acces.ok) {
     const admin = depotAdminDrizzle(acces.db);
     const accueil = depotAccueilDrizzle(acces.db);
@@ -60,7 +63,12 @@ export default async function MaisonDeLia() {
     // Le monde (ADR 0024) : servi du cache en base, ECCC relu au plus toutes les 30 minutes.
     meteo = await sourceMeteoEccc(acces.db, process.env.MEMORYAI_METEO_VILLE).lire(new Date());
     actualite = await sourceActualite(acces.db).lire(new Date());
+    // Les bornes proches (ADR 0028) : depuis le point de la ville de la météo, jamais une adresse.
+    bornes = await sourceBornes(acces.db).lire(new Date(), meteo.ok ? (meteo.meteo.position ?? null) : null);
   }
   const contenus = contenuEspaces({ budget, appels, lectures, activite, relances, agenda, idees, meteo, actualite, outils: [...OUTILS_LIA_HUB], formes: TYPES_BLOCS });
-  return <AccueilClient contenus={contenus} />;
+  // Sans base, `bornes` reste `undefined` : la tuile garde son texte d'origine.
+  const monde = contenus.monde.tableau;
+  const complets = monde ? { ...contenus, monde: { ...contenus.monde, tableau: avecBornes(monde, bornes) } } : contenus;
+  return <AccueilClient contenus={complets} />;
 }
