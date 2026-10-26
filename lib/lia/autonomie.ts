@@ -35,7 +35,7 @@ export type Issue = "faite" | "echec" | "frein" | "budget";
 /** Combien de jours la base garde le journal (ADR 0032 § 4). */
 export const RETENTION_JOURNAL_JOURS = 90;
 
-export interface LigneJournal {
+interface LigneJournal {
   action: CleAction;
   niveau: NiveauAutonome;
   raison: string;
