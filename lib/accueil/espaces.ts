@@ -175,14 +175,11 @@ function ideesPourApps(idees: EntreesEspaces["idees"]): ContenuEspace {
 
 export function contenuEspaces(e: EntreesEspaces): Record<IdEspace, ContenuEspace> {
   return {
+    // Plus aucun lien vers les anciennes pages (Marc, 26/10, tâche MemoryAI 320) : les tuiles attendent la lecture des messages.
     souvenirs: {
-      phrase: "Retrouver un message ou un papier mot pour mot arrive avec la lecture des messages. D'ici là, tes conversations et ce qu'elle sait sont ici.",
-      dit: "Tes conversations et ce que je sais sont ici.",
+      phrase: "Retrouver un message ou un papier mot pour mot arrive avec la lecture des messages.",
+      dit: "Retrouver un message mot pour mot arrivera avec la lecture des messages.",
       vide: false,
-      liens: [
-        { href: "/conversations", libelle: "Anciennes conversations" },
-        { href: "/pieces", libelle: "Ce qu'elle sait" },
-      ],
       tableau: tableauSouvenirs(),
     },
     sante: {
