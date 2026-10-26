@@ -21,6 +21,7 @@ import { depotQuestionsDrizzle } from "@/lib/depotQuestions";
 import { cleJournalDepuisEnv, ClefJournalAbsenteError } from "@/lib/journal";
 import { SOURCE_BILAN_HUB } from "@/lib/lia/blocs";
 import { composerQuestion, composerReponse, CONVERSATIONS_FERMEES, OUTILS_LIA_HUB, type DemandeAsk } from "@/lib/lia/ask";
+import { longueSansBloc } from "@/lib/lia/longueur";
 import { assurerMigrations } from "@/lib/migrations";
 import { depotBancDrizzle } from "@/lib/banc/passe";
 import { depotPiecesLectureDrizzle } from "@/lib/pieces/depotLecture";
@@ -88,8 +89,11 @@ export async function repondreLia(demande: DemandeAsk, origine: string, lecteur:
       couches,
     });
     // Chaque tour laisse ses COMPTEURS (jamais son contenu) : sans eux, « 0 bloc » ne dit pas si
-    // le modèle n'a rien proposé ou si tout a été rejeté.
-    console.info(`[${lecteur}] tour : ${r.blocs.length} bloc(s), outils ${r.outilsAppeles.join(", ") || "aucun"}`);
+    // le modèle n'a rien proposé ou si tout a été rejeté. `longue_sans_bloc` (tâche MemoryAI 291)
+    // dit si la réponse dépasse 280 caractères sans bloc : la part de 1 sur le total des tours est
+    // la mesure de « deux phrases ».
+    const longue = longueSansBloc(r.reponse, r.blocs.length);
+    console.info(`[${lecteur}] tour : ${r.blocs.length} bloc(s), outils ${r.outilsAppeles.join(", ") || "aucun"}, longue_sans_bloc=${longue ? 1 : 0}`);
     // Les raisons portent des chemins de champs, jamais des valeurs : un journal n'est pas chiffré.
     if (r.blocsRejetes > 0) console.error(`[${lecteur}] ${r.blocsRejetes} bloc(s) rejeté(s) : ${r.raisonsBlocs.join(" ; ")}`);
     const reponse = composerReponse(r.reponse, origine, r.blocs);
