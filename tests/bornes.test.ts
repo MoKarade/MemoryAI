@@ -135,7 +135,7 @@ describe("la source des bornes, derrière un cache d'un jour", () => {
 describe("la tuile « Bornes proches »", () => {
   const base = tableauMonde();
   const corps = (b: Parameters<typeof avecBornes>[1], cle = "bornes") => avecBornes(base, b).tuiles.find((t) => t.cle === cle)?.corps;
-  const fichier = { ok: true, bornes: { fichierLe: null, parcs: [] } } as const;
+  const fichier: Parameters<typeof avecBornes>[1] = { ok: true, bornes: { fichierLe: null, parcs: [] } };
 
   it("une ligne par parc, avec la distance, le niveau, la puissance, le réseau et la date du fichier", () => {
     const c = corps({
