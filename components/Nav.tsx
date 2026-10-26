@@ -2,9 +2,14 @@
 //
 // [R1, MemoryAI#9] PLUS DE BARRE D'ONGLETS. L'en-tête porte le bouton du menu et le nom de
 // l'app ; les sections vivent dans le menu (`MenuLia`), celui de `docs/REFONTE-INTERFACE.md` §4 :
-// Lia (sa maison, l'orbite de MemoryAI#74) · Parler (la conversation complète) · Mémoire (le réseau en 3D) · Questions (ses questions, plus rien à juger) · Ce qu'elle sait · Lecture des papiers · Dépenses · Anciennes
-// conversations · Réglages. Chaque entrée est une SECTION, pas une page : un détail
+// Lia (sa maison, l'orbite de MemoryAI#74) · Parler (la conversation complète) · Mémoire (le réseau en 3D) · Questions (ses questions, plus rien à juger) · Réglages.
+// Chaque entrée est une SECTION, pas une page : un détail
 // (`/fait/[id]`) ou un cadre embarqué (`/widget`) n'y figure pas.
+//
+// ⚠️ LES QUATRE ANCIENNES PAGES NE SONT PLUS AU MENU (Marc, 26/10/2026, tâche MemoryAI 320) :
+// « Ce qu'elle sait » (`/pieces`), « Lecture des papiers » (`/avancement`), « Dépenses »
+// (`/depenses`) et « Anciennes conversations » (`/conversations`). Les pages existent toujours,
+// par adresse directe ; leur clé est routée vers `null` (elles n'allument aucune section).
 //
 // ⚠️ LES ANCIENNES CLÉS SONT GARDÉES, volontairement. Les pages passent encore `active="moi"`,
 // `active="apps"`… : les faire toutes muter ici mélangerait le déplacement de la NAVIGATION avec
@@ -27,10 +32,6 @@ export const SECTIONS = [
   { cle: "discussion", href: "/chat", libelle: "Parler" },
   { cle: "memoire", href: "/memoire", libelle: "Mémoire" },
   { cle: "vrai-faux", href: "/questions", libelle: "Questions" },
-  { cle: "savoir", href: "/pieces", libelle: "Ce qu'elle sait" },
-  { cle: "lecture", href: "/avancement", libelle: "Lecture des papiers" },
-  { cle: "depenses", href: "/depenses", libelle: "Dépenses" },
-  { cle: "conversations", href: "/conversations", libelle: "Anciennes conversations" },
   { cle: "reglages", href: "/regler", libelle: "Réglages" },
 ] as const;
 
@@ -54,8 +55,7 @@ export type CleNav =
 
 /**
  * Où vit chaque ancienne page dans le menu. ⚠️ Écrit comme une table plutôt que deviné par une
- * heuristique de nom : `pieces` va dans « Ce qu'elle sait » et `a-valider` dans « Questions »,
- * et rien dans leur nom ne le dit.
+ * heuristique de nom : `a-valider` va dans « Questions », et rien dans son nom ne le dit.
  */
 const SECTION_DE: Record<CleNav, (typeof SECTIONS)[number]["cle"] | null> = {
   parler: "parler",
@@ -63,15 +63,16 @@ const SECTION_DE: Record<CleNav, (typeof SECTIONS)[number]["cle"] | null> = {
   memoire: "memoire",
   questions: "vrai-faux",
   "a-valider": "vrai-faux",
-  chercher: "savoir",
-  pieces: "savoir",
-  avancement: "lecture",
-  depenses: "depenses",
-  conversations: "conversations",
   regler: "reglages",
   moi: "reglages",
   apps: "reglages",
   graphe: "reglages",
+  // Les quatre anciennes pages (tâche MemoryAI 320) : plus au menu, elles n'allument rien.
+  chercher: null,
+  pieces: null,
+  avancement: null,
+  depenses: null,
+  conversations: null,
   // Une FICHE n'est pas une section : elle s'ouvre depuis n'importe où, donc elle n'allume
   // rien. Allumer « Ce qu'elle sait » parce qu'on regarde un fait dirait que la fiche EST une
   // section, ce qui est faux.

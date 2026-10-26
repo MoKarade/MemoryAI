@@ -174,6 +174,7 @@ export function tableauBudget(b: EntreesBudget | null): Tableau {
           },
         ],
       },
+      // Plus de lien vers la page Dépenses (Marc, 26/10, tâche MemoryAI 320) : l'histogramme suffit.
       {
         cle: "trente",
         largeur: 12,
@@ -187,7 +188,6 @@ export function tableauBudget(b: EntreesBudget | null): Tableau {
                 resume: `Dépense de chacun des ${trente.length} derniers jours qui en portent une.`,
                 unite: "$ US",
               },
-              { genre: "texte", texte: "Le détail, jour par jour et poste par poste :", lien: { href: "/depenses", libelle: "Toutes les dépenses" } },
             ]
           : [vide("Aucune dépense enregistrée pour l'instant.")],
       },
@@ -234,7 +234,6 @@ export function tableauBudget(b: EntreesBudget | null): Tableau {
               { libelle: "0 $ met en pause", detail: "un plafond existe toujours, il ne se désactive pas" },
             ],
           },
-          { genre: "texte", texte: "Les plafonds se règlent dans Dépenses.", lien: { href: "/depenses", libelle: "Régler les plafonds" } },
         ],
       },
     ],
@@ -251,16 +250,8 @@ export function tableauSouvenirs(): Tableau {
       { cle: "filtre", largeur: 5, icone: "search", titre: "Filtre", corps: [attend("Le filtre par jour et par personne")] },
       { cle: "chemin", largeur: 12, icone: "path", titre: "Chemin", repliee: true, corps: [vide("Le chemin de sa recherche se dessinera à la première vraie recherche.")] },
       { cle: "journee", largeur: 12, icone: "clock", titre: "Journée", repliee: true, corps: [vide("La journée autour d'un message viendra avec l'agenda.")] },
-      {
-        cle: "recherche",
-        largeur: 12,
-        icone: "search",
-        titre: "Recherche",
-        corps: [
-          { genre: "texte", texte: "Tes conversations avec elle sont déjà là :", lien: { href: "/conversations", libelle: "Anciennes conversations" } },
-          { genre: "texte", texte: "Et tout ce qu'elle sait :", lien: { href: "/pieces", libelle: "Ce qu'elle sait" } },
-        ],
-      },
+      // Plus aucun lien vers les anciennes pages (Marc, 26/10) : la recherche attend la lecture des messages.
+      { cle: "recherche", largeur: 12, icone: "search", titre: "Recherche", corps: [attend("La recherche mot pour mot")] },
       { cle: "autour", largeur: 6, icone: "cal", titre: "Autour de ce jour", repliee: true, corps: [vide("Le jour d'un message (météo, lieu, personnes) viendra avec l'agenda.")] },
       { cle: "papiers", largeur: 6, icone: "folder", titre: "Papiers liés", repliee: true, corps: [attend("Le lien entre un message et ses papiers")] },
     ],

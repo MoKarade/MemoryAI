@@ -227,13 +227,14 @@ describe("Souvenirs, Santé et Sa journée, comme la maquette", () => {
   const toutVide = (t: ReturnType<typeof tableauSante>, sauf: string[]) =>
     t.tuiles.filter((x) => !sauf.includes(x.cle)).every((x) => x.corps.every((c) => c.genre === "vide"));
 
-  it("Souvenirs : les sept tuiles, vides sauf la recherche qui mène à ce qui existe déjà", () => {
+  it("Souvenirs : les sept tuiles, toutes vides, sans aucun lien vers les anciennes pages (tâche MemoryAI 320)", () => {
     const t = tableauSouvenirs();
     expect(titres(t)).toEqual(["Fil", "Filtre", "Chemin", "Journée", "Recherche", "Autour de ce jour", "Papiers liés"]);
-    expect(toutVide(t, ["recherche"])).toBe(true);
+    expect(toutVide(t, [])).toBe(true);
     const html = rendre("souvenirs");
-    expect(html).toContain('href="/conversations"');
-    expect(html).toContain('href="/pieces"');
+    expect(html).not.toContain('href="/conversations"');
+    expect(html).not.toContain('href="/pieces"');
+    expect(html).not.toContain("Anciennes conversations");
     // La question de la maquette nomme une personne FICTIVE : elle n'est pas recopiée.
     expect(html).not.toContain("Julie");
   });

@@ -122,11 +122,17 @@ describe("les espaces", () => {
     expect(c.formes.puces).toEqual(["carte", "courbe", "liste"]);
   });
 
-  it("chaque lien mène à une page qui existe", () => {
+  it("aucun espace ne mène aux anciennes pages, et un lien éventuel mène à une page qui existe (tâche MemoryAI 320)", () => {
     const c = contenuEspaces({ ...ENTREES, budget: { depense: { chat: 0, apprentissage: 0 }, plafonds: { chat: 1, apprentissage: 2 } } });
     const liens = Object.values(c).flatMap((x) => x.liens ?? []);
-    expect(liens.length).toBeGreaterThanOrEqual(3);
+    // Marc, 26/10 : plus aucun lien de la maison vers les quatre anciennes pages. Elles existent
+    // toujours, par adresse directe, mais la maison ne les montre plus.
+    const anciennes = ["/pieces", "/avancement", "/depenses", "/conversations"];
+    for (const l of liens) expect(anciennes, `la maison renvoie encore vers ${l.href}`).not.toContain(l.href);
+    // Un lien qui reviendrait un jour doit mener quelque part. Anti-vacuité : la boucle porte sur
+    // les liens RÉELS, et le test d'au-dessus (`JSON.stringify(c)`) lit tout le contenu composé.
     for (const l of liens) expect(() => readFileSync(`app${l.href}/page.tsx`), l.href).not.toThrow();
+    expect(JSON.stringify(c)).not.toMatch(/href[^,]*\/(pieces|avancement|depenses|conversations)/);
   });
 });
 
