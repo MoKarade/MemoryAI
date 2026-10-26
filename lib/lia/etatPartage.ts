@@ -1,13 +1,17 @@
 // lib/lia/etatPartage.ts — l'état PARTAGÉ de LIA (contrat `commun/assistant/CONTRAT-etat-lia.md`) :
-// ce qui fait d'elle UNE seule LIA, quel que soit l'hôte. PUR : la lecture du corps et la relecture
-// de la ligne gardée ; l'I/O vit dans `depotEtat.ts`, les routes dans `app/api/…`.
+// ce qui fait d'elle UNE seule LIA, quel que soit l'hôte. PUR : la lecture du corps, la séparation
+// de la discussion et la relecture de la ligne gardée ; l'I/O vit dans `depotEtat.ts`, les routes
+// dans `app/api/…`.
 //
-// Une seule définition des bornes : `validerEtat` du paquet épinglé (lia-ui ≥ v0.22.0), le même
-// que LIA applique à ce que l'hôte lui rend. Il retire les clés inconnues, les faits hors verbe, la
-// mémoire lente et le monde intérieur hors bornes ; un champ obligatoire faux refuse tout. Aucun
-// contenu de Marc : des nombres, des verbes de LIA et un nom d'humeur.
+// Une seule définition des bornes : `validerEtat` du paquet épinglé (lia-ui ≥ v0.39.0 pour la
+// discussion), le même que LIA applique à ce que l'hôte lui rend. Il retire les clés inconnues, les
+// faits hors verbe, la mémoire lente et le monde intérieur hors bornes ; un champ obligatoire faux
+// refuse tout. Le JSON de l'état ne porte aucun contenu de Marc : des nombres, des verbes de LIA et
+// un nom d'humeur. La DISCUSSION (du texte de Marc, ADR 0030) en est retirée avant l'écriture, rangée
+// à part et chiffrée par `depotEtat.ts`, puis remise à la lecture : elle repasse alors par
+// `validerEtat`, donc par les mêmes bornes, jamais recopiées ici.
 
-import { validerEtat, type EtatLia } from "@mokarade/lia-ui";
+import { validerEtat, type DiscussionPartagee, type EtatLia } from "@mokarade/lia-ui";
 
 export type EtatPartage = EtatLia;
 
@@ -35,7 +39,21 @@ export function lireEtat(brut: string): LectureEtat {
     : { ok: false, status: 400, code: "corps_invalide", message: "État de LIA non conforme (contrat CONTRAT-etat-lia)." };
 }
 
-/** Ce que la base garde déjà est-il relu tel quel ? Une ligne abîmée n'est jamais rendue : `null`. */
-export function relireEtat(garde: unknown): EtatPartage | null {
-  return validerEtat(garde);
+/** L'état SANS sa discussion (ce que le JSON de la base garde) et la discussion à ranger à part, chiffrée. PURE. */
+export function separerDiscussion(etat: EtatPartage): { sansDiscussion: EtatPartage; discussion: DiscussionPartagee | null } {
+  const { discussion, ...sansDiscussion } = etat;
+  return { sansDiscussion, discussion: discussion ?? null };
+}
+
+/**
+ * Ce que la base garde déjà est-il relu tel quel ? Une ligne abîmée n'est jamais rendue : `null`.
+ * La discussion, déchiffrée par l'appelant, est remise dans l'état AVANT `validerEtat` : ses bornes
+ * sont celles du paquet. Une clé `discussion` qui traînerait dans le JSON gardé est ignorée.
+ */
+export function relireEtat(garde: unknown, discussion?: unknown): EtatPartage | null {
+  if (typeof garde !== "object" || garde === null) return null;
+  const base: Record<string, unknown> = { ...(garde as Record<string, unknown>) };
+  delete base.discussion;
+  if (discussion !== undefined) base.discussion = discussion;
+  return validerEtat(base);
 }
