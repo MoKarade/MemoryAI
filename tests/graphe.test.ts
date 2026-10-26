@@ -1,4 +1,4 @@
-// tests/graphe.test.ts — les cinq règles de l'ADR 0002 §5.3, une par une.
+// tests/graphe.test.ts — les règles de l'ADR 0002 §5.3 (cinq de la v1, quatre du 26/10), une par une.
 //
 // Ce qui est vérifié ici n'est pas « ça produit des liens » mais ce que chaque règle
 // AFFIRME : qu'elle lie ce qu'elle doit lier, qu'elle ne lie PAS ce qui se ressemble sans
@@ -13,6 +13,8 @@ import {
   REGLES_ORIENTEES,
   seChevauchent,
   TAILLE_MAX_GROUPE,
+  LIENS_MAX_PAR_FAIT,
+  JOURS_PROCHES,
   type FaitPourGraphe,
 } from "../lib/graphe";
 import { TYPES_LIEN } from "../lib/db/schema";
@@ -44,11 +46,14 @@ describe("les types de lien du code et ceux de la base disent la même chose", (
           fait({ id: "d", valideDe: "2026-02-01", remplaceId: "c" }),
           fait({ id: "e", attributs: { emetteur: "Revenu Québec" } }),
           fait({ id: "f", attributs: { emetteur: "revenu quebec" } }),
+          fait({ id: "g", domaine: "impots", attributs: { emetteur: "Revenu Québec" }, sources: ["src1"] }),
+          fait({ id: "h", domaine: "sante", predicat: "sante.clinique", valeur: "Clinique Fictive", sources: ["src1"] }),
+          fait({ id: "i", domaine: "quartier", predicat: "quartier.voisin", valeur: "clinique fictive", valideDe: "2026-01-03" }),
         ],
         [{ id: "q1", question: "Quand finit ton bail ?", faitId: "e" }],
       ).liens.map((l) => l.type),
     );
-    // Les cinq règles de la v1 sont toutes atteignables par ce corpus : si l'une cessait de
+    // Toutes les règles sont atteignables par ce corpus : si l'une cessait de
     // l'être, on la croirait vivante sans qu'aucun test ne la joue.
     expect([...calcules].sort()).toEqual([...TYPES_LIEN].sort());
   });
@@ -248,9 +253,10 @@ describe("ce qui vaut pour tous les liens", () => {
 
   it("parType trie par nombre de liens, et chaque groupe par poids décroissant", () => {
     const { liens } = calculerLiens([
+      // Débuts à un mois d'écart : les périodes ouvertes se chevauchent, sans « dates proches ».
       fait({ id: "a", domaine: "emploi", valideDe: "2026-01-01" }),
-      fait({ id: "b", domaine: "logement", valideDe: "2026-01-01" }),
-      fait({ id: "c", domaine: "sante", valideDe: "2026-01-01" }),
+      fait({ id: "b", domaine: "logement", valideDe: "2026-02-01" }),
+      fait({ id: "c", domaine: "sante", valideDe: "2026-03-01" }),
       fait({ id: "d", remplaceId: "a" }),
     ]);
     const groupes = parType(liens);
@@ -260,5 +266,93 @@ describe("ce qui vaut pour tous les liens", () => {
 
   it("aucune mémoire ⇒ aucun lien, et aucune abstention", () => {
     expect(calculerLiens([])).toEqual({ liens: [], abstentions: [] });
+  });
+});
+
+describe("les quatre règles du 26/10 (tâche MemoryAI 186)", () => {
+  const de = (liens: ReturnType<typeof calculerLiens>["liens"], type: string) => liens.filter((l) => l.type === type);
+
+  it("meme-source : deux faits tirés de la même source, quel que soit leur domaine", () => {
+    const { liens } = calculerLiens([
+      fait({ id: "a", domaine: "emploi", sources: ["s1", "s1"] }),
+      fait({ id: "b", domaine: "sante", sources: ["s1"] }),
+      fait({ id: "c", domaine: "sante", sources: ["s2"] }),
+    ]);
+    expect(de(liens, "meme-source").map((l) => [l.faitA, l.faitB])).toEqual([["a", "b"]]);
+  });
+
+  it("meme-valeur : même valeur sous deux prédicats ; le pourquoi nomme les prédicats, jamais la valeur", () => {
+    const { liens } = calculerLiens([
+      fait({ id: "a", predicat: "famille.soeur", valeur: "Prénom Fictif" }),
+      fait({ id: "b", predicat: "voyage.compagnon", valeur: "prenom  fictif" }),
+      fait({ id: "c", predicat: "voyage.compagnon", valeur: "Prénom Fictif" }),
+    ]);
+    const l = de(liens, "meme-valeur");
+    // b et c ont le même prédicat : un doublon, pas une trouvaille.
+    expect(l.map((x) => [x.faitA, x.faitB])).toEqual([
+      ["a", "b"],
+      ["a", "c"],
+    ]);
+    expect(l[0]?.pourquoi).toBe("Même valeur sous « famille.soeur » et « voyage.compagnon ».");
+    expect(liens.some((x) => /fictif/i.test(x.pourquoi))).toBe(false);
+  });
+
+  it("meme-valeur ignore les valeurs banales, trop courtes, et tout ce qui n'est pas du texte", () => {
+    const { liens } = calculerLiens([
+      fait({ id: "a", predicat: "p.un", valeur: "Oui" }),
+      fait({ id: "b", predicat: "p.deux", valeur: "oui" }),
+      fait({ id: "c", predicat: "p.un", valeur: "ab" }),
+      fait({ id: "d", predicat: "p.deux", valeur: "AB" }),
+      fait({ id: "e", predicat: "p.un", valeurType: "date", valeur: "2026-01-01" }),
+      fait({ id: "f", predicat: "p.deux", valeurType: "date", valeur: "2026-01-01" }),
+    ]);
+    expect(de(liens, "meme-valeur")).toHaveLength(0);
+  });
+
+  it("meme-emetteur : le même émetteur dans deux domaines ; le même domaine reste à la règle 4", () => {
+    const { liens } = calculerLiens([
+      fait({ id: "a", domaine: "impots", attributs: { emetteur: "Organisme Fictif" } }),
+      fait({ id: "b", domaine: "logement", attributs: { emetteur: "organisme fictif" } }),
+      fait({ id: "c", domaine: "impots", attributs: { emetteur: "Organisme Fictif" } }),
+    ]);
+    expect(de(liens, "meme-emetteur").map((l) => [l.faitA, l.faitB])).toEqual([
+      ["a", "b"],
+      ["b", "c"],
+    ]);
+    expect(de(liens, "meme-domaine-meme-entite").map((l) => [l.faitA, l.faitB])).toEqual([["a", "c"]]);
+  });
+
+  it(`dates-proches : ${JOURS_PROCHES} jours au plus, domaines différents, la date d'un fait-date compte`, () => {
+    const { liens } = calculerLiens([
+      fait({ id: "a", domaine: "sante", valeurType: "date", valeur: "2026-03-10" }),
+      fait({ id: "b", domaine: "emploi", valideDe: "2026-03-17" }),
+      fait({ id: "c", domaine: "logement", valideDe: "2026-03-18" }),
+      fait({ id: "d", domaine: "sante", valideDe: "2026-03-12" }),
+    ]);
+    const l = de(liens, "dates-proches");
+    // a–c : huit jours, trop loin ; a–d : même domaine.
+    expect(l.map((x) => [x.faitA, x.faitB]).sort()).toEqual([
+      ["a", "b"],
+      ["b", "c"],
+      ["b", "d"],
+      ["c", "d"],
+    ]);
+    expect(l.find((x) => x.faitA === "a")?.pourquoi).toBe("Datés à 7 jours d'écart (sante et emploi).");
+  });
+
+  it("le plafond par fait garde les liens les plus forts, et il le dit", () => {
+    // Un fait relié par ses sources à LIENS_MAX_PAR_FAIT + 20 autres, en groupes de 100.
+    const n = LIENS_MAX_PAR_FAIT + 20;
+    const autres = Array.from({ length: n }, (_, i) =>
+      fait({ id: `f${String(i).padStart(4, "0")}`, domaine: `d${i}`, sources: [`s${Math.floor(i / 100)}`] }),
+    );
+    const centre = fait({ id: "centre", domaine: "centre", sources: ["s0", "s1", "s2", "s3"] });
+    const r = calculerLiens([centre, ...autres]);
+    expect(r.liens.filter((l) => l.faitA === "centre" || l.faitB === "centre")).toHaveLength(LIENS_MAX_PAR_FAIT);
+    const p = r.abstentions.find((a) => a.regle === "plafond");
+    expect(p?.taille).toBeGreaterThanOrEqual(1);
+    expect(p?.motif).toMatch(/liens plus faibles écartés/);
+    // Même entrée, mêmes liens gardés : le plafond est déterministe.
+    expect(calculerLiens([centre, ...autres]).liens).toEqual(r.liens);
   });
 });

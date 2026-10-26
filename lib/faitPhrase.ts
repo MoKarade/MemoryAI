@@ -123,6 +123,10 @@ export const LIBELLES_LIEN: Record<(typeof TYPES_LIEN)[number], string> = {
   remplacement: "remplace ou est remplacé",
   "meme-domaine-meme-entite": "parle de la même chose",
   "cause-declaree": "cause déclarée",
+  "meme-source": "tiré de la même source",
+  "meme-valeur": "nomme la même chose",
+  "meme-emetteur": "vient du même émetteur",
+  "dates-proches": "daté à quelques jours près",
 };
 
 /**
