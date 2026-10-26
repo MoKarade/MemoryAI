@@ -1,15 +1,20 @@
 "use client";
-// app/memoire/MemoireClient.tsx — le réseau 3D de la mémoire, ses filtres et la fiche du point
+// app/memoire/MemoireClient.tsx — le réseau 3D de la mémoire, ses filtres et la carte du point
 // choisi (MemoryAI#74). Les données arrivent toutes calculées du serveur (`construireReseau`) :
 // ce composant ne fait que filtrer et montrer.
+//
+// Depuis le 26/10/2026 (Marc, tâche MemoryAI 323), la carte d'un fait ne renvoie plus à
+// l'ancienne page `/fait/[id]` : elle liste les faits auxquels il est relié, et un clic sur l'un
+// d'eux le choisit dans le réseau. Aucune valeur de fait n'est affichée ici.
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Graphe3D } from "@/components/Graphe3D";
-import { filtrerVisibles, JETON_NIVEAU, type Reseau } from "@/lib/memoire/reseau";
+import { filtrerVisibles, JETON_NIVEAU, voisinsDe, type Reseau } from "@/lib/memoire/reseau";
 
 const NIVEAUX = [0, 1, 2, 3] as const;
 const SENS_NIVEAU = ["public", "courant", "privé", "intime"] as const;
+/** Combien de voisins la carte montre ; le reste est compté, pas dessiné. */
+const VOISINS_MAX = 12;
 
 export function MemoireClient({ reseau, totalLiens, papiers, tronque }: { reseau: Reseau; totalLiens: number; papiers: number | null; tronque: boolean }) {
   const [niveaux, setNiveaux] = useState<ReadonlySet<number>>(new Set(NIVEAUX));
@@ -19,6 +24,7 @@ export function MemoireClient({ reseau, totalLiens, papiers, tronque }: { reseau
   const visibles = useMemo(() => filtrerVisibles(reseau.noeuds, niveaux, recherche), [reseau, niveaux, recherche]);
   const nombreVisibles = visibles.filter((v, i) => v && !reseau.noeuds[i]?.centre).length;
   const noeud = choisi >= 0 ? reseau.noeuds[choisi] : undefined;
+  const voisins = useMemo(() => (choisi >= 0 ? voisinsDe(reseau, choisi) : []), [reseau, choisi]);
 
   const basculer = (n: number) =>
     setNiveaux((avant) => {
@@ -89,10 +95,22 @@ export function MemoireClient({ reseau, totalLiens, papiers, tronque }: { reseau
                 </span>{" "}
                 <span className="doux">{noeud.degre} lien(s)</span>
               </p>
-              {noeud.id && (
-                <Link className="bouton bouton-second" href={`/fait/${noeud.id}`}>
-                  Ouvrir la fiche
-                </Link>
+              {voisins.length === 0 ? (
+                <p className="doux">Aucun lien avec un autre fait affiché.</p>
+              ) : (
+                <>
+                  <p className="surtitre">Relié à</p>
+                  <ul>
+                    {voisins.slice(0, VOISINS_MAX).map((v) => (
+                      <li key={v.index}>
+                        <button type="button" className="bouton bouton-second" onClick={() => setChoisi(v.index)}>
+                          {v.domaine} · {v.etiquette}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                  {voisins.length > VOISINS_MAX && <p className="doux">Et {voisins.length - VOISINS_MAX} autre(s) fait(s) relié(s).</p>}
+                </>
               )}
             </>
           )}
