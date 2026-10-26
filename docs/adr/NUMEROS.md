@@ -35,3 +35,4 @@
 | 0028 | LIA montre les bornes de recharge proches de ta ville, d'après le fichier ouvert du Circuit électrique | accepté (demande de Marc, 25/10 20:21Z ; OK de Marc, 26/10 13:07Z, « Oui, tout, dans cet ordre ») ; codé | MemoryAI#234 |
 | 0029 | L'agenda du jour arrive de DriveAI, par une porte à lui, et ne garde que deux jours | proposé (demande de Marc, 25/10 20:21Z) ; OK de Marc côté MemoryAI le 26/10 12:15Z (carte) ; l'envoi attend son oui côté DriveAI | MemoryAI#236 |
 | 0030 | La discussion de LIA suit Marc d'une app à l'autre, chiffrée, par l'état partagé | accepté (carte de Marc, 26/10 13:12Z, « Oui, via MemoryAI » ; OK de Marc sur ce texte, 26/10 17:04Z, « Oui, tel quel ») ; code en cours | MemoryAI#263 |
+| 0031 | Tout ce qui sort des apps arrive chez LIA, par une porte à jeton par app | proposé (demande de Marc, 26/10 14:46Z ; carte du 26/10 14:50Z) ; code après l'OK de Marc sur ce texte | MemoryAI#281 |
