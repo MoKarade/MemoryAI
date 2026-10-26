@@ -4,7 +4,8 @@
 // des règles (`lib/graphe.ts`). Couleur = niveau du fait (N0 à N3).
 //
 // ⚠️ AUCUNE VALEUR DE FAIT ICI, seulement des prédicats : le réseau montre la STRUCTURE de la
-// mémoire. Le contenu s'ouvre sur la fiche (`/fait/[id]`), qui applique la politique des niveaux.
+// mémoire. Depuis le 26/10/2026 (tâche MemoryAI 323), la carte d'un point ne mène plus à
+// l'ancienne fiche `/fait/[id]` : elle liste les faits auquel il est relié (`voisinsDe`).
 //
 // ⚠️ ON BORNE, ET ON LE DIT. Au-delà de `MAX_NOEUDS_3D`, on garde les faits les plus reliés
 // (les autres n'ont rien à montrer dans un réseau) et `omis` compte le reste.
@@ -111,6 +112,33 @@ export function construireReseau(faits: readonly FaitReseau[], liens: readonly L
     })),
   ];
   return { noeuds, aretes, domaines, omis: faits.length - gardes.length };
+}
+
+/** Un fait relié au point choisi : son rang dans `Reseau.noeuds`, de quoi le nommer, et la force du lien. */
+export interface Voisin {
+  index: number;
+  etiquette: string;
+  domaine: string;
+  poids: number;
+}
+
+/**
+ * Les faits reliés au point `i`, du lien le plus fort au plus faible (puis par étiquette). Les
+ * fils vers les centres de domaine ne comptent pas : ce sont des attaches du dessin, pas des liens
+ * de la mémoire. Un centre n'a pas de voisins au sens des liens, donc `[]`. Structurel : aucune
+ * valeur de fait.
+ */
+export function voisinsDe(r: Pick<Reseau, "noeuds" | "aretes">, i: number): Voisin[] {
+  if (r.noeuds[i]?.centre !== false) return [];
+  const force = new Map<number, number>();
+  for (const [a, b, poids] of r.aretes) {
+    const autre = a === i ? b : b === i ? a : -1;
+    if (r.noeuds[autre]?.centre !== false) continue;
+    force.set(autre, Math.max(force.get(autre) ?? 0, poids));
+  }
+  return [...force]
+    .map(([index, poids]) => ({ index, etiquette: r.noeuds[index]!.etiquette, domaine: r.noeuds[index]!.domaine, poids }))
+    .sort((x, y) => y.poids - x.poids || x.etiquette.localeCompare(y.etiquette) || x.index - y.index);
 }
 
 /**
