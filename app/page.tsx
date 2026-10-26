@@ -2,7 +2,7 @@
 // maquette v5 validée par Marc le 22/10/2026 ; « Memory ai est toujours pas en refonte », 23/10).
 //
 // La conversation complète a déménagé à `/chat` (section « Parler ») ; toucher LIA ouvre ici une
-// discussion légère (`lia-ui`, `POST /api/lia/ask`). Cette page LIT seulement : la dépense du jour et les plafonds, les trente derniers jours et les modèles, les appels du mois par outil, ce qu'elle a fait aujourd'hui, ses dernières vérifications, les échéances de tes papiers et l'agenda du jour envoyé par DriveAI. Ce que montre chaque espace est composé par
+// discussion légère (`lia-ui`, `POST /api/lia/ask`). Cette page LIT seulement : la dépense du jour et les plafonds, les trente derniers jours et les modèles, les appels du mois par outil, ce qu'elle a fait aujourd'hui, ses dernières vérifications, les échéances de tes papiers, l'agenda du jour envoyé par DriveAI et ses idées pour tes apps. Ce que montre chaque espace est composé par
 // `contenuEspaces` (pur, `tests/accueil.test.ts`) : sans source réelle, un espace le dit.
 //
 // ⚠️ `requireSession()` comme partout (`tests/gardePages.test.ts`), et `force-dynamic` : sans
@@ -15,6 +15,7 @@ import { contenuEspaces, type EntreesEspaces } from "@/lib/accueil/espaces";
 import { debutDuMoisQuebec, jourMoins, LECTURES_DU_JOUR_MAX, LIGNES_RELANCES, minuitQuebec, RELANCES_JOURS_A_VENIR, RELANCES_JOURS_PASSES } from "@/lib/accueil/tableaux";
 import { jourQuebec } from "@/lib/coutChat";
 import { depotAdminDrizzle } from "@/lib/depotAdmin";
+import { lireIdees } from "@/lib/idees/depot";
 import { OUTILS_LIA_HUB } from "@/lib/lia/ask";
 import { TYPES_BLOCS } from "@/lib/lia/blocs";
 import { accesDonnees } from "@/lib/pageDonnees";
@@ -35,6 +36,7 @@ export default async function MaisonDeLia() {
   let activite: EntreesEspaces["activite"] = null;
   let relances: EntreesEspaces["relances"] = null;
   let agenda: EntreesEspaces["agenda"] = null;
+  let idees: EntreesEspaces["idees"] = null;
   let meteo: EntreesEspaces["meteo"] = null;
   let actualite: EntreesEspaces["actualite"] = null;
   if (acces.ok) {
@@ -53,10 +55,12 @@ export default async function MaisonDeLia() {
     relances = await accueil.echeancesEntre(jour, jourMoins(jour, RELANCES_JOURS_PASSES), jourMoins(jour, -RELANCES_JOURS_A_VENIR), LIGNES_RELANCES);
     // L'agenda du jour que DriveAI envoie (ADR 0029) : rien reçu aujourd'hui, la tuile le dit.
     agenda = (await lireAgendaDuJour(acces.db, acces.cle, jour)) ?? "non-recu";
+    // Ses idées pour tes apps (ADR 0027) : la page les LIT, c'est la passe d'apprentissage qui les écrit.
+    idees = await lireIdees(acces.db, acces.cle);
     // Le monde (ADR 0024) : servi du cache en base, ECCC relu au plus toutes les 30 minutes.
     meteo = await sourceMeteoEccc(acces.db, process.env.MEMORYAI_METEO_VILLE).lire(new Date());
     actualite = await sourceActualite(acces.db).lire(new Date());
   }
-  const contenus = contenuEspaces({ budget, appels, lectures, activite, relances, agenda, meteo, actualite, outils: [...OUTILS_LIA_HUB], formes: TYPES_BLOCS });
+  const contenus = contenuEspaces({ budget, appels, lectures, activite, relances, agenda, idees, meteo, actualite, outils: [...OUTILS_LIA_HUB], formes: TYPES_BLOCS });
   return <AccueilClient contenus={contenus} />;
 }
