@@ -2,7 +2,7 @@
 // (ADR 0001 Q14). Le catalogue est le contrat public : un outil ajouté = une ligne ici ET une
 // décision écrite.
 //
-// ══ TROIS RÈGLES QUI GOUVERNENT CE FICHIER ══════════════════════════════════════════════════════════════════
+// ══ TROIS RÈGLES QUI GOUVERNENT CE FICHIER ═══════════════════════════════════════════
 //
 // 1. UN FAIT SORT EN RÉSULTAT D'OUTIL, BALISÉ, JAMAIS AUTREMENT (`lib/mcp/balisage.ts`).
 //    Aucun outil ne rend un fait sans passer par `rendreServables` (statuts, canari, N2) puis
@@ -199,8 +199,9 @@ async function lireEtFiltrer(args: Record<string, unknown>, ctx: ContexteOutils)
   // pas proposé. C'est le seul endroit du dépôt où ce verrou est CONSULTÉ pour les outils.
   const retenus = await ctx.lecture.predicatsRetenus();
   const rendu = rendreServables(rows, p, ctx.cle, retenus);
-  // ⚠️ `rendu.retenus` ÉTAIT DÉTRUIT ICI, et `rendreServables` le calcule exprs. Son propre
-  // commentaire dit pourquoi : « « aucun fait » et « des faits, mais leur prédicat attend » ne disent pas la même chose, et seul le second désigne un geste (aller les accepter) ».
+  // ⚠️ `rendu.retenus` ÉTAIT DÉTRUIT ICI, et `rendreServables` le calcule exprès. Son propre
+  // commentaire dit pourquoi : « « aucun fait » et « des faits, mais leur prédicat attend »
+  // ne disent pas la même chose, et seul le second désigne un geste (aller les accepter) ».
   // Un compteur qui existe et que personne ne lit n'est pas une protection
   // (`UN-INVENTAIRE-N-EST-UNE-PROTECTION-QUE-POUR-QUI-LE-LIT`).
   return { p, faits: rendu.faits, illisibles: rendu.illisibles, retenus: rendu.retenus };
@@ -535,7 +536,7 @@ export const OUTILS: readonly Outil[] = [
       // ⚠️ La note NE PARAÎT QUE s'il y a vraiment plusieurs graphies. Mesuré sur le corpus
       // de Marc : « Banque Aurore » (56), « Banque Aurore Assurances » (12) et « Banque Aurore
       // Assurances Générales » (7) — donc 75, là où un filtre exact rend 56. Sans cette
-      // ligne le modèle ne peut pas le savoir : les émetteurs sont filtrés par clé keyed, et
+      // ligne le modèle ne peut pas le savoir : les émetteurs sont filtrés par clé keyée, et
       // un hash n'a pas de préfixe.
       const note = noteFamilles(valeursLues);
       return {
@@ -613,7 +614,7 @@ export const OUTILS: readonly Outil[] = [
       // le premier.
       let correspondent = await ctx.pieces.compter({ ...filtres, texte });
 
-      // ── ADR 0011 §2.4 : le plein texte des papiers N3, EN MÉMOIRE ─────────────────────────────────────
+      // ── ADR 0011 §2.4 : le plein texte des papiers N3, EN MÉMOIRE ────────────────────
       // Un papier N3 n'a pas de colonne `recherche` (régime chiffré) : `to_tsvector` ne le voit
       // jamais, et « mon passeport » ne rendait rien alors que le passeport est là. Seulement
       // quand cette politique SERT le niveau 3 — donc jamais au MCP —, on déchiffre les papiers
