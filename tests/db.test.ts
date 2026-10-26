@@ -134,13 +134,15 @@ describe("les trente tables", () => {
       "predicats_refuses",
       "provenances",
       "questions",
-      // [ADR 0026] Les secondes lectures des papiers par DriveAI (migration 0031).
+      // [ADR 0026] Les secondes lectures des pièces par DriveAI (migration 0031).
       "relectures_pieces",
       // [ADR 0019] Les échecs du sauvetage (des raisons, jamais une valeur) et son état.
       "sauvetage_echecs",
       "sauvetage_etat",
       // [ADR 0031] Ce qui sort des apps, une ligne par événement, titre et résumé chiffrés (migration 0035).
       "sorties",
+      // [ADR 0031] Ce que la porte des sorties a refusé, un nombre par jour et par code (migration 0036).
+      "sorties_refus",
       "sujets",
       // [ADR 0025] La trace des relectures de LIA (migration 0030).
       "validations_lia",

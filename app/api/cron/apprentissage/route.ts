@@ -35,6 +35,7 @@ import { rendreLisible } from "@/lib/lecture";
 import { accesDonnees } from "@/lib/pageDonnees";
 import { depotPiecesLectureDrizzle } from "@/lib/pieces/depotLecture";
 import { depotRelectureDrizzle } from "@/lib/relectureLia";
+import { purgerSorties, type ResultatPurge } from "@/lib/sorties/retention";
 
 export const dynamic = "force-dynamic";
 /** Une passe lit plusieurs conversations et appelle le modèle : la seconde par défaut ne suffit pas. */
@@ -53,8 +54,9 @@ function rendre(
   banc: FinPasseBanc | "echec" | null = null,
   deduction: ResultatDeduction | "echec" | null = null,
   idees: ResultatIdees | "echec" | null = null,
+  sorties: ResultatPurge | "echec" | null = null,
 ): Response {
-  return Response.json({ ...r, motif: MOTIFS_FIN_PASSE[r.fin], banc, deduction, idees }, { status: 200, headers: NO_STORE });
+  return Response.json({ ...r, motif: MOTIFS_FIN_PASSE[r.fin], banc, deduction, idees, sorties }, { status: 200, headers: NO_STORE });
 }
 
 export async function POST(req: Request): Promise<Response> {
@@ -122,8 +124,18 @@ export async function POST(req: Request): Promise<Response> {
     idees = "echec";
   }
 
+  // La rétention des sorties des apps (ADR 0031 § 4, tâche MemoryAI 281) : 180 jours puis 2 000 par app, aucun
+  // modèle, donc AVANT la clé Anthropic. Même contrat : un échec se voit (`sorties: "echec"`), il ne bloque rien.
+  let sorties: ResultatPurge | "echec";
+  try {
+    sorties = await purgerSorties(acces.db, new Date());
+  } catch (err) {
+    console.error("[sorties] purge impossible", err);
+    sorties = "echec";
+  }
+
   const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
-  if (!apiKey) return rendre(passeVide("cle-absente"), banc, deduction, idees);
+  if (!apiKey) return rendre(passeVide("cle-absente"), banc, deduction, idees, sorties);
 
   const anthropic = new Anthropic({ apiKey });
   const r = await passeApprentissage({
@@ -170,7 +182,7 @@ export async function POST(req: Request): Promise<Response> {
     // ADR 0025 : LIA valide seule ce que deux signaux confirment ; ses comptes sortent dans la réponse.
     relecture: depotRelectureDrizzle(acces.db),
   });
-  return rendre(r, banc, deduction, idees);
+  return rendre(r, banc, deduction, idees, sorties);
 }
 
 /**
