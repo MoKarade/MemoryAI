@@ -30,6 +30,7 @@ import { depotDrizzle } from "@/lib/depotFaits";
 import { depotLectureDrizzle } from "@/lib/depotLecture";
 import { depotQuestionsDrizzle } from "@/lib/depotQuestions";
 import { estGele } from "@/lib/gel";
+import { passeIdees, type ResultatIdees } from "@/lib/idees/depot";
 import { rendreLisible } from "@/lib/lecture";
 import { accesDonnees } from "@/lib/pageDonnees";
 import { depotPiecesLectureDrizzle } from "@/lib/pieces/depotLecture";
@@ -47,8 +48,13 @@ function memeSecret(a: string, b: string): boolean {
   return timingSafeEqual(ha, hb);
 }
 
-function rendre(r: ResultatPasse, banc: FinPasseBanc | "echec" | null = null, deduction: ResultatDeduction | "echec" | null = null): Response {
-  return Response.json({ ...r, motif: MOTIFS_FIN_PASSE[r.fin], banc, deduction }, { status: 200, headers: NO_STORE });
+function rendre(
+  r: ResultatPasse,
+  banc: FinPasseBanc | "echec" | null = null,
+  deduction: ResultatDeduction | "echec" | null = null,
+  idees: ResultatIdees | "echec" | null = null,
+): Response {
+  return Response.json({ ...r, motif: MOTIFS_FIN_PASSE[r.fin], banc, deduction, idees }, { status: 200, headers: NO_STORE });
 }
 
 export async function POST(req: Request): Promise<Response> {
@@ -105,8 +111,19 @@ export async function POST(req: Request): Promise<Response> {
     deduction = "echec";
   }
 
+  // Les idées de LIA pour tes apps (ADR 0027, tâche MemoryAI 233) : des comptes sur les demandes
+  // du hub, aucun modèle, donc AVANT la clé Anthropic. Même contrat : un échec se voit
+  // (`idees: "echec"`), il ne bloque rien. La réponse ne porte que des nombres.
+  let idees: ResultatIdees | "echec";
+  try {
+    idees = await passeIdees(acces.db, acces.cle, new Date());
+  } catch (err) {
+    console.error("[idees] passe impossible", err);
+    idees = "echec";
+  }
+
   const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
-  if (!apiKey) return rendre(passeVide("cle-absente"), banc, deduction);
+  if (!apiKey) return rendre(passeVide("cle-absente"), banc, deduction, idees);
 
   const anthropic = new Anthropic({ apiKey });
   const r = await passeApprentissage({
@@ -153,7 +170,7 @@ export async function POST(req: Request): Promise<Response> {
     // ADR 0025 : LIA valide seule ce que deux signaux confirment ; ses comptes sortent dans la réponse.
     relecture: depotRelectureDrizzle(acces.db),
   });
-  return rendre(r, banc, deduction);
+  return rendre(r, banc, deduction, idees);
 }
 
 /**
