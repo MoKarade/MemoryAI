@@ -58,7 +58,9 @@ export type TypeLien =
   | "meme-source"
   | "meme-valeur"
   | "meme-emetteur"
-  | "dates-proches";
+  | "dates-proches"
+  /** Posé par un modèle, jamais par une règle d'ici : `lib/sensProche.ts`. */
+  | "sens-proche";
 
 export interface LienCalcule {
   faitA: string;

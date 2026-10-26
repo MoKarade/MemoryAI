@@ -2,8 +2,8 @@
 //
 // ⚠️ CE QUE CETTE PAGE MONTRE EN PREMIER, C'EST LE POURQUOI. Un graphe qui affiche des traits
 // sans dire ce qui les justifie ne s'audite pas : on le croit ou on l'ignore. Chaque lien
-// porte donc la phrase de la règle qui l'a posé, et les liens d'un modèle (phase suivante,
-// `origine: "modele"`) resteront distingués de ceux d'une règle — jamais mélangés.
+// porte donc la phrase de la règle qui l'a posé, et les liens d'un modèle (`origine: "modele"`,
+// tâche MemoryAI 186 B) ont leur section « devinés », distincte de celles des règles.
 //
 // ⚠️ ELLE DIT AUSSI L'ÉCART. La table est une PHOTO du dernier recalcul ; les faits, eux,
 // bougent. La page compare donc ce qui est enregistré à ce que les règles diraient
@@ -52,17 +52,20 @@ export default async function GraphePage() {
   }
 
   const depot = depotLiensDrizzle(acces.db);
-  const [comptes, apercu, faitsBruts] = await Promise.all([
+  const [comptes, apercu, faitsBruts, devines] = await Promise.all([
     depot.comptes(),
     depot.apercu(acces.cle),
     depotLectureDrizzle(acces.db).faits({ statuts: ["valide", "propose"], limite: 1000 }),
+    depot.devines(LIMITE_PAR_TYPE),
   ]);
 
   // Le prédicat suffit à situer une extrémité, et il n'est pas chiffré : c'est exactement ce
   // qu'il faut pour lire un lien sans lire un fait.
   const predicatDe = new Map(faitsBruts.map((r) => [r.fait.id, r.fait.predicat]));
   const groupes = parType(apercu.liens);
-  const ecart = apercu.liens.length - comptes.total;
+  // L'écart compare les liens de RÈGLE seulement : les liens devinés ne sont pas dans l'aperçu.
+  const enregistres = comptes.total - comptes.devines;
+  const ecart = apercu.liens.length - enregistres;
 
   // Le DESSIN. Il ne montre que les faits RELIÉS, et au plus quelques dizaines : c'est un
   // résumé, jamais la source — la liste en dessous reste complète, et c'est elle qui porte
@@ -87,7 +90,7 @@ export default async function GraphePage() {
         <p className="lead">
           {apercu.liens.length === 0
             ? "Aucun lien. Les règles n'ont rien trouvé à rapprocher — c'est une réponse, pas une panne."
-            : `${apercu.liens.length} lien(s) entre ${apercu.faitsLus} faits, posés par cinq règles déterministes. Chaque lien dit pourquoi il existe.`}
+            : `${apercu.liens.length} lien(s) entre ${apercu.faitsLus} faits, posés par des règles déterministes. Chaque lien dit pourquoi il existe.`}
         </p>
 
         <form action={recalculerAction}>
@@ -98,7 +101,7 @@ export default async function GraphePage() {
 
         {ecart !== 0 && (
           <p className="alerte bandeau">
-            {comptes.total} lien(s) enregistré(s), {apercu.liens.length} que les règles donnent aujourd&apos;hui. La
+            {enregistres} lien(s) enregistré(s), {apercu.liens.length} que les règles donnent aujourd&apos;hui. La
             mémoire a bougé depuis le dernier enregistrement.
           </p>
         )}
@@ -173,6 +176,35 @@ export default async function GraphePage() {
             )}
           </section>
         ))}
+
+        <section aria-label="Liens devinés">
+          <h2>
+            Liens devinés <span className="hint">· {comptes.devines}</span>
+          </h2>
+          <p className="hint">
+            Posés chaque jour par un petit modèle gratuit qui tourne dans la mémoire : une ressemblance de sens,
+            pas un rapport établi. Ils ne remplacent jamais un lien de règle.
+          </p>
+          {devines.length === 0 ? (
+            <p className="hint">Aucun lien deviné enregistré pour l&apos;instant.</p>
+          ) : (
+            <ul className="liste-simple">
+              {devines.map((l) => (
+                <li key={l.id}>
+                  <Link href={`/fait/${l.faitA}`}>
+                    <code>{predicatDe.get(l.faitA) ?? l.faitA}</code>
+                  </Link>{" "}
+                  —{" "}
+                  <Link href={`/fait/${l.faitB}`}>
+                    <code>{predicatDe.get(l.faitB) ?? l.faitB}</code>
+                  </Link>
+                  <br />
+                  <span className="hint">{l.pourquoi}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
       </main>
     </>
   );

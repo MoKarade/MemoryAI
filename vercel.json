@@ -12,6 +12,10 @@
     {
       "path": "/api/cron/apprentissage",
       "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/reseau",
+      "schedule": "27 10 * * *"
     }
   ]
 }

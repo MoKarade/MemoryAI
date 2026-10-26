@@ -127,6 +127,7 @@ export const LIBELLES_LIEN: Record<(typeof TYPES_LIEN)[number], string> = {
   "meme-valeur": "nomme la même chose",
   "meme-emetteur": "vient du même émetteur",
   "dates-proches": "daté à quelques jours près",
+  "sens-proche": "a un sens proche (deviné)",
 };
 
 /**

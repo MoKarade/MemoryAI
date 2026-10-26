@@ -183,7 +183,7 @@ describe("recalculer", () => {
     await poser({ id: "b", valeurType: "ref_document", valeur: "doc-1" });
     const depot = depotLiensDrizzle(db);
     await depot.recalculer(cle, T0);
-    expect(await depot.comptes()).toEqual({ total: 1, parType: { "meme-document": 1 } });
+    expect(await depot.comptes()).toEqual({ total: 1, parType: { "meme-document": 1 }, devines: 0 });
   });
 });
 
