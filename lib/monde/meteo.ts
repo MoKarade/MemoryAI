@@ -41,6 +41,8 @@ interface Prevision {
 
 export interface Meteo {
   ville: string;
+  /** Le point de la ville que rend ECCC (sa `geometry`), pour les bornes proches (ADR 0028) ; absent : ECCC ne le donne pas. */
+  position?: { lat: number; lon: number };
   /** L'heure d'observation des conditions, ISO. */
   observeLe: string;
   temperature: number | null;
@@ -63,6 +65,15 @@ const fr = (v: unknown): unknown => (v && typeof v === "object" ? (v as { fr?: u
 const nombre = (v: unknown): number | null => (typeof v === "number" && Number.isFinite(v) ? v : null);
 const objet = (v: unknown): Record<string, unknown> => (v && typeof v === "object" ? (v as Record<string, unknown>) : {});
 
+/** Le point de la ville (`geometry`, [longitude, latitude]) ; `null` : absent ou hors limites. */
+function lirePoint(json: unknown): { lat: number; lon: number } | null {
+  const c = objet(objet(json).geometry).coordinates;
+  const [lon, lat] = Array.isArray(c) ? (c as unknown[]) : [];
+  const la = nombre(lat);
+  const lo = nombre(lon);
+  return la !== null && lo !== null && Math.abs(la) <= 90 && Math.abs(lo) <= 180 ? { lat: la, lon: lo } : null;
+}
+
 /** Lit la réponse d'ECCC pour une ville. PURE. `null` : la forme n'est pas celle attendue. */
 export function lireMeteoEccc(json: unknown): Meteo | null {
   const p = objet(objet(json).properties);
@@ -83,8 +94,10 @@ export function lireMeteoEccc(json: unknown): Meteo | null {
       const classe = fr(t.class);
       return [{ periode, resume, temperature: valeur !== null && (classe === "high" || classe === "low") ? { valeur, genre: classe === "high" ? "max" : "min" } : null }];
     });
+  const position = lirePoint(json);
   return {
     ville,
+    ...(position && { position }),
     observeLe: new Date(observeLe).toISOString(),
     temperature: nombre(fr(objet(cc.temperature).value)),
     condition: texte(fr(cc.condition)),

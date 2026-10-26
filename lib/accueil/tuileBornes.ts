@@ -11,6 +11,7 @@ import type { Corps, Tableau } from "./tableaux";
 
 const km = (d: number) => `${d < 10 ? d.toFixed(1).replace(".", ",") : Math.round(d)} km`;
 const kw = (v: number) => `${String(v).replace(".", ",")} kW`;
+/** « 24 oct. » : l'abréviation du mois porte déjà son point. */
 const JOUR_DU_FICHIER = new Intl.DateTimeFormat("fr-CA", { timeZone: FUSEAU, day: "numeric", month: "short" });
 
 const vide = (texte: string): Corps => ({ genre: "vide", texte });
@@ -27,7 +28,7 @@ function corpsBornes(b: LectureBornes | null): Corps[] {
   if (b === null) return [vide("La base ne répond pas : les bornes ne sont pas lisibles.")];
   if (!b.ok) return [vide(b.raison === "sans-position" ? "Pas de bornes : la ville de la météo n'a pas de position." : "Bornes indisponibles : le Circuit électrique ne répond pas.")];
   if (b.bornes.parcs.length === 0) return [vide(`Aucune borne du Circuit électrique à moins de ${RAYON_KM} km de ta ville.`)];
-  const reseau = `Réseau du Circuit électrique seulement.${b.bornes.fichierLe ? ` Fichier du ${JOUR_DU_FICHIER.format(new Date(b.bornes.fichierLe))}.` : ""}`;
+  const reseau = `Réseau du Circuit électrique seulement.${b.bornes.fichierLe ? ` Fichier du ${JOUR_DU_FICHIER.format(new Date(b.bornes.fichierLe))}` : ""}`;
   return [{ genre: "liste", elements: b.bornes.parcs.map(ligneParc) }, { genre: "texte", texte: `Les plus proches de ta ville, à vol d'oiseau. ${reseau}` }];
 }
 
