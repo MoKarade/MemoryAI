@@ -1,9 +1,10 @@
 # ADR 0023 — Des faits DÉDUITS par une règle, reliés à ceux d'où ils viennent
 
-- **Statut** : **proposé** (24/10/2026, fil MemoryAI). Il applique la demande de Marc du 24/10/2026
-  (18:44Z : « mon âge n'est écrit dans aucun papier, mais ça devrait être déduit du reste et créer
-  des liens »). Tâche : MemoryAI#185. Le code attend l'OK de Marc (protocole,
-  `docs/claude/11-protocole.md`).
+- **Statut** : **proposé** (24/10/2026, fil MemoryAI) ; **OK de Marc pour le code le 26/10/2026 à
+  13:07Z** (carte « Je code tout ce qui reste, dans l'ordre proposé ? », réponse « Oui, tout, dans
+  cet ordre »). Il applique la demande de Marc du 24/10/2026 (18:44Z : « mon âge n'est écrit dans
+  aucun papier, mais ça devrait être déduit du reste et créer des liens »). Tâche : MemoryAI#185.
+  Première règle livrée : `age` (voir « Mise en œuvre de l'âge »).
 - **Amont** : ADR 0001 (frontière, niveaux), 0003 (un fait mécanique ne passe pas par l'œil de
   Marc), 0007 et 0011 (le niveau 3, papiers d'identité), décision de Marc du 15/09 (règles
   d'abord, modèle ensuite ; ce qui est établi et ce qui est deviné restent distincts).
@@ -35,9 +36,37 @@ adresse. Aujourd'hui personne ne fait ce calcul, et LIA le refait (ou l'invente)
 6. **Jamais** : une déduction tirée d'un fait deviné par un modèle, ou d'un autre fait déduit
    (pas de chaîne, une seule marche). Ligne et test au point d'écriture.
 
+## Mise en œuvre de l'âge (26/10/2026)
+
+Mesuré avant d'écrire, trois points de la décision ne tenaient pas tels quels ; voici ce qui est fait
+à la place, et pourquoi.
+
+- **Les sources sont des PAPIERS, pas des faits.** Aucun fait ne porte la date de naissance : elle
+  vit dans les champs libres d'un papier (`date de naissance`, AAAA-MM-JJ, écrite par DriveAI). La
+  passe (`lib/deductionPasse.ts`) lit les papiers dont le titulaire est Marc (noms de
+  `personnes.est_marc`, ADR 0020, comparés à l'ordre des mots près) ; le papier d'un proche ne compte
+  pas. Deux papiers de Marc qui se contredisent : abstention (`contradiction`), jamais un choix.
+  Aucun nom de Marc connu : abstention (`aucun-nom`). La date est lue en mémoire et ne s'écrit nulle
+  part.
+- **Le lien à la source passe par la provenance** (point 2) : `source_ref` = le fileId NU du papier,
+  comme DriveAI l'écrit. La règle `meme-source` du graphe (MemoryAI#186) relie donc l'âge aux faits
+  du même papier, sans origine de lien nouvelle. La règle se lit dans `extracteur = deduction-v1` et
+  le prédicat : les attributs sont une liste fermée (`type`, `emetteur`, `annee`, `echeance`).
+- **Le prédicat est `profil.age`**, texte (« 36 ans »), une seule valeur, borné par `valide_de` (dernier
+  anniversaire) et `valide_a` (veille du prochain). Le domaine `identite` est N3 par construction, et
+  le N3 refuse tout texte : l'âge ne peut pas y vivre. La provenance ne porte ni dossier ni type de
+  document, qui le monteraient au N3. Son niveau est celui du vocabulaire, c'est-à-dire la décision
+  de Marc ci-dessous ; il entre au profil de LIA (`PREDICATS_PROFIL`) et n'est jamais demandé en
+  question.
+- **Validation et mise à jour** (points 4 et 5) : la passe valide le fait qu'elle crée (`valider`,
+  comme une correction de Marc), ce qui périme l'âge d'avant le jour anniversaire, sans l'effacer.
+  Elle tourne une fois par jour avec le cron d'apprentissage (Vercel gratuit n'en permet pas plus) ;
+  l'âge change une fois par an, c'est assez. Le sauvetage en cours la suspend (`sauvetage`).
+
 ## Ce qui reste ouvert
 
-- **Le niveau de l'âge** : le garder au niveau 3 (LIA du hub ne le voit pas) ou le servir au
-  niveau 1 (LIA le dit partout, l'année de naissance devient déductible). Choix de Marc.
+- **Le niveau de l'âge** : niveau 1 (LIA le dit partout, l'année de naissance devient déductible à
+  un an près), niveau 2 (sur bascule), ou rester fermé. Carte posée à Marc le 26/10/2026 à 13:14Z,
+  niveau 1 recommandé ; le code livré porte le niveau 1 et suit sa réponse.
 - [À vérifier] les règles suivantes (durée entre deux emplois, âge d'un véhicule) : une à la fois,
   chacune ajoutée ici.
