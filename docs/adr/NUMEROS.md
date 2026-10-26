@@ -33,3 +33,4 @@
 | 0026 | Un papier se juge seul quand une seconde lecture de DriveAI concorde avec la première | proposé (carte de Marc, 24/10 21:55Z, « Seconde lecture par DriveAI ») | MemoryAI#219 |
 | 0027 | Les idées de LIA pour tes apps viennent de ce qu'elle compte, pas d'un modèle | proposé (demande de Marc, 25/10 20:21Z) ; code après l'OK de Marc | MemoryAI#233 |
 | 0028 | LIA montre les bornes de recharge proches de ta ville, d'après le fichier ouvert du Circuit électrique | proposé (demande de Marc, 25/10 20:21Z) ; code après l'OK de Marc | MemoryAI#234 |
+| 0029 | L'agenda du jour arrive de DriveAI, par une porte à lui, et ne garde que deux jours | proposé (demande de Marc, 25/10 20:21Z) ; code après l'OK de Marc | MemoryAI#236 |
