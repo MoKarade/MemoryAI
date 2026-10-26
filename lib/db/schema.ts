@@ -1063,6 +1063,41 @@ export const relecturesPieces = pgTable(
   ],
 );
 
+/**
+ * L'AGENDA DU JOUR que DriveAI envoie (ADR 0029, migration 0032) : un envoi complet par jour,
+ * qui remplace le précédent. `agenda_envois` est le point de bascule (une ligne par jour) ;
+ * `agenda_evenements` porte les événements de chaque envoi, et seuls ceux de l'envoi courant se
+ * lisent. Le titre est CHIFFRÉ au niveau 2 (AAD `agenda|<envoi>|<position>`) ; heures et durées
+ * restent en clair. Deux jours gardés au plus : ce n'est pas une mémoire.
+ */
+export const agendaEnvois = pgTable("agenda_envois", {
+  jour: text("jour").primaryKey(),
+  envoi: text("envoi").notNull(),
+  app: text("app").notNull(),
+  nombre: integer("nombre").notNull(),
+  luLe: timestamp("lu_le", { withTimezone: true }).notNull(),
+  recuLe: timestamp("recu_le", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const agendaEvenements = pgTable(
+  "agenda_evenements",
+  {
+    id: serial("id").primaryKey(),
+    envoi: text("envoi").notNull(),
+    jour: text("jour").notNull(),
+    position: integer("position").notNull(),
+    debut: timestamp("debut", { withTimezone: true }).notNull(),
+    dureeMin: integer("duree_min").notNull(),
+    journeeEntiere: boolean("journee_entiere").notNull().default(false),
+    titre: text("titre").notNull(),
+  },
+  (t) => [
+    uniqueIndex("agenda_evenements_unicite").on(t.envoi, t.position),
+    index("agenda_evenements_jour").on(t.jour),
+    check("agenda_evenements_duree", sql`${t.dureeMin} BETWEEN 0 AND 1440`),
+  ],
+);
+
 export type Fait = typeof faits.$inferSelect;
 export type NouveauFait = typeof faits.$inferInsert;
 export type Provenance = typeof provenances.$inferSelect;
