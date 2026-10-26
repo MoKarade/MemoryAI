@@ -1,8 +1,8 @@
 # ADR 0032 — LIA agit seule dans les limites du catalogue, et tient le journal de ce qu'elle a fait
 
-- **Statut** : **proposé** (26/10/2026, fil MemoryAI). Il applique la décision de Marc du 26/10 à
-  14:46Z (« l'indépendance ») et sa carte de 14:50Z (« Agit aussi dans les apps »). Tâche : MemoryAI#283,
-  mission .github#575. **Le code attend l'OK de Marc sur CE texte** (même patron que les ADR 0030 et 0031).
+- **Statut** : **accepté** (décision de Marc, 26/10/2026 14:46Z « l'indépendance » et carte de 14:50Z
+  « Agit aussi dans les apps » ; OK de Marc sur ce texte, 26/10 20:42Z, « Oui, tel quel » : règles pour
+  choisir, frein en marche au départ). Tâche : MemoryAI#283, mission .github#575. Code à venir, lot par lot.
 - **Amont** : ADR 0025 (LIA valide seule ce que deux signaux confirment), 0023 (faits déduits), 0027 (idées
   de LIA), 0031 (sorties des apps), et le catalogue d'outils et de niveaux de risque (tâche MemoryAI 282,
   `lib/lia/catalogueOutils.ts`), dont cet ADR est le premier consommateur.
@@ -37,7 +37,7 @@ c'est demander ces trois choses : agir, le dire, pouvoir l'arrêter.
    chaque action**, pas seulement au début de la passe : posé au milieu, la suivante est notée `frein` et
    ne part pas. Posé, il arrête aussi les passes déjà existantes qui relèvent de l'autonomie (relecture,
    déduction, idées), pas seulement la nouvelle. `MEMORYAI_GEL=1` reste l'arrêt dur et passe avant lui.
-   Valeur par défaut : **en marche** (les étapes tournent déjà aujourd'hui) [À vérifier avec Marc].
+   Valeur par défaut : **en marche** (les étapes tournent déjà aujourd'hui ; choix de Marc, 20:42Z).
 6. **Le budget** : aucun poste neuf. Chaque action garde le poste qu'elle a (`apprentissage`, `chat`) et
    le plafond DUR de `lib/coutChat.ts` ; le total de 3 $/jour ne change pas et n'est donc pas dépassable
    par construction. Une action qui n'a plus de budget est notée `budget` et saute. Si un planificateur
@@ -55,8 +55,5 @@ journal, le frein, l'affichage dans « Sa journée ». 4. Les intentions d'app, 
 
 ## Ce qui reste ouvert
 
-- **Règles ou modèle pour choisir** : cet ADR recommande les règles (0 $, testable). Un modèle choisirait
-  mieux dans les cas flous mais coûterait un poste et rendrait le journal moins prévisible.
-- **Frein par défaut** : en marche (recommandé, rien ne change pour ce qui tourne déjà) ou en pause (rien
-  ne part tant que Marc n'a pas levé le frein une première fois).
+- Un planificateur par modèle, si les règles se montrent trop raides : nouvel ADR, nouveau poste.
 - [À vérifier] la limite de crons du plan Vercel au moment du code ; la rétention de 90 jours du journal.
