@@ -2,7 +2,7 @@
 
 <!-- GÉNÉRÉ par `node .github/ci/generer-index.mjs` : ne pas modifier à la main (`--verifier` échoue si ce fichier est périmé). -->
 
-50 document(s). Ancien titre -> nouveau chemin : [correspondance.md](correspondance.md).
+51 document(s). Ancien titre -> nouveau chemin : [correspondance.md](correspondance.md).
 
 ## docs/
 
@@ -16,7 +16,7 @@
 ## docs/adr/
 
 - [ADR 0001 — Une base de faits sur Marc existe hors de son compte Google](adr/0001-une-base-de-faits-sur-marc-hors-de-son-compte-google.md) — `docs/adr/0001-une-base-de-faits-sur-marc-hors-de-son-compte-google.md`
-- [ADR 0002 — La mémoire apprend des conversations, demande ce qui lui manque, et se montre](adr/0002-la-memoire-apprend-des-conversations-et-demande-ce-qui-manque.md) — `docs/adr/0002-la-memoire-apprend-des-conversations-et-demande-ce-qui-manque.md`
+- [ADR 0002 — La mémoire apprend des conversations, demande ce qui manque, et se montre](adr/0002-la-memoire-apprend-des-conversations-et-demande-ce-qui-manque.md) — `docs/adr/0002-la-memoire-apprend-des-conversations-et-demande-ce-qui-manque.md`
 - [ADR 0003 — Un fait MÉCANIQUE ne passe pas par l'œil de Marc](adr/0003-un-fait-mecanique-ne-passe-pas-par-l-oeil-de-marc.md) — `docs/adr/0003-un-fait-mecanique-ne-passe-pas-par-l-oeil-de-marc.md`
 - [ADR 0004 — Tout entre, et tout se retrouve](adr/0004-tout-entre-et-tout-se-retrouve.md) — `docs/adr/0004-tout-entre-et-tout-se-retrouve.md`
 - [ADR 0005 — Lia parle juste, et l'interface s'efface](adr/0005-lia-parle-juste-et-l-interface-s-efface.md) — `docs/adr/0005-lia-parle-juste-et-l-interface-s-efface.md`
@@ -45,6 +45,7 @@
 - [ADR 0029 — L'agenda du jour arrive de DriveAI, par une porte à lui, et ne garde que deux jours](adr/0029-l-agenda-du-jour-arrive-de-driveai.md) — `docs/adr/0029-l-agenda-du-jour-arrive-de-driveai.md`
 - [ADR 0030 — La discussion de LIA suit Marc d'une app à l'autre, chiffrée, par l'état partagé](adr/0030-la-discussion-de-lia-suit-marc-entre-les-apps.md) — `docs/adr/0030-la-discussion-de-lia-suit-marc-entre-les-apps.md`
 - [ADR 0031 — Tout ce qui sort des apps arrive chez LIA, par une porte à jeton par app](adr/0031-tout-ce-qui-sort-des-apps-arrive-chez-lia.md) — `docs/adr/0031-tout-ce-qui-sort-des-apps-arrive-chez-lia.md`
+- [ADR 0032 — LIA agit seule dans les limites du catalogue, et tient le journal de ce qu'elle a fait](adr/0032-lia-agit-seule-dans-ses-limites.md) — `docs/adr/0032-lia-agit-seule-dans-ses-limites.md`
 - [Registre des numéros d'ADR](adr/NUMEROS.md) — `docs/adr/NUMEROS.md`
 
 ## docs/claude/
