@@ -1,8 +1,10 @@
 # ADR 0027 — Les idées de LIA pour tes apps viennent de ce qu'elle compte, pas d'un modèle
 
-- **Statut** : **proposé** (25/10/2026, fil MemoryAI). Il répond à la demande de Marc du 25/10 à
-  20:21Z (« Jveux tout ça », capture de l'espace « Idées »). Tâche : MemoryAI#233. Le code attend
-  l'OK de Marc (protocole, `docs/claude/11-protocole.md`).
+- **Statut** : **accepté** (26/10/2026). Proposé le 25/10 (fil MemoryAI) en réponse à la demande de
+  Marc du 25/10 à 20:21Z (« Jveux tout ça », capture de l'espace « Idées »). **OK de Marc** le
+  26/10 à 13:07Z (carte « Oui, tout, dans cet ordre »). Tâche : MemoryAI#233. Premier lot codé le
+  26/10 : la table, la règle, la passe quotidienne et les tuiles (voir « Tel que codé »). Le bouton
+  « En faire une tâche » et le suivi de l'issue (§ 4 à 6) suivent dans le lot suivant.
 - **Amont** : ADR 0021 (les demandes du hub), ADR 0001 (frontière, oublis), ADR 0026 et son
   amendement du 25/10 (Marc ne juge plus rien).
 
@@ -82,6 +84,27 @@ d'une demande est une DONNÉE (ADR 0021 §3) et ne doit pas devenir une consigne
 - **Refusées, jamais reproposées** : les idées écartées.
 - **Aucune idée** : « Aucune idée : tu n'as encore rien demandé deux fois au hub. » C'est l'état
   vide honnête.
+
+## Tel que codé (premier lot, 26/10/2026, tâche MemoryAI 233)
+
+- **Table** : migration `drizzle/0033_idees.sql`, déclarée dans `lib/idees/table.ts`. `raisons` est
+  un `jsonb` de trois champs : `jours`, `fenetre` (30) et `derniere` (le jour de la dernière
+  demande). Des contraintes de base bornent `etat`, `regle` et `utilite`.
+- **Règle** : `lib/idees/regles.ts`, pure. Une demande par (app, genre, nom), comptée en jours de
+  Québec sur les 30 derniers ; une demande d'un jour à venir ne compte pas.
+- **Utilité** : `70 % × répétition + 30 % × fraîcheur`. La répétition vaut 0 à un jour et 1 à cinq
+  jours ; la fraîcheur vaut 1 le jour de la dernière demande et 0 trente jours plus tard. Une idée
+  dont la demande sort de la fenêtre reste, et son utilité continue de baisser avec le temps.
+- **Passe** : `lib/idees/depot.ts`, appelée par le cron d'apprentissage (`idees` dans sa réponse,
+  des nombres seulement). Elle lit `demandes`, consulte `oublis`, crée les idées neuves et met à
+  jour celles qui sont encore en jeu (`proposee`, `retenue`). Une idée `faite` ou `ecartee` n'est
+  jamais retouchée. Un nom de demande illisible est compté, jamais deviné.
+- **Écran** : `lib/idees/tableau.ts`. Les quatre tuiles gardent leur titre et leur place ; l'utilité
+  s'écrit « ≈ n / 100 » avec la mention « Estimation, pas une mesure ».
+- **Pas encore là** : les gestes de Marc (§ 4), le bouton « En faire une tâche » (§ 5), le suivi de
+  l'issue (§ 6), et le retrait d'une idée quand Marc oublie la demande dont elle vient (§ 7,
+  seconde moitié : MemoryAI n'a pas encore de chemin d'oubli pour une demande, il vient avec
+  Hubperso#450).
 
 ## Ce qui reste ouvert
 

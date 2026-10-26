@@ -6,10 +6,12 @@
 // recopier. Un espace se remplit quand le lot qui produit sa donnée est livré, pas avant.
 
 import type { Poste } from "@/lib/coutChat";
+import type { IdeeAffichee } from "@/lib/idees/regles";
+import { tableauIdeesLues } from "@/lib/idees/tableau";
 import { MAX_BLOCS } from "@/lib/lia/blocs";
 import type { LectureMeteo, Meteo } from "@/lib/monde/meteo";
 import type { Actualite } from "@/lib/monde/actualite";
-import { LECTURES_DU_JOUR_MAX, LIBELLE_OUTIL, tableauBudget, tableauFormes, tableauIdees, tableauJournee, tableauMonde, tableauOutils, tableauSante, tableauSouvenirs, type ActiviteDuJour, type EntreesBudget, type LectureAgenda, type Relances, type Tableau } from "./tableaux";
+import { LECTURES_DU_JOUR_MAX, LIBELLE_OUTIL, tableauBudget, tableauFormes, tableauJournee, tableauMonde, tableauOutils, tableauSante, tableauSouvenirs, type ActiviteDuJour, type EntreesBudget, type LectureAgenda, type Relances, type Tableau } from "./tableaux";
 
 export const IDS_ESPACES = ["souvenirs", "sante", "journee", "idees", "monde", "budget", "outils", "formes"] as const;
 export type IdEspace = (typeof IDS_ESPACES)[number];
@@ -81,6 +83,8 @@ export interface EntreesEspaces {
   relances?: Relances | null;
   /** L'agenda du jour envoyé par DriveAI (ADR 0029) ; null sans base, absent : non lu. */
   agenda?: LectureAgenda | null;
+  /** Les idées de LIA pour les apps (ADR 0027), noms déchiffrés ; null sans base, absentes : non lues. */
+  idees?: readonly IdeeAffichee[] | null;
 }
 
 const LIBELLE_POSTE: Record<Poste, string> = { chat: "Parler", apprentissage: "Apprendre" };
@@ -144,6 +148,31 @@ function journee(e: EntreesEspaces): ContenuEspace {
   };
 }
 
+/** Idées : ses idées pour tes apps, nées de tes demandes au hub (ADR 0027, tâche MemoryAI 233). */
+function ideesPourApps(idees: EntreesEspaces["idees"]): ContenuEspace {
+  const tableau = tableauIdeesLues(idees);
+  if (idees === undefined) {
+    return { phrase: "Elle ne propose pas encore d'idées pour tes apps.", dit: "Je n'ai pas encore d'idée pour tes apps.", vide: true, tableau };
+  }
+  if (idees === null) {
+    return { phrase: "La base ne répond pas : ses idées ne sont pas lisibles.", dit: "Je n'arrive pas à relire mes idées.", vide: true, tableau };
+  }
+  if (idees.length === 0) {
+    return { phrase: "Aucune idée : tu n'as encore rien demandé deux fois au hub.", dit: "Je n'ai pas encore d'idée : tu n'as rien demandé deux fois au hub.", vide: true, tableau };
+  }
+  const n = idees.filter((i) => i.etat === "proposee" || i.etat === "retenue").length;
+  if (n === 0) {
+    return { phrase: "Toutes ses idées sont faites ou écartées.", dit: "Toutes mes idées sont faites ou écartées.", vide: false, tableau };
+  }
+  const s = n > 1 ? "s" : "";
+  return {
+    phrase: `${n} idée${s} en attente pour tes apps, nées de tes demandes au hub.`,
+    dit: `J'ai ${n} idée${s} pour tes apps, nées de tes demandes au hub.`,
+    vide: false,
+    tableau,
+  };
+}
+
 export function contenuEspaces(e: EntreesEspaces): Record<IdEspace, ContenuEspace> {
   return {
     souvenirs: {
@@ -165,12 +194,7 @@ export function contenuEspaces(e: EntreesEspaces): Record<IdEspace, ContenuEspac
     journee: journee(e),
     // Marc ne juge plus JAMAIS ce que LIA déduit ou lit (25/10/2026, tâche MemoryAI 231) : plus
     // de « N à juger », ni pastille, ni remarque, ni lien vers la pile. LIA tranche seule.
-    idees: {
-      phrase: "Elle ne propose pas encore d'idées pour tes apps.",
-      dit: "Je n'ai pas encore d'idée pour tes apps.",
-      vide: true,
-      tableau: tableauIdees(),
-    },
+    idees: ideesPourApps(e.idees),
     monde: e.meteo?.ok
       ? {
           phrase: "La météo d'Environnement Canada, à l'heure de son observation, et les titres du jour.",
