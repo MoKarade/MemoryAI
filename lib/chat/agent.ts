@@ -25,6 +25,7 @@ import { budgetOuvert, coutUsd, jourQuebec, lireUsage, type IdModele } from "../
 import { cleJournalDepuisEnv } from "../journal";
 import { journaliserAcces } from "../journalAcces";
 import { OUTILS, OUTILS_MCP_SEULS, type ContexteOutils } from "../mcp/outils";
+import { exigerNiveaux } from "../lia/catalogueOutils";
 import { lireNote, LONGUEUR_MAX_NOTE, NOTES_PAR_JOUR, GENRES_NOTE, APPS_NOTE } from "../lia/notes";
 import { baliserMeteo } from "../monde/meteo";
 import { baliserActualite } from "../monde/actualite";
@@ -223,6 +224,8 @@ export async function tourDeChat(params: {
   if (outils.notes) tools.push(OUTIL_NOTE);
   if (outils.meteo) tools.push(OUTIL_METEO);
   if (outils.actualite) tools.push(OUTIL_ACTUALITE);
+  // Un outil sans niveau de risque au catalogue n'atteint jamais le modèle (tâche MemoryAI 282).
+  exigerNiveaux(tools.map((t) => t.name));
   const conversation: unknown[] = historique.map((m) => ({ role: m.role, content: m.content }));
   // ⚠️ Les faits servis s'ACCUMULENT sur tout le tour, pas sur le dernier appel d'outil.
   // Un tour agentique en fait jusqu'à 6 : ne garder que le dernier laisserait sans lien
