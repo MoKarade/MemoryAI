@@ -12,8 +12,8 @@
 
 import { jourQuebec } from "../coutChat";
 
-const ETATS_IDEE = ["proposee", "retenue", "faite", "ecartee"] as const;
-export type EtatIdee = (typeof ETATS_IDEE)[number];
+/** Les quatre états d'une idée (ADR 0027 § 3). `faite` et `ecartee` sont définitifs. */
+export type EtatIdee = "proposee" | "retenue" | "faite" | "ecartee";
 
 /** La seule règle de ce lot : la même demande revient (ADR 0027 § 2). */
 export const REGLE_DEMANDE_REPETEE = "demande-repetee" as const;
