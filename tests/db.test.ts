@@ -139,6 +139,8 @@ describe("les trente tables", () => {
       // [ADR 0019] Les échecs du sauvetage (des raisons, jamais une valeur) et son état.
       "sauvetage_echecs",
       "sauvetage_etat",
+      // [ADR 0031] Ce qui sort des apps, une ligne par événement, titre et résumé chiffrés (migration 0035).
+      "sorties",
       "sujets",
       // [ADR 0025] La trace des relectures de LIA (migration 0030).
       "validations_lia",
