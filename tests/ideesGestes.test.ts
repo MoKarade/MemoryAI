@@ -131,12 +131,16 @@ describe("« En faire une tâche » : l'adresse de la page « nouvelle issue » 
   });
 
   it("un titre trop long est coupé en caractères, sans casser une paire de substitution", () => {
-    const long = `${"é".repeat(118)}😀😀😀`;
+    // « Idée de LIA : » fait 14 caractères : 103 « é » les portent à 117, et la coupe à 120 tombe
+    // après le 3e emoji. Coupé en unités UTF-16, le titre finirait par une moitié d'emoji et
+    // `encodeURIComponent` lèverait.
+    const long = `${"é".repeat(103)}${"😀".repeat(5)}`;
     const url = urlNouvelleIssue({ ...e, titre: long });
     if (url === null) throw new Error("adresse attendue");
     const titre = new URL(url).searchParams.get("title") ?? "";
     expect([...titre]).toHaveLength(120);
     expect(titre.endsWith("😀")).toBe(true);
+    expect([...titre].filter((c) => c === "😀")).toHaveLength(3);
   });
 
   it("les guillemets, les retours à la ligne et le & d'un nom passent intacts", () => {
