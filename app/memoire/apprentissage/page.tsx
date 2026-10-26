@@ -208,9 +208,6 @@ export default async function ApprentissagePage() {
               {papiersParLia.toLocaleString("fr-CA")} papier{papiersParLia > 1 ? "s" : ""} jugé{papiersParLia > 1 ? "s" : ""} vrai{papiersParLia > 1 ? "s" : ""} par LIA (seconde lecture concordante).
             </p>
           ) : null}
-          <Link href="/a-valider" className="bouton bouton-second">
-            À valider
-          </Link>
         </Tuile>
         <Tuile largeur={6} icone="clock" titre="Ton rythme habituel">
           {lectures.length === 0 ? (
