@@ -87,6 +87,9 @@ describe("les trente tables", () => {
     );
     expect(r.rows.map((x) => x.table_name)).toEqual([
       "acces_journal",
+      // [ADR 0029] L'agenda du jour envoyé par DriveAI : le point de bascule et ses événements (migration 0032).
+      "agenda_envois",
+      "agenda_evenements",
       // [ADR 0009] L'avancement qu'une app publie : des COMPTES, une ligne par app (migration 0017).
       "avancement_sources",
       // [ADR 0012] Les avis de Marc sur la pile « vrai / faux », en ajout seul (migration 0018).

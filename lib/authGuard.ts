@@ -59,6 +59,11 @@ export const ROUTES_A_AUTH_PROPRE = [
    * c'est lui qui tient le Drive ; aucune autre app n'écrit de messages.
    */
   "/api/evenements",
+  /**
+   * L'agenda du jour que DriveAI envoie (ADR 0029). Jeton d'écrivain de DriveAI SEULEMENT : c'est
+   * lui qui tient l'accès Google ; un envoi remplace le jour, et rien d'autre que l'agenda n'entre.
+   */
+  "/api/agenda",
   /** Connecteur MCP : OAuth 2.1 (`lib/mcp/oauth.ts`), et rien d'autre. */
   "/api/mcp",
   /**
