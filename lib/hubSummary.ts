@@ -81,10 +81,12 @@ export function composerSummary(c: ComptesMemoire, maintenant: Date = new Date()
           : "MemoryAI en construction — aucun fait validé.",
     });
   }
+  // ⚠️ Aucun lien ne mène à l'ancienne page `/a-valider` (tâche MemoryAI 277) : Marc ne juge plus
+  // rien, et ce qui reste à regarder se lit dans l'onglet Mémoire.
   const alerts: HubSummary["alerts"] = [];
-  if (c.aValider >= SEUIL_A_VALIDER_FORT) alerts.push({ label: `${c.aValider} faits à valider — la file déborde`, severity: "alert", href: `${APP.url}/a-valider` });
-  else if (c.aValider >= SEUIL_A_VALIDER_ALERTE) alerts.push({ label: `${c.aValider} faits à valider`, severity: "warn", href: `${APP.url}/a-valider` });
-  if (c.canaris > 0) alerts.push({ label: `${c.canaris} valeur(s) ressemblant à une consigne, jamais servies`, severity: "info", href: `${APP.url}/a-valider` });
+  if (c.aValider >= SEUIL_A_VALIDER_FORT) alerts.push({ label: `${c.aValider} faits à valider — la file déborde`, severity: "alert", href: `${APP.url}/memoire` });
+  else if (c.aValider >= SEUIL_A_VALIDER_ALERTE) alerts.push({ label: `${c.aValider} faits à valider`, severity: "warn", href: `${APP.url}/memoire` });
+  if (c.canaris > 0) alerts.push({ label: `${c.canaris} valeur(s) ressemblant à une consigne, jamais servies`, severity: "info", href: `${APP.url}/memoire` });
   if (c.gele) alerts.push({ label: "Mémoire gelée (MEMORYAI_GEL=1) : rien n'est servi", severity: "warn" });
 
   // Le total « ce que la mémoire sait de toi », source UNIQUE partagée avec l'écran Régler.
@@ -110,10 +112,10 @@ export function composerSummary(c: ComptesMemoire, maintenant: Date = new Date()
     ],
     alerts,
     actions: [
-      { label: "À valider", href: `${APP.url}/a-valider`, kind: "link" },
+      { label: "Mémoire", href: `${APP.url}/memoire`, kind: "link" },
       { label: "Chat", href: `${APP.url}/chat`, kind: "link" },
     ],
-    ...(c.aValider > 0 ? { recommendation: { label: `Valider ${c.aValider} fait(s)`, why: "Un fait proposé n'est servi comme sûr qu'une fois validé.", href: `${APP.url}/a-valider` } } : {}),
+    ...(c.aValider > 0 ? { recommendation: { label: `Valider ${c.aValider} fait(s)`, why: "Un fait proposé n'est servi comme sûr qu'une fois validé.", href: `${APP.url}/memoire` } } : {}),
     ...(domaines.length
       ? { details: [{ title: "Faits validés par domaine", items: itemsParDomaine(domaines) }] }
       : {}),

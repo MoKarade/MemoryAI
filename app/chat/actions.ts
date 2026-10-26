@@ -1,8 +1,8 @@
 "use server";
 // app/chat/actions.ts — « Épingler » : Marc retient une phrase du chat comme fait `propose`
 // (ADR 0001 §5.5). Fiabilité `marc` — c'est lui qui a choisi et relu la valeur — mais statut
-// `propose` : il la confirme encore dans « à valider », où elle prend sa place parmi les
-// autres. Mêmes gardes que tout écrivain (`ecrireLot`).
+// `propose` : LIA le relit avant de le garder, sans qu'il ait à le juger. Mêmes gardes que tout
+// écrivain (`ecrireLot`).
 
 import { revalidatePath } from "next/cache";
 import { rafraichirCompteurs } from "../rafraichirCompteurs";
@@ -42,7 +42,7 @@ export async function epinglerAction(entree: { predicat: string; valeur: string;
   );
   revalidatePath("/a-valider");
   rafraichirCompteurs();
-  if (r.acceptes === 1) return { ok: true, message: "Épinglé : à confirmer dans « À valider »." };
+  if (r.acceptes === 1) return { ok: true, message: "Épinglé : LIA le relira avant de le garder." };
   if (r.dejaPresents === 1) return { ok: true, message: "Déjà dans la mémoire." };
   return { ok: false, message: `${r.refuses[0]?.code ?? "refus"} — ${r.refuses[0]?.raison ?? ""}` };
 }
