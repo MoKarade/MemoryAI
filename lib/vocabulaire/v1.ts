@@ -95,6 +95,8 @@ export const VOCABULAIRE_V1: readonly DefinitionPredicat[] = [
   d("famille.evenement", "famille", 2, TD, true, "Un événement familial daté"),
   d("famille.anniversaire", "famille", 2, TD, true, "Un anniversaire à retenir"),
   d("famille.enfant", "famille", 2, T, true, "Un enfant (slug de sujet)"),
+  // ── profil (déduit, ADR 0023) : son niveau est la décision de Marc (ADR, « Niveau de l'âge ») ─
+  d("profil.age", "profil", 1, T, false, "Ton âge, déduit de ta date de naissance"),
   // ── identité / immigration / fiscal (N3 : existence, type, date, échéance, pointeur) ─
   d("identite.document", "identite", 3, R, true, "Un document d'identité existe"),
   d("identite.echeance", "identite", 3, D, true, "Échéance d'un document d'identité"),
