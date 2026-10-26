@@ -16,7 +16,7 @@
 ## docs/adr/
 
 - [ADR 0001 — Une base de faits sur Marc existe hors de son compte Google](adr/0001-une-base-de-faits-sur-marc-hors-de-son-compte-google.md) — `docs/adr/0001-une-base-de-faits-sur-marc-hors-de-son-compte-google.md`
-- [ADR 0002 — La mémoire apprend des conversations, demande ce qui manque, et se montre](adr/0002-la-memoire-apprend-des-conversations-et-demande-ce-qui-manque.md) — `docs/adr/0002-la-memoire-apprend-des-conversations-et-demande-ce-qui-manque.md`
+- [ADR 0002 — La mémoire apprend des conversations, demande ce qui lui manque, et se montre](adr/0002-la-memoire-apprend-des-conversations-et-demande-ce-qui-manque.md) — `docs/adr/0002-la-memoire-apprend-des-conversations-et-demande-ce-qui-manque.md`
 - [ADR 0003 — Un fait MÉCANIQUE ne passe pas par l'œil de Marc](adr/0003-un-fait-mecanique-ne-passe-pas-par-l-oeil-de-marc.md) — `docs/adr/0003-un-fait-mecanique-ne-passe-pas-par-l-oeil-de-marc.md`
 - [ADR 0004 — Tout entre, et tout se retrouve](adr/0004-tout-entre-et-tout-se-retrouve.md) — `docs/adr/0004-tout-entre-et-tout-se-retrouve.md`
 - [ADR 0005 — Lia parle juste, et l'interface s'efface](adr/0005-lia-parle-juste-et-l-interface-s-efface.md) — `docs/adr/0005-lia-parle-juste-et-l-interface-s-efface.md`
