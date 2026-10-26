@@ -45,6 +45,11 @@ export interface EtatPublic {
   };
   informations: number | null;
   gele: boolean;
+  /**
+   * L'agenda du jour envoyé par DriveAI (ADR 0029) : le compte et l'heure de lecture, jamais un
+   * titre. `null` : rien reçu aujourd'hui. Absent : la route ne l'a pas lu.
+   */
+  agenda?: { jour: string; evenements: number; luLe: string } | null;
 }
 
 /**
@@ -70,6 +75,7 @@ export function composerEtatPublic(
   extracteurs: { lus: number; nonLus: number },
   gele: boolean,
   parLia: { faits: number; papiers: number },
+  agenda?: EtatPublic["agenda"],
 ): EtatPublic {
   const valides = faits.parStatut.valide ?? 0;
   return {
@@ -89,5 +95,6 @@ export function composerEtatPublic(
     jugement: { aJugerParMarc: 0, faitsParLia: parLia.faits, papiersParLia: parLia.papiers },
     informations: totalInformations({ faits: valides, papiers: papiers.total }),
     gele,
+    ...(agenda !== undefined ? { agenda } : {}),
   };
 }
