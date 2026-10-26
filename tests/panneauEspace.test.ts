@@ -31,12 +31,14 @@ describe("le panneau d'un espace", () => {
     expect(html).not.toContain("maison-panneau-tete");
   });
 
-  it("ouvert sur Budget, il montre les vraies dépenses en tuiles et le lien vers les dépenses", () => {
+  it("ouvert sur Budget, il montre les vraies dépenses en tuiles, sans lien vers les anciennes pages (tâche MemoryAI 320)", () => {
     const html = rendre("budget");
     expect(html).toContain("data-ouvert");
     expect(html).toContain('aria-hidden="false"');
     expect(html).toContain("<span>Parler</span><span class=\"tab-valeur\">0,25 $ / 1,00 $</span>");
-    expect(html).toContain('href="/depenses"');
+    // Marc, 26/10 : plus aucun lien vers la page Dépenses, qui n'est plus au menu.
+    expect(html).not.toContain('href="/depenses"');
+    expect(html).not.toContain("Toutes les dépenses");
     // La mini-barre marque l'espace courant, et lui seul.
     expect(html.match(/aria-current="true"/g)).toHaveLength(1);
     // Huit espaces, plus « Parler » en tête (maquette v5).
