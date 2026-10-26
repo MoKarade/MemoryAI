@@ -50,6 +50,11 @@ export interface EtatPublic {
    * titre. `null` : rien reçu aujourd'hui. Absent : la route ne l'a pas lu.
    */
   agenda?: { jour: string; evenements: number; luLe: string } | null;
+  /**
+   * Ce qui sort des apps (ADR 0031 § 5) : combien de sorties gardées et combien de refus sur 7 jours,
+   * deux nombres GLOBAUX — jamais par app. Absent : la route ne l'a pas lu.
+   */
+  sorties?: { gardees: number; refusSur7Jours: number };
 }
 
 /**
@@ -76,6 +81,7 @@ export function composerEtatPublic(
   gele: boolean,
   parLia: { faits: number; papiers: number },
   agenda?: EtatPublic["agenda"],
+  sorties?: EtatPublic["sorties"],
 ): EtatPublic {
   const valides = faits.parStatut.valide ?? 0;
   return {
@@ -96,5 +102,6 @@ export function composerEtatPublic(
     informations: totalInformations({ faits: valides, papiers: papiers.total }),
     gele,
     ...(agenda !== undefined ? { agenda } : {}),
+    ...(sorties !== undefined ? { sorties } : {}),
   };
 }
