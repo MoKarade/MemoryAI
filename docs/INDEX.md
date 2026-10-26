@@ -2,7 +2,7 @@
 
 <!-- GÉNÉRÉ par `node .github/ci/generer-index.mjs` : ne pas modifier à la main (`--verifier` échoue si ce fichier est périmé). -->
 
-48 document(s). Ancien titre -> nouveau chemin : [correspondance.md](correspondance.md).
+49 document(s). Ancien titre -> nouveau chemin : [correspondance.md](correspondance.md).
 
 ## docs/
 
@@ -43,6 +43,7 @@
 - [ADR 0027 — Les idées de LIA pour tes apps viennent de ce qu'elle compte, pas d'un modèle](adr/0027-les-idees-de-lia-viennent-de-ce-qu-elle-compte.md) — `docs/adr/0027-les-idees-de-lia-viennent-de-ce-qu-elle-compte.md`
 - [ADR 0028 — LIA montre les bornes de recharge proches de ta ville, d'après le fichier ouvert du Circuit électrique](adr/0028-lia-montre-les-bornes-de-recharge-proches.md) — `docs/adr/0028-lia-montre-les-bornes-de-recharge-proches.md`
 - [ADR 0029 — L'agenda du jour arrive de DriveAI, par une porte à lui, et ne garde que deux jours](adr/0029-l-agenda-du-jour-arrive-de-driveai.md) — `docs/adr/0029-l-agenda-du-jour-arrive-de-driveai.md`
+- [ADR 0030 — La discussion de LIA suit Marc d'une app à l'autre, chiffrée, par l'état partagé](adr/0030-la-discussion-de-lia-suit-marc-entre-les-apps.md) — `docs/adr/0030-la-discussion-de-lia-suit-marc-entre-les-apps.md`
 - [Registre des numéros d'ADR](adr/NUMEROS.md) — `docs/adr/NUMEROS.md`
 
 ## docs/claude/
