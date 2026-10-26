@@ -10,8 +10,7 @@
 
 import { randomUUID } from "node:crypto";
 import { eq, lt, sql } from "drizzle-orm";
-import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
-import { boolean, check, index, integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, check, index, integer, pgTable, text, timestamp, type PgDatabase, type PgQueryResultHKT } from "drizzle-orm/pg-core";
 import { jourQuebec } from "../coutChat";
 import { ligneJournal, RETENTION_JOURNAL_JOURS, type CleAction, type Issue } from "./autonomie";
 
