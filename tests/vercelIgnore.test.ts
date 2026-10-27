@@ -13,9 +13,9 @@ describe("vercel.json", () => {
     expect(vercel.ignoreCommand).toBe("node .github/ci/ignore-command.mjs");
   });
 
-  it("garde le cron fonctionnel de l'apprentissage, inchangé, et celui du réseau (tâche MemoryAI 186)", () => {
+  it("décale le cron d'apprentissage à 09:07 UTC et garde celui du réseau (tâche MemoryAI 186)", () => {
     expect(vercel.crons).toEqual([
-      { path: "/api/cron/apprentissage", schedule: "0 9 * * *" },
+      { path: "/api/cron/apprentissage", schedule: "7 9 * * *" },
       { path: "/api/cron/reseau", schedule: "27 10 * * *" },
     ]);
   });
