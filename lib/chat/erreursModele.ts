@@ -50,6 +50,21 @@ export function classerErreurModele(err: unknown): ErreurModele | null {
         "Le crédit de l'API Anthropic est épuisé. Recharge-le dans la console API (platform.claude.com → Billing), dans l'organisation de la clé du chat — le crédit de claude.ai ne compte pas.",
     };
   }
+  // La limite d'usage de l'API (plafond de dépense du compte, pas le solde) arrive aussi en 400
+  // `invalid_request_error`, avec une phrase qui donne la date de reprise. Sans cette branche elle
+  // tombait dans « requête refusée (HTTP 400) », qui ne dit ni la cause ni quand LIA revient.
+  // La date n'est reprise que si elle a la forme exacte `AAAA-MM-JJ at HH:MM UTC` : tout autre
+  // texte du fournisseur reste une donnée, jamais recopié.
+  if (e.status === 400 && /api usage limits?/i.test(texte)) {
+    const reprise = /(\d{4}-\d{2}-\d{2}) at (\d{2}:\d{2}) UTC/.exec(texte);
+    return {
+      status: 503,
+      code: "limite_usage",
+      message: reprise
+        ? `La limite d'usage de l'API Anthropic est atteinte : LIA et le chat reprennent le ${reprise[1]} à ${reprise[2]} UTC, ou dès que la limite est relevée dans la console API.`
+        : "La limite d'usage de l'API Anthropic est atteinte : LIA et le chat reprennent à la date de reprise indiquée par Anthropic, ou dès que la limite est relevée dans la console API.",
+    };
+  }
   if (e.status === 401 || type === "authentication_error") {
     return { status: 503, code: "cle_refusee", message: "Anthropic refuse la clé ANTHROPIC_API_KEY : elle est invalide ou révoquée." };
   }

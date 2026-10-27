@@ -95,6 +95,15 @@ font les actions permises, journalisent des comptes et consultent le frein avant
 et `issue.ts` permettent retenir, écarter ou ouvrir une nouvelle issue, sans jeton ni écriture GitHub.
 `preuve-attendue` : gestes visibles sur une idée réelle ; suivi de l’issue (§6) et oubli (§7) restent hors de ce lot.
 
+## 🔨 27/10/2026 : la limite d'usage de l'API Anthropic est nommée (MemoryAI#349)
+
+Quand l'API refuse en 400 « You have reached your specified API usage limits… » (plafond de dépense, pas
+solde), `classerErreurModele` (`lib/chat/erreursModele.ts`) rend maintenant 503 `limite_usage` avec la date de
+reprise SEULEMENT si elle a la forme exacte `AAAA-MM-JJ at HH:MM UTC` ; avant, c'était 502 `modele_refus`
+« requête refusée (HTTP 400) ». La bulle de LIA disait déjà « indisponible » (contrat de lia-ui : un `ask` qui
+échoue n'invente rien). Limite annoncée le 27/10 : reprise le 01/11 00:00 UTC (brief du jour). À lire après le
+déploiement : une demande à LIA sous la limite rend `limite_usage`, pas `modele_refus`.
+
 ## ✅ 24/10/2026 : LIA lit la météo et l'actualité (MemoryAI#189, ADR 0024)
 
 Outil `monde_meteo` (chat et hub, hors du MCP) : Environnement Canada (`api.weather.gc.ca`, gratuit, sans clé,
