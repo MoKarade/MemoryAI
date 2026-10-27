@@ -103,6 +103,8 @@ const nextConfig = {
       "node_modules/onnxruntime-node/bin/napi-v6/linux/x64/libonnxruntime.so.1",
       "node_modules/onnxruntime-node/bin/napi-v6/linux/x64/libonnxruntime_providers_shared.so",
       "node_modules/onnxruntime-node/bin/napi-v6/linux/x64/onnxruntime_binding.node",
+      "node_modules/onnxruntime-common/package.json",
+      "node_modules/onnxruntime-common/dist/cjs/**",
     ],
   },
   // La version web du moteur ne sert jamais côté serveur.
