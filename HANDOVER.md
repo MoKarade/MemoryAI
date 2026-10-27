@@ -58,6 +58,43 @@ l'onglet Mémoire montre « Tranché par LIA » (`corpsTranche`, compte des papi
 **Reste** : mesurer la file en production (« fini » = moins de 50 faits `propose`) ; si trop de faits sont sensibles ou
 sans source lisible ici, le dire à Marc chiffres à l'appui (ADR 0025, « Ce qui reste ouvert »).
 
+**L’âge déduit** (26/10, #185, ADR 0023) : `lib/deduction.ts` applique les règles et
+`lib/deductionPasse.ts` écrit `profil.age` niveau 1 dans le cron quotidien, relié au papier source.
+Reste : le premier cron après déploiement, puis la vérification du fait validé sur `/graphe`.
+
+**Réseau dans Mémoire** (#187, PR #286 ; sans ADR dédiée) : `app/memoire/reseau/page.tsx`,
+`lib/memoire/tuilesReseau.ts` et `lib/memoire/depotMemoire.ts` montrent les comptes réels, les liens
+établis ou devinés, les domaines et la date ; « Les six couches » reste vide. Reste : READY, cron
+du réseau et relevé de la page en production.
+
+**Idées** (25–26/10, #233, ADR 0027) : `lib/idees/regles.ts` et `depot.ts` produisent les idées
+comptées ; `tableau.ts` les affiche avec une utilité étiquetée « estimation », sans modèle.
+`preuve-attendue` : une idée réelle en production, ou l’état vide honnête ; suivi d’issue (§6) et oubli (§7) restent à faire.
+
+**Bornes proches** (#234, ADR 0028) : `lib/monde/bornes.ts` lit le CSV ouvert du Circuit électrique ;
+`lib/accueil/tuileBornes.ts` montre les cinq parcs proches depuis la ville météo, avec source et date.
+Reste : premier relevé en production sur le vrai fichier (ou panne dite) ; les autres réseaux ne sont pas couverts.
+
+**Discussion partagée** (#263, ADR 0030) : migration additive `0034`, `lib/lia/depotEtat.ts` chiffre
+la discussion niveau 2 derrière les deux portes existantes ; les bornes viennent de `validerEtat`.
+`preuve-attendue` : aller-retour entre apps en production ; le chemin d’oubli complet reste à brancher.
+
+**Sorties des apps** (#281, ADR 0031) : `POST /api/sorties`, `lib/sorties/` et `memoryai_sorties`
+reçoivent, chiffrent et relisent les événements ; refus, rétention et comptes sont en place.
+`en-cours` tant que les jetons d’écrivain par app ne sont pas posés ; l’envoi depuis chaque app reste à brancher.
+
+**Catalogue des outils** (#282, prérequis de l’ADR 0032) : `lib/lia/catalogueOutils.ts` classe les
+outils ; `lib/chat/agent.ts` refuse ceux sans niveau et `app/regler/page.tsx` affiche le catalogue.
+`preuve-attendue` : vérifier en production que la liste et les niveaux s’affichent.
+
+**Autonomie** (#283, ADR 0032) : `lib/lia/autonomie.ts`, `lib/lia/journal.ts` et le cron
+font les actions permises, journalisent des comptes et consultent le frein avant chaque action.
+`preuve-attendue` : voir une action autonome dans « Sa journée », puis confirmer que le frein l’arrête ; intentions d’app en lot ultérieur.
+
+**Gestes sur les idées** (#338, ADR 0027 §§4–5) : `app/idees/actions.ts`, `lib/idees/geste.ts`
+et `issue.ts` permettent retenir, écarter ou ouvrir une nouvelle issue, sans jeton ni écriture GitHub.
+`preuve-attendue` : gestes visibles sur une idée réelle ; suivi de l’issue (§6) et oubli (§7) restent hors de ce lot.
+
 ## ✅ 24/10/2026 : LIA lit la météo et l'actualité (MemoryAI#189, ADR 0024)
 
 Outil `monde_meteo` (chat et hub, hors du MCP) : Environnement Canada (`api.weather.gc.ca`, gratuit, sans clé,
