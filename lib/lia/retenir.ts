@@ -179,9 +179,14 @@ async function retenirUn(deps: DepsRetenir, entree: Record<string, unknown>, mai
   // Signal n° 1, SANS modèle : la valeur se lit-elle telle quelle dans les mots de Marc ?
   if (!signalDuCode(v.valeur, v.valeurType, preuve)) {
     return refus(
-      "Je n'ai pas retrouvé cette valeur telle quelle dans ce que tu as écrit : je ne la retiens pas. Redemande-la avec les mots exacts de Marc.",
+      "Je n'ai pas retrouvé cette valeur telle quelle dans ce que Marc a écrit : je ne la retiens pas. Recopie-la exactement comme il l'a dite, ou demande-lui de la redire.",
     );
   }
+
+  // Ce que la mémoire sait déjà de ce prédicat. Une valeur identique, déjà validée, n'a rien à décider
+  // (`ecrireLot` ne le voit que pour les prédicats à une seule valeur : un prédicat neuf passerait).
+  const connu = await valeursValidees(deps, v);
+  if (connu.identique) return { ok: true, phrase: "Je le savais déjà : c'est déjà validé tel quel." };
 
   const decl: Declaration = {
     voie: "marc",
@@ -191,7 +196,8 @@ async function retenirUn(deps: DepsRetenir, entree: Record<string, unknown>, mai
     predicatRefuse: (await deps.depot.statutPredicat(v.predicat)) === "refuse",
     predicatDeclarable: true,
     enContradiction: (await deps.depot.predicatsEnContradiction()).has(v.predicat),
-    contreditUnValide: await contreditUnValide(deps, v),
+    // Un prédicat `multi` accepte plusieurs valeurs ; un prédicat neuf est traité comme n'en tenant qu'une.
+    contreditUnValide: connu.autre && definition(v.predicat, v.versionVocabulaire)?.multi !== true,
     dejaValidesAujourdhui: await deps.depot.dejaValidesAujourdhui(jour),
   };
   // Tout ce qui ne dépend pas du modèle se décide AVANT de le payer.
@@ -243,22 +249,25 @@ async function retenirUn(deps: DepsRetenir, entree: Record<string, unknown>, mai
 }
 
 /**
- * Un fait VALIDE du même prédicat porte-t-il une AUTRE valeur ? Alors on n'écrase rien : le fait reste
- * proposé. Un prédicat `multi` accepte plusieurs valeurs ; un prédicat neuf (sans définition) est
- * traité comme n'en tenant qu'une, le côté prudent. Une valeur illisible compte comme une contradiction.
+ * Les faits VALIDES de ce prédicat, comparés à la valeur dite : `identique` (la même, au caractère près)
+ * et `autre` (une valeur différente, ou illisible — le côté prudent). La comparaison est STRICTE : une
+ * nuance de casse peut être une correction que Marc veut voir.
  */
-async function contreditUnValide(deps: DepsRetenir, v: FaitValide): Promise<boolean> {
-  if (definition(v.predicat, v.versionVocabulaire)?.multi) return false;
+async function valeursValidees(deps: DepsRetenir, v: FaitValide): Promise<{ identique: boolean; autre: boolean }> {
   const lignes = await deps.faits.valeursValidees(v.sujet, [v.predicat]);
-  return lignes.some((l) => {
-    if (l.valeur === null) return false;
+  let identique = false;
+  let autre = false;
+  for (const l of lignes) {
+    if (l.valeur === null) continue;
     try {
       const claire = l.niveau >= 1 ? dechiffrer(deps.cle, l.valeur, l.id, l.niveau) : l.valeur;
-      return claire !== v.valeur;
+      if (claire === v.valeur) identique = true;
+      else autre = true;
     } catch {
-      return true;
+      autre = true;
     }
-  });
+  }
+  return { identique, autre };
 }
 
 /** Le signal n° 2 : un modèle INDÉPENDANT relit la phrase de Marc et le fait. `null` = pas de verdict. */
