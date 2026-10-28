@@ -101,7 +101,7 @@ function erreursDeClassification(fichiers: string[], classes: Record<string, Cla
 
 function verifierSortiePublique(texte: string): void {
   expect(texte).not.toMatch(/"(?:faits?|papiers?|pieces?|nombreDeFaits|count|total)"\s*:/i);
-  expect(texte).not.toMatch(/\b(?:fait|papier|piece|fact|paper)\b/i);
+  expect(texte).not.toMatch(/\b(?:faits?|papiers?|pi[eè]ces?|facts?|papers?|count|total|nombre)\b/i);
 }
 
 describe("accès aux routes", () => {
@@ -122,6 +122,7 @@ describe("accès aux routes", () => {
       const source = readFileSync(chemin, "utf8");
       expect(source, chemin).not.toMatch(/from\s+["'][^"']*\/lib\/db(?:\/|["'])/);
       expect(source, chemin).not.toMatch(/\b(?:depotLecture|depotFaits|depotPieces|comptesParDomaine)\b/);
+      expect(source, chemin).not.toMatch(/\b(?:faits?|papiers?|pièces?)\b/i);
     }
   });
 
