@@ -20,7 +20,7 @@
 // ⚠️ Ce module importe `ClientModele` du chat ; le chat, lui, ne connaît que la FORME de `RetenirLia`
 // (`tourDeChat`, paramètre `retenir`) : l'inverse ferait un cycle d'imports.
 
-import { and, count, eq, like } from "drizzle-orm";
+import { and, count, eq, inArray, isNull, like, lte } from "drizzle-orm";
 import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
 import * as schema from "../db/schema";
 import type { ClientModele } from "../chat/agent";
@@ -39,6 +39,7 @@ import {
 } from "../declaration";
 import { depotAdminDrizzle, type DepotAdmin } from "../depotAdmin";
 import { depotDrizzle, type DepotFaits } from "../depotFaits";
+import { poserLiensLia } from "../depotLiens";
 import { ecrireLot } from "../ecrireFaits";
 import type { Ecrivain } from "../jetons";
 import { reglagesLecture } from "../reglagesModele";
@@ -63,7 +64,7 @@ interface ResultatRetenir {
 
 /** La capacité que `tourDeChat` offre au modèle sous le nom `lia_retenir`. Absente, l'outil n'est pas offert. */
 export interface RetenirLia {
-  retenir(entree: Record<string, unknown>, maintenant: Date): Promise<ResultatRetenir>;
+  retenir(entree: Record<string, unknown>, maintenant: Date, faitsServis?: ReadonlySet<string>): Promise<ResultatRetenir>;
 }
 
 /** Ce que la décision lit et écrit en base, derrière une interface (comme `DepotRelecture`). */
@@ -74,6 +75,8 @@ interface DepotRetenir {
   predicatsEnContradiction(): Promise<ReadonlySet<string>>;
   /** Les faits validés aujourd'hui par cette voie (jour de Québec). */
   dejaValidesAujourdhui(jour: string): Promise<number>;
+  /** Les faits encore vivants et servables au niveau du nouveau fait. */
+  faitsLiables(ids: readonly string[], niveauMax: number): Promise<string[]>;
   /** Écrit la trace, PUIS valide le fait s'il le faut (et seulement s'il est encore `propose`). */
   tracer: DepotRelecture["tracer"];
 }
@@ -86,6 +89,7 @@ interface DepsRetenir {
   depot: DepotRetenir;
   admin: DepotAdmin;
   client: ClientModele;
+  poserLiens(faitId: string, cibles: readonly string[], maintenant: Date): Promise<number>;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -111,6 +115,21 @@ export function depotRetenirDrizzle(db: Base): DepotRetenir {
         .where(and(eq(V.jour, jour), eq(V.decision, "valide"), like(V.extracteur, `${EXTRACTEUR_RETENIR}%`)));
       return Number(r?.n ?? 0);
     },
+    async faitsLiables(ids, niveauMax) {
+      if (ids.length === 0) return [];
+      const lignes = await db
+        .select({ id: schema.faits.id })
+        .from(schema.faits)
+        .where(
+          and(
+            inArray(schema.faits.id, [...ids]),
+            isNull(schema.faits.supprimeLe),
+            inArray(schema.faits.statut, ["valide", "propose"]),
+            lte(schema.faits.niveau, niveauMax),
+          ),
+        );
+      return lignes.map((ligne) => ligne.id);
+    },
     tracer: (t, valider) => relecture.tracer(t, valider),
   };
 }
@@ -124,6 +143,7 @@ export function retenirLiaDrizzle(db: Base, params: { messages: readonly { role:
     depot: depotRetenirDrizzle(db),
     admin: depotAdminDrizzle(db),
     client: params.client,
+    poserLiens: (faitId, cibles, maintenant) => poserLiensLia(db, faitId, cibles, maintenant),
   });
 }
 
@@ -151,9 +171,9 @@ const refus = (phrase: string): ResultatRetenir => ({ ok: false, phrase });
 
 export function fabriquerRetenir(deps: DepsRetenir): RetenirLia {
   return {
-    async retenir(entree, maintenant) {
+    async retenir(entree, maintenant, faitsServis = new Set()) {
       try {
-        return await retenirUn(deps, entree, maintenant);
+        return await retenirUn(deps, entree, maintenant, faitsServis);
       } catch (err) {
         // Le NOM de l'erreur, jamais son message : il peut citer la valeur de Marc.
         console.error("[lia_retenir] impossible", err instanceof Error ? err.name : "erreur");
@@ -163,7 +183,12 @@ export function fabriquerRetenir(deps: DepsRetenir): RetenirLia {
   };
 }
 
-async function retenirUn(deps: DepsRetenir, entree: Record<string, unknown>, maintenant: Date): Promise<ResultatRetenir> {
+async function retenirUn(
+  deps: DepsRetenir,
+  entree: Record<string, unknown>,
+  maintenant: Date,
+  faitsServis: ReadonlySet<string>,
+): Promise<ResultatRetenir> {
   const preuve = preuveRecevable("marc", deps.parole);
   if (preuve === null) return refus("Je n'ai pas pu le retenir : ton message est vide ou dépasse 2 000 caractères.");
 
@@ -219,6 +244,19 @@ async function retenirUn(deps: DepsRetenir, entree: Record<string, unknown>, mai
   const id = lot.idsCrees[0];
   if (id === undefined) return { ok: true, phrase: "Je le connaissais déjà : rien n'a changé." };
 
+  let liensPoses = 0;
+  const cibles = Array.isArray(entree.lie_a)
+    ? [...new Set(entree.lie_a.filter((cible): cible is string => typeof cible === "string" && cible !== id && faitsServis.has(cible)))].slice(0, 5)
+    : [];
+  if (cibles.length > 0) {
+    try {
+      const ciblesLiables = await deps.depot.faitsLiables(cibles, v.niveau);
+      liensPoses = await deps.poserLiens(id, ciblesLiables, maintenant);
+    } catch (err) {
+      console.error("[lia_retenir] liens impossibles", err instanceof Error ? err.name : "erreur");
+    }
+  }
+
   // Signal n° 2 : seulement si rien d'autre ne tranche. Le fait est déjà écrit `propose` : un échec
   // du modèle le laisse là, jamais validé.
   let nouvelleRubrique = false;
@@ -248,7 +286,11 @@ async function retenirUn(deps: DepsRetenir, entree: Record<string, unknown>, mai
   }
 
   const phrase = phraseDeclaration(decision);
-  return { ok: true, phrase: nouvelleRubrique ? `${phrase} J'ai ajouté cette rubrique (${v.predicat}) à ce que je sais tenir.` : phrase };
+  const ajouts = [
+    nouvelleRubrique ? `J'ai ajouté cette rubrique (${v.predicat}) à ce que je sais tenir.` : null,
+    liensPoses > 0 ? `Je l'ai rapproché de ${liensPoses} fait${liensPoses > 1 ? "s" : ""} que je connaissais.` : null,
+  ].filter((ajout): ajout is string => ajout !== null);
+  return { ok: true, phrase: [phrase, ...ajouts].join(" ") };
 }
 
 /**

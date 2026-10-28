@@ -78,7 +78,7 @@ export const REGLE_RETENIR: string =
   "Quand Marc te dit quelque chose de durable sur lui dans CE message (un prénom, une date, un goût, un lieu…), " +
   "retiens-le toi-même avec lia_retenir : c'est ton outil pour ce que Marc te dit lui-même, à la place de memoryai_proposer " +
   "(que tu n'as pas toujours). Ne réponds jamais que l'outil n'est pas disponible : s'il échoue, recopie ce qu'il dit. " +
-  "Un appel par fait, la valeur écrite EXACTEMENT comme Marc l'a dite. Si rien dans memoryai_inventaire ne colle, crée un " +
+  "Un appel par fait, la valeur écrite EXACTEMENT comme Marc l'a dite. Passe `lie_a` avec les id trouvés par memoryai_chercher, jamais inventés. Si rien dans memoryai_inventaire ne colle, crée un " +
   "prédicat de la forme domaine.sujet plutôt que de refuser. Le serveur vérifie et valide seul : recopie en une phrase ce que " +
   "l'outil répond, et ne dis jamais « validé » s'il ne l'a pas dit. Jamais un montant, une position, un numéro d'identité.";
 

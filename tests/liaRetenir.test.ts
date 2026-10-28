@@ -2,7 +2,7 @@
 // Postgres (PGlite) : les deux signaux ou le fait reste proposé, la trace, le prédicat neuf accepté par la
 // phrase de Marc, et chaque garde avec son cas valide ET son cas rejeté. Données FICTIVES.
 
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { randomBytes } from "node:crypto";
 import { readdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -11,13 +11,18 @@ import { drizzle } from "drizzle-orm/pglite";
 import { eq } from "drizzle-orm";
 import * as schema from "../lib/db/schema";
 import { chiffrer, dechiffrer, deriverCle } from "../lib/chiffrement";
-import { tourDeChat, type ClientBoucle, type ClientModele, type ReponseModele } from "../lib/chat/agent";
+import { OUTIL_RETENIR, tourDeChat, type ClientBoucle, type ClientModele, type ReponseModele } from "../lib/chat/agent";
 import { construirePrompt, REGLE_RETENIR, REGLES_SYSTEME } from "../lib/chat/prompt";
 import { depotAdminDrizzle } from "../lib/depotAdmin";
 import { depotDrizzle } from "../lib/depotFaits";
+import { poserLiensLia } from "../lib/depotLiens";
+import { depotConversationsDrizzle } from "../lib/conversations/depot";
+import { depotLectureDrizzle } from "../lib/depotLecture";
+import { depotQuestionsDrizzle } from "../lib/depotQuestions";
 import { empreinteOubli } from "../lib/ecrireFaits";
 import type { ContexteOutils } from "../lib/mcp/outils";
 import { depotRetenirDrizzle, fabriquerRetenir, paroleDeMarc, type RetenirLia } from "../lib/lia/retenir";
+import { depotPiecesLectureDrizzle } from "../lib/pieces/depotLecture";
 
 let pg: PGlite;
 let db: ReturnType<typeof drizzle<typeof schema>>;
@@ -48,7 +53,12 @@ beforeEach(async () => {
 });
 
 /** Un faux modèle de relecture : il rend le verdict demandé, ou tombe en panne (`null`), et note ce qu'on lui a montré. */
-function fabrique(parole: string, verdict: "confirme" | "doute" | "infirme" | null = "confirme", depot = depotRetenirDrizzle(db)) {
+function fabrique(
+  parole: string,
+  verdict: "confirme" | "doute" | "infirme" | null = "confirme",
+  depot = depotRetenirDrizzle(db),
+  poserLiens = (faitId: string, cibles: readonly string[], maintenant: Date) => poserLiensLia(db, faitId, cibles, maintenant),
+) {
   const vus: string[] = [];
   const client: ClientModele = {
     async create(p) {
@@ -62,13 +72,35 @@ function fabrique(parole: string, verdict: "confirme" | "doute" | "infirme" | nu
       return r;
     },
   };
-  const retenir = fabriquerRetenir({ parole, cle, faits: depotDrizzle(db), depot, admin: depotAdminDrizzle(db), client });
+  const retenir = fabriquerRetenir({ parole, cle, faits: depotDrizzle(db), depot, admin: depotAdminDrizzle(db), client, poserLiens });
   return { retenir, vus };
 }
 
 const SPORT = { predicat: PREDICAT, valeur: "badminton", valeur_type: "texte" };
 const PAROLE = "Mon sport préféré, c'est le badminton.";
 const faitsDuPredicat = () => db.select().from(schema.faits).where(eq(schema.faits.predicat, PREDICAT));
+
+async function ajouterFaitLiable(
+  id: string,
+  niveau = 2,
+  statut: "valide" | "propose" = "valide",
+  supprimeLe: Date | null = null,
+) {
+  await db.insert(schema.faits).values({
+    id,
+    sujet: "marc",
+    predicat: `fictif.${id}`,
+    valeur: niveau === 3 ? "2026-01-01" : "valeur fictive",
+    valeurType: niveau === 3 ? "date" : "texte",
+    niveau,
+    statut,
+    fiabiliteSource: "marc",
+    canari: false,
+    versionVocabulaire: 1,
+    empreinte: `empreinte-${id}`,
+    supprimeLe,
+  });
+}
 
 describe("ce que LIA valide seule, quand Marc le dit", () => {
   it("⚠ la valeur est dans ses mots ET la relecture confirme : validé, prédicat neuf accepté, tout tracé", async () => {
@@ -134,6 +166,90 @@ describe("ce que LIA valide seule, quand Marc le dit", () => {
     expect(r.phrase).toContain("je n'ai pas pu le relire");
     expect((await faitsDuPredicat())[0]?.statut).toBe("propose");
     expect((await db.select().from(schema.validationsLia))[0]).toMatchObject({ decision: "doute", verdict: null });
+  });
+});
+
+describe("les liens posés par LIA", () => {
+  it("lie une cible servie et éligible, normalise la paire et ne double pas le lien", async () => {
+    const cible = "a-fait-fictif";
+    await ajouterFaitLiable(cible, 2, "propose");
+    const { retenir } = fabrique(PAROLE);
+    const r = await retenir.retenir({ ...SPORT, lie_a: [cible, cible] }, T0, new Set([cible]));
+    const faits = await faitsDuPredicat();
+    const nouveau = faits[0]!;
+    const liens = await db.select().from(schema.liens);
+
+    expect(r.phrase).toContain("Je l'ai rapproché de 1 fait que je connaissais.");
+    expect(liens).toHaveLength(1);
+    expect(liens[0]).toMatchObject({
+      faitA: [nouveau.id, cible].sort()[0],
+      faitB: [nouveau.id, cible].sort()[1],
+      cibleB: "fait",
+      type: "lie-par-lia",
+      poids: 0.5,
+      origine: "modele",
+      regle: "lia-lie-v1",
+      pourquoi: "Rapproché par LIA quand Marc l'a dit : même sujet (lien deviné).",
+    });
+    expect(await poserLiensLia(db, nouveau.id, [cible], T0)).toBe(0);
+    expect(await db.select().from(schema.liens)).toHaveLength(1);
+  });
+
+  it("ignore un identifiant inconnu", async () => {
+    const r = await fabrique(PAROLE).retenir.retenir({ ...SPORT, lie_a: ["inconnu"] }, T0, new Set(["inconnu"]));
+    expect(r.phrase).not.toContain("rapproché");
+    expect(await db.select().from(schema.liens)).toHaveLength(0);
+  });
+
+  it("ignore un identifiant qui n'a pas été servi pendant le tour", async () => {
+    await ajouterFaitLiable("fait-non-servi");
+    const r = await fabrique(PAROLE).retenir.retenir({ ...SPORT, lie_a: ["fait-non-servi"] }, T0);
+    expect(r.phrase).not.toContain("rapproché");
+    expect(await db.select().from(schema.liens)).toHaveLength(0);
+  });
+
+  it("ignore un fait de niveau supérieur à celui du fait retenu", async () => {
+    await ajouterFaitLiable("fait-niveau-3", 3);
+    const r = await fabrique(PAROLE).retenir.retenir({ ...SPORT, lie_a: ["fait-niveau-3"] }, T0, new Set(["fait-niveau-3"]));
+    expect(r.phrase).not.toContain("rapproché");
+    expect(await db.select().from(schema.liens)).toHaveLength(0);
+  });
+
+  it("ignore un fait supprimé", async () => {
+    await ajouterFaitLiable("fait-supprime", 2, "valide", T0);
+    const r = await fabrique(PAROLE).retenir.retenir({ ...SPORT, lie_a: ["fait-supprime"] }, T0, new Set(["fait-supprime"]));
+    expect(r.phrase).not.toContain("rapproché");
+    expect(await db.select().from(schema.liens)).toHaveLength(0);
+  });
+
+  it("ne pose que cinq liens pour six identifiants", async () => {
+    const cibles = Array.from({ length: 6 }, (_, i) => `fait-fictif-${i}`);
+    for (const cible of cibles) await ajouterFaitLiable(cible);
+    const r = await fabrique(PAROLE).retenir.retenir({ ...SPORT, lie_a: cibles }, T0, new Set(cibles));
+    expect(r.phrase).toContain("Je l'ai rapproché de 5 faits que je connaissais.");
+    expect(await db.select().from(schema.liens)).toHaveLength(5);
+  });
+
+  it("ne fait pas échouer la rétention si la pose des liens échoue", async () => {
+    await ajouterFaitLiable("fait-liable");
+    const erreurJournal = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      const { retenir } = fabrique(PAROLE, "confirme", depotRetenirDrizzle(db), async () => {
+        throw new Error("valeur fictive à ne pas journaliser");
+      });
+      const r = await retenir.retenir({ ...SPORT, lie_a: ["fait-liable"] }, T0, new Set(["fait-liable"]));
+      expect(r.ok).toBe(true);
+      expect(await faitsDuPredicat()).toHaveLength(1);
+      expect(erreurJournal).toHaveBeenCalledWith("[lia_retenir] liens impossibles", "Error");
+    } finally {
+      erreurJournal.mockRestore();
+    }
+  });
+
+  it("sans `lie_a`, ne change rien au graphe", async () => {
+    const r = await fabrique(PAROLE).retenir.retenir(SPORT, T0);
+    expect(r.ok).toBe(true);
+    expect(await db.select().from(schema.liens)).toHaveLength(0);
   });
 });
 
@@ -251,8 +367,9 @@ describe("l'outil dans le tour de chat", () => {
   it("offert seulement quand l'appelant le branche, et le résultat revient au modèle tel quel", async () => {
     const recu: Record<string, unknown>[] = [];
     const retenir: RetenirLia = {
-      async retenir(entree) {
+      async retenir(entree, _maintenant, faitsServis) {
         recu.push(entree);
+        expect(faitsServis).toEqual(new Set());
         return { ok: true, phrase: "Retenu et validé : c'est toi qui l'as dit." };
       },
     };
@@ -276,6 +393,7 @@ describe("l'outil dans le tour de chat", () => {
       retenir,
     });
     expect(vus[0]!.outils).toEqual(["lia_retenir"]);
+    expect(OUTIL_RETENIR.input_schema.properties).toHaveProperty("lie_a");
     expect(recu).toEqual([SPORT]);
     expect(r.outilsAppeles).toEqual(["lia_retenir"]);
     expect(JSON.stringify(vus[1]!.derniers)).toContain("Retenu et validé");
@@ -292,6 +410,48 @@ describe("l'outil dans le tour de chat", () => {
     const r2 = await tourDeChat({ client: sans, modele: "claude-haiku-5-5", messages: [{ role: "user", content: PAROLE }], inclureN2: false, inclureN3: false, outils: contexte, admin: depotAdminDrizzle(db), outilsPermis: new Set() });
     expect(vus2[0]).toEqual([]);
     expect(r2.outilsAppeles).toEqual([]);
+  });
+
+  it("transmet à `lia_retenir` les faits de `memoryai_chercher` servis plus tôt dans le tour", async () => {
+    const id = "fait-servi-ce-tour";
+    await ajouterFaitLiable(id, 0);
+    await db.update(schema.faits).set({ valeur: "badminton" }).where(eq(schema.faits.id, id));
+    const recus: ReadonlySet<string>[] = [];
+    const retenir: RetenirLia = {
+      async retenir(_entree, _maintenant, faitsServis) {
+        recus.push(faitsServis ?? new Set());
+        return { ok: true, phrase: "Retenu." };
+      },
+    };
+    const lot: ReponseModele[] = [
+      { content: [{ type: "tool_use", id: "cherche", name: "memoryai_chercher", input: { question: "badminton" } }], stop_reason: "tool_use", usage: { input_tokens: 10, output_tokens: 5 } },
+      { content: [{ type: "tool_use", id: "retient", name: "lia_retenir", input: SPORT }], stop_reason: "tool_use", usage: { input_tokens: 10, output_tokens: 5 } },
+      { content: [{ type: "text", text: "C'est noté." }], stop_reason: "end_turn", usage: { input_tokens: 10, output_tokens: 5 } },
+    ];
+    const client: ClientBoucle = { async create() { return lot.shift()!; } };
+    const contexteComplet = {
+      lecture: depotLectureDrizzle(db),
+      ecriture: depotDrizzle(db),
+      pieces: depotPiecesLectureDrizzle(db),
+      questions: depotQuestionsDrizzle(db),
+      conversations: depotConversationsDrizzle(db),
+      cle,
+      env: { MEMORYAI_JOURNAL_CLE: "cle-de-journal-de-test-0123456789abcdef" },
+      lecteur: "chat",
+      maintenant: () => T0,
+    } satisfies ContexteOutils;
+    await tourDeChat({
+      client,
+      modele: "claude-haiku-5-5",
+      messages: [{ role: "user", content: PAROLE }],
+      inclureN2: false,
+      inclureN3: false,
+      outils: contexteComplet,
+      admin: depotAdminDrizzle(db),
+      retenir,
+    });
+    expect(recus).toHaveLength(1);
+    expect(recus[0]).toEqual(new Set([id]));
   });
 
   it("la règle du prompt suit les règles, seulement quand l'outil est offert", () => {
