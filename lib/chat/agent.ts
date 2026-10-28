@@ -182,6 +182,7 @@ export const OUTIL_RETENIR = {
       predicat: { type: "string", description: "Ex. identite.prenom_2, gout.cuisine, vehicule.bail.fin." },
       valeur: { type: "string", description: "200 caractères au plus, EXACTEMENT comme Marc l'a écrite (une date : AAAA-MM-JJ)." },
       valeur_type: { type: "string", enum: ["texte", "date"] },
+      lie_a: { type: "array", items: { type: "string" }, maxItems: 5, description: "Au plus 5 id de faits que memoryai_chercher t'a servis dans CE tour." },
     },
     required: ["predicat", "valeur", "valeur_type"],
   } as Record<string, unknown>,
@@ -260,7 +261,13 @@ export async function tourDeChat(params: {
    * Seule la FORME est connue ici (`RetenirLia` de `lib/lia/retenir.ts` la remplit) : importer ce module
    * ferait un cycle, car il importe `ClientModele` d'ici.
    */
-  retenir?: { retenir(entree: Record<string, unknown>, maintenant: Date): Promise<{ ok: boolean; phrase: string }> };
+  retenir?: {
+    retenir(
+      entree: Record<string, unknown>,
+      maintenant: Date,
+      faitsServis: ReadonlySet<string>,
+    ): Promise<{ ok: boolean; phrase: string }>;
+  };
 }): Promise<ResultatTour> {
   const { client, modele, inclureN2, inclureN3, outils, admin, outilsPermis } = params;
   // Les outils du MCP seul (les notes que LIA laisse au coordinateur) ne sont jamais offerts ici.
@@ -389,7 +396,7 @@ export async function tourDeChat(params: {
         }
       } else if (params.retenir && appel.name === OUTIL_RETENIR.name) {
         // `retenir` ne lève jamais : tout échec devient une phrase vraie (« rien n'est validé »).
-        const r = await params.retenir.retenir(appel.input, outils.maintenant());
+        const r = await params.retenir.retenir(appel.input, outils.maintenant(), new Set(servis.keys()));
         texte = r.phrase;
         erreur = !r.ok;
         if (r.ok) resultat.outilsAppeles.push(OUTIL_RETENIR.name);

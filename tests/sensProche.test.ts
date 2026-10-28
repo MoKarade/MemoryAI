@@ -121,13 +121,17 @@ describe("recalculerSens, sur une VRAIE Postgres", () => {
       id: randomUUID(), faitA: ids[0]!, faitB: ids[2]!, cibleB: "fait", type: "meme-source",
       poids: 0.9, origine: "regle", regle: "meme-source", pourquoi: "fictif",
     });
+    await db.insert(schema.liens).values({
+      id: randomUUID(), faitA: ids[0]!, faitB: ids[1]!, cibleB: "fait", type: "lie-par-lia",
+      poids: 0.5, origine: "modele", regle: "lia-lie-v1", pourquoi: "Rapproché par LIA : fictif.",
+    });
     // Un plongeur factice : les deux musiques proches, la course loin.
     const plongeur = async (textes: readonly string[]) => textes.map((t) => angle(t.includes("course") ? 90 : t.includes("blues") ? 10 : 0));
     const r = await depotLiensDrizzle(db).recalculerSens(cle, new Date("2026-10-26T12:00:00Z"), plongeur);
     expect(r).toMatchObject({ faitsLus: 3, illisibles: 0, liensEcrits: 1 });
     const modele = await db.select().from(schema.liens).where(eq(schema.liens.origine, "modele"));
-    expect(modele).toHaveLength(1);
-    expect(modele[0]!.type).toBe("sens-proche");
+    expect(modele).toHaveLength(2);
+    expect(modele.map((lien) => lien.type).sort()).toEqual(["lie-par-lia", "sens-proche"]);
     expect(await db.select().from(schema.liens).where(eq(schema.liens.origine, "regle"))).toHaveLength(1);
   });
 
@@ -136,6 +140,8 @@ describe("recalculerSens, sur une VRAIE Postgres", () => {
       throw new Error("téléchargement impossible");
     };
     await expect(depotLiensDrizzle(db).recalculerSens(cle, new Date(), enPanne)).rejects.toThrow("téléchargement impossible");
-    expect(await db.select().from(schema.liens).where(eq(schema.liens.origine, "modele"))).toHaveLength(1);
+    const modele = await db.select().from(schema.liens).where(eq(schema.liens.origine, "modele"));
+    expect(modele).toHaveLength(2);
+    expect(modele.some((lien) => lien.type === "lie-par-lia")).toBe(true);
   });
 });

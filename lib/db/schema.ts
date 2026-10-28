@@ -474,10 +474,10 @@ export const TYPES_LIEN_REGLE = [
   "dates-proches",
 ] as const;
 /**
- * Tous les types : ceux des règles, et celui que pose le petit modèle (tâche MemoryAI 186, partie
- * B), toujours avec `origine: "modele"`.
+ * Tous les types : ceux des règles, et ceux que pose un modèle (tâche MemoryAI 186 et ADR 0033 A5),
+ * toujours avec `origine: "modele"`.
  */
-export const TYPES_LIEN = [...TYPES_LIEN_REGLE, "sens-proche"] as const;
+export const TYPES_LIEN = [...TYPES_LIEN_REGLE, "sens-proche", "lie-par-lia"] as const;
 /** Une règle POSE, un modèle DEVINE. Les deux ne se confondent jamais à l'écran (ADR §5.3). */
 export const ORIGINES_LIEN = ["regle", "modele"] as const;
 /** Ce que l'extrémité B désigne : un autre fait, ou la question qui a produit celui-ci. */

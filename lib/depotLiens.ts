@@ -186,7 +186,9 @@ export function depotLiensDrizzle(db: Base): DepotLiens {
       if (vecteurs.length !== aPlonger.length) throw new Error(`le modèle a rendu ${vecteurs.length} vecteurs pour ${aPlonger.length} textes`);
       const { liens, abstentions } = liensDeSens(aPlonger.map((x, i) => ({ ...x, vecteur: vecteurs[i]! })));
 
-      await db.delete(schema.liens).where(eq(schema.liens.origine, "modele"));
+      await db
+        .delete(schema.liens)
+        .where(and(eq(schema.liens.origine, "modele"), eq(schema.liens.type, "sens-proche")));
       const aEcrire = liens.map((l) => ({
         id: randomUUID(),
         faitA: l.faitA,
@@ -237,4 +239,28 @@ export function depotLiensDrizzle(db: Base): DepotLiens {
       return db.select().from(schema.liens).where(eq(schema.liens.origine, "modele")).orderBy(desc(schema.liens.poids), asc(schema.liens.faitA)).limit(limite);
     },
   };
+}
+
+/** Lie un fait retenu par LIA aux faits qu'elle a déjà lus pendant le tour. */
+export async function poserLiensLia(db: Base, faitId: string, cibles: readonly string[], maintenant: Date): Promise<number> {
+  const valeurs = [...new Set(cibles)]
+    .filter((cible) => cible !== faitId)
+    .map((cible) => {
+      const [faitA, faitB] = faitId < cible ? [faitId, cible] : [cible, faitId];
+      return {
+        id: randomUUID(),
+        faitA,
+        faitB,
+        cibleB: "fait" as const,
+        type: "lie-par-lia" as const,
+        poids: 0.5,
+        origine: "modele" as const,
+        regle: "lia-lie-v1",
+        pourquoi: "Rapproché par LIA quand Marc l'a dit : même sujet (lien deviné).",
+        creeLe: maintenant,
+      };
+    });
+  if (valeurs.length === 0) return 0;
+  const inseres = await db.insert(schema.liens).values(valeurs).onConflictDoNothing().returning({ id: schema.liens.id });
+  return inseres.length;
 }
