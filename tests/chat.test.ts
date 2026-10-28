@@ -12,7 +12,7 @@ import { eq } from "drizzle-orm";
 import * as schema from "../lib/db/schema";
 import { deriverCle } from "../lib/chiffrement";
 import { construirePrompt, REGLE_BLOCS } from "../lib/chat/prompt";
-import { OUTIL_BLOCS, PlafondAtteintError, PROMPT_SYSTEME, RELANCE_REPONSE_VIDE, tourDeChat, type ClientModele, type ReponseModele } from "../lib/chat/agent";
+import { OUTIL_BLOCS, PlafondAtteintError, PROMPT_SYSTEME, RELANCE_REPONSE_VIDE, tourDeChat, type ClientBoucle, type ClientModele, type ReponseModele } from "../lib/chat/agent";
 import { depotAdminDrizzle } from "../lib/depotAdmin";
 import { depotDrizzle } from "../lib/depotFaits";
 import { depotQuestionsDrizzle } from "../lib/depotQuestions";
@@ -29,7 +29,7 @@ let db: ReturnType<typeof drizzle<typeof schema>>;
 const cle = deriverCle(randomBytes(32).toString("base64"));
 const MAINTENANT = new Date("2026-09-15T21:00:00Z");
 
-function outils(env: Record<string, string | undefined> = {}): ContexteOutils {
+function outils(env: Record<string, string | undefined> = {}, maintenant: Date = MAINTENANT): ContexteOutils {
   return {
     lecture: depotLectureDrizzle(db),
     ecriture: depotDrizzle(db),
@@ -39,7 +39,7 @@ function outils(env: Record<string, string | undefined> = {}): ContexteOutils {
     cle,
     env: { MEMORYAI_JOURNAL_CLE: "cle-de-journal-de-test-0123456789abcdef", ...env },
     lecteur: "chat",
-    maintenant: () => MAINTENANT,
+    maintenant: () => maintenant,
   };
 }
 
@@ -177,10 +177,11 @@ describe("tourDeChat", () => {
       appel("lia_blocs", { blocs: [chiffre(bon!.id), chiffre(inventee)] }),
       texte("Voilà."),
     ];
-    const client: ClientModele = {
+    const client: ClientBoucle = {
       async create(p) {
         outilsVus.push(p.tools.map((t) => t.name));
-        systemes.push(String(p.system));
+        // Le système arrive en blocs (point de cache) : on lit le texte de chacun.
+        systemes.push(typeof p.system === "string" ? p.system : p.system.map((b) => b.text).join("\n"));
         return reponses.shift()!;
       },
     };
@@ -227,5 +228,76 @@ describe("tourDeChat", () => {
     await expect(
       tourDeChat({ client, modele: "claude-sonnet-5", messages: [{ role: "assistant", content: "?" }], inclureN2: false, inclureN3: false, outils: outils(), admin: depotAdminDrizzle(db) }),
     ).rejects.toThrow(/dernier message/);
+  });
+});
+
+describe("tourDeChat : cache de prompt (tâche MemoryAI 365)", () => {
+  /** Un autre jour que les tests du plafond, qui ont rempli celui du 15/09. */
+  const JOUR_CACHE = new Date("2026-09-16T21:00:00Z");
+  /** Comme `faux`, mais PHOTOGRAPHIE chaque requête : la boucle retire et déplace des marqueurs après coup. */
+  function fauxPhoto(reponses: ReponseModele[]) {
+    const requetes: { system: unknown; tools: unknown; messages: { role: string; content: unknown }[] }[] = [];
+    const client: ClientBoucle = {
+      async create(p) {
+        requetes.push(JSON.parse(JSON.stringify({ system: p.system, tools: p.tools, messages: p.messages })));
+        const r = reponses.shift();
+        if (!r) throw new Error("le faux modèle n'a plus de réponse");
+        return r;
+      },
+    };
+    return { client, requetes };
+  }
+  const tour = (client: ClientBoucle, modele: "claude-sonnet-5" | "claude-haiku-4-5" = "claude-sonnet-5") =>
+    tourDeChat({ client, modele, messages: [{ role: "user", content: "où je travaille ?" }], inclureN2: false, inclureN3: false, outils: outils({}, JOUR_CACHE), admin: depotAdminDrizzle(db) });
+  const marqueurs = (messages: { content: unknown }[]) =>
+    messages.flatMap((m, i) => (Array.isArray(m.content) ? m.content.flatMap((b: { cache_control?: unknown }, j) => (b.cache_control ? [`${i}.${j}`] : [])) : []));
+
+  it("le dernier bloc système porte le point de cache : il couvre les outils ET les règles", async () => {
+    const { client, requetes } = fauxPhoto([texte("Bonjour Marc.")]);
+    await tour(client);
+    const systeme = requetes[0]!.system as { type: string; text: string; cache_control?: { type: string } }[];
+    expect(systeme).toHaveLength(1);
+    expect(systeme[0]!.cache_control).toEqual({ type: "ephemeral" });
+    expect(systeme[0]!.text).toBe(PROMPT_SYSTEME);
+    expect((requetes[0]!.tools as unknown[]).length).toBeGreaterThan(0);
+  });
+
+  it("une réponse sans outil n'écrit pas la question en cache : aucun marqueur dans les messages", async () => {
+    const { client, requetes } = fauxPhoto([texte("Bonjour Marc.")]);
+    await tour(client);
+    expect(marqueurs(requetes[0]!.messages)).toEqual([]);
+  });
+
+  it("le point de cache des messages SUIT le dernier tool_result : jamais plus d'un, plus quatre au total", async () => {
+    const { client, requetes } = fauxPhoto([
+      appel("memoryai_chercher", { question: "employeur" }),
+      appel("memoryai_chercher", { question: "poste" }),
+      texte("Tu travailles à la Entreprise Exemple."),
+    ]);
+    const r = await tour(client);
+    expect(r.appels).toBe(3);
+    expect(marqueurs(requetes[0]!.messages)).toEqual([]);
+    expect(marqueurs(requetes[1]!.messages)).toEqual(["2.0"]);
+    // L'ancien marqueur est retiré quand le nouveau est posé : l'API en refuse plus de 4 par requête.
+    expect(marqueurs(requetes[2]!.messages)).toEqual(["4.0"]);
+  });
+
+  it("outils et système sont identiques octet pour octet d'un appel à l'autre du même tour", async () => {
+    const { client, requetes } = fauxPhoto([appel("memoryai_chercher", { question: "employeur" }), texte("ok")]);
+    await tour(client);
+    expect(JSON.stringify(requetes[1]!.tools)).toBe(JSON.stringify(requetes[0]!.tools));
+    expect(JSON.stringify(requetes[1]!.system)).toBe(JSON.stringify(requetes[0]!.system));
+  });
+
+  it("le coût compte l'écriture (×1,25) et la lecture (×0,10) du cache : le plafond voit la vraie dépense", async () => {
+    const avecCache: ReponseModele = {
+      content: [{ type: "text", text: "Bonjour Marc." }],
+      stop_reason: "end_turn",
+      usage: { input_tokens: 100, output_tokens: 10, cache_creation_input_tokens: 2000, cache_read_input_tokens: 3000 },
+    };
+    const { client } = fauxPhoto([avecCache]);
+    const r = await tour(client);
+    // Sonnet 5 : 3 $ entrée, 15 $ sortie par million.
+    expect(r.coutUsd).toBeCloseTo((100 * 3 + 10 * 15 + 2000 * 3 * 1.25 + 3000 * 3 * 0.1) / 1_000_000);
   });
 });

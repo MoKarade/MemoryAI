@@ -16,7 +16,7 @@ import { drizzle } from "drizzle-orm/pglite";
 import { eq } from "drizzle-orm";
 import * as schema from "../lib/db/schema";
 import { deriverCle } from "../lib/chiffrement";
-import { tourDeChat, type ClientModele, type ReponseModele } from "../lib/chat/agent";
+import { tourDeChat, type ClientBoucle, type ReponseModele } from "../lib/chat/agent";
 import { chargerCouches } from "../lib/chat/couches";
 import { depotAdminDrizzle } from "../lib/depotAdmin";
 import { depotDrizzle } from "../lib/depotFaits";
@@ -73,9 +73,10 @@ function outils(): ContexteOutils {
 /** Un faux modèle qui répond « ok » et enregistre le `system` de CHAQUE appel. */
 function fauxQuiNoteLeSysteme() {
   const systemes: string[] = [];
-  const client: ClientModele = {
+  const client: ClientBoucle = {
     async create(p) {
-      systemes.push(p.system);
+      // Le système arrive en blocs (point de cache) : on lit le texte de chacun.
+      systemes.push(typeof p.system === "string" ? p.system : p.system.map((b) => b.text).join("\n"));
       const r: ReponseModele = { content: [{ type: "text", text: "ok" }], stop_reason: "end_turn", usage: { input_tokens: 100, output_tokens: 10 } };
       return r;
     },
