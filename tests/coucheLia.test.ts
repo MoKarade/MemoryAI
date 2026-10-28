@@ -220,7 +220,7 @@ describe("du prompt jusqu'au modèle — « Marc change la voix et le constate a
     const { client, systemes } = fauxQuiNoteLeSysteme();
     await tourDeChat({
       client,
-      modele: "claude-sonnet-5",
+      modele: "claude-sonnet-5-5",
       messages: [{ role: "user", content: "salut" }],
       inclureN2: false,
       inclureN3: false,
@@ -242,7 +242,7 @@ describe("du prompt jusqu'au modèle — « Marc change la voix et le constate a
     const tour = async () =>
       tourDeChat({
         client,
-        modele: "claude-sonnet-5",
+        modele: "claude-sonnet-5-5",
         messages: [{ role: "user", content: "salut" }],
         inclureN2: false,
         inclureN3: false,
@@ -261,7 +261,7 @@ describe("du prompt jusqu'au modèle — « Marc change la voix et le constate a
 
   it("sans `couches` (les tests d'avant), Lia n'a que ses règles", async () => {
     const { client, systemes } = fauxQuiNoteLeSysteme();
-    await tourDeChat({ client, modele: "claude-sonnet-5", messages: [{ role: "user", content: "x" }], inclureN2: false, inclureN3: false, outils: outils(), admin: depotAdminDrizzle(db) });
+    await tourDeChat({ client, modele: "claude-sonnet-5-5", messages: [{ role: "user", content: "x" }], inclureN2: false, inclureN3: false, outils: outils(), admin: depotAdminDrizzle(db) });
     expect(systemes[0]).not.toContain("\n\n<voix>\n");
     expect(systemes[0]).not.toContain("\n\n<profil>\n");
   });

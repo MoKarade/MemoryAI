@@ -437,7 +437,7 @@ describe("[L25] TRAVERSE — la réponse RENDUE par tourDeChat porte ses liens",
     ]);
     const r = await tourDeChat({
       client,
-      modele: "claude-sonnet-5",
+      modele: "claude-sonnet-5-5",
       messages: [{ role: "user", content: "où je travaille ?" }],
       inclureN2: false, inclureN3: false,
       outils: outils(),
@@ -464,7 +464,7 @@ describe("[L25] TRAVERSE — la réponse RENDUE par tourDeChat porte ses liens",
     ]);
     const r = await tourDeChat({
       client,
-      modele: "claude-sonnet-5",
+      modele: "claude-sonnet-5-5",
       messages: [{ role: "user", content: "où est mon avis de cotisation ?" }],
       inclureN2: false, inclureN3: false,
       outils: outils(),
@@ -483,7 +483,7 @@ describe("[L25] TRAVERSE — la réponse RENDUE par tourDeChat porte ses liens",
     const { client } = faux([texte("Bonjour Marc.")]);
     const r = await tourDeChat({
       client,
-      modele: "claude-sonnet-5",
+      modele: "claude-sonnet-5-5",
       messages: [{ role: "user", content: "salut" }],
       inclureN2: false, inclureN3: false,
       outils: outils(),
@@ -501,7 +501,7 @@ describe("[L25] TRAVERSE — la réponse RENDUE par tourDeChat porte ses liens",
     ]);
     const r = await tourDeChat({
       client,
-      modele: "claude-sonnet-5",
+      modele: "claude-sonnet-5-5",
       messages: [{ role: "user", content: "un animal ?" }],
       inclureN2: false, inclureN3: false,
       outils: outils(),

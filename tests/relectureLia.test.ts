@@ -143,7 +143,7 @@ describe("la passe de relecture (PGlite)", () => {
   it("⚠ chaque relecture laisse une trace : raison CHIFFRÉE, empreintes, et un fait n'est jamais relu deux fois", async () => {
     const traces = await db.select().from(schema.validationsLia);
     const proprio = traces.find((t) => t.faitId === "f-proprio")!;
-    expect(proprio).toMatchObject({ decision: "valide", verdict: "confirme", signalCode: true, extracteur: "lia-relecture-v1|claude-haiku-4-5", jour: "2026-10-24" });
+    expect(proprio).toMatchObject({ decision: "valide", verdict: "confirme", signalCode: true, extracteur: "lia-relecture-v1|claude-haiku-5-5", jour: "2026-10-24" });
     expect(proprio.raison).not.toContain("propriétaire");
     expect(proprio.empreinteSource).toMatch(/^[0-9a-f]{64}$/);
     expect(proprio.empreinteValeur).toMatch(/^[0-9a-f]{64}$/);
