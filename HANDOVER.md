@@ -3,6 +3,10 @@
 > L'état RÉEL, à lire en premier. Ce qui est décidé vit dans `docs/adr/0001-…`, ce qui reste
 > à faire dans `BACKLOG.md`. Ce fichier dit où on en est, et ce qui attend un geste de Marc.
 
+## 28/10/2026 : lia-ui v0.47.0, LIA lit les graphiques et ne scanne que sur demande (MemoryAI#408, mission MoKarade/.github#575)
+
+Épingle `@mokarade/lia-ui` v0.47.0 (sha pelé `7f1d7bb`), seul changement (`package.json`, lock). Deux demandes de Marc (28/10, 19 h 40 UTC) : « l'assistant voit toujours pas les graphes, il devrait » (v0.47.0 : `decrireParDefaut` lit lui-même titre, axes, légende et infobulles d'un graphique SVG, sans code chez MemoryAI ; un graphique canvas reste illisible) et « quand il scan, uniquement sur ce que je lui ai demandé » (v0.46.0 : le balayage des nanobots ne joue que sur « Explique-moi ça », « Regarde ça avec moi » ou un ordre de l'hôte, plus sur une visite spontanée). Preuve à lire : relevé du PC dans MemoryAI (réponse sur un graphique citant ce qui y est écrit ; aucun essaim quand LIA va voir seule).
+
 ## 28/10/2026 : lia-ui v0.45.1, le menu du clic droit passe au-dessus de la fenêtre « Sa journée » (MemoryAI#402, mission MoKarade/.github#575)
 
 Épingle `@mokarade/lia-ui` v0.45.1 (sha pelé `b7084b9`), seul changement (`package.json`, lock). Relevé du PC (28/10, 14 h 50) : après v0.44.2, le menu s'ouvrait à la bonne hauteur mais passait SOUS la fenêtre « Sa journée » (menu à z-index 5 dans le conteneur, fenêtre à 10) et débordait de 6 px. Le menu d'un élément s'ouvre maintenant dans sa propre couche pleine page, au-dessus de toute fenêtre. v0.45.0 (faits lus par l'hôte) arrive avec, inactif. Preuve attendue : relevé du PC, clic droit dans « Sa journée ».
