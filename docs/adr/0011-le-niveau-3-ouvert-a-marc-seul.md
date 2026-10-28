@@ -1,6 +1,7 @@
 # ADR 0011 — Le niveau 3 ouvert par défaut à Marc, et à lui seul
 
 - **Statut** : ACCEPTÉ (Marc, 24/09/2026 — « go » sur le plan du lot 2).
+- **Amendé par** : l'ADR 0034 (28/10/2026) : il n'y a plus de niveau d'ACCÈS. La liste fermée de lecteurs du § 2.1 et le sommaire servi à claude.ai (§ 4) tombent ; le reste de cet ADR décrit l'état du 24/09.
 - **Amende** : l'ADR 0007 §3 (qui peut demander N3), §4 (« n'ouvre rien par défaut ») et §5
   (« la case retombe à chaque fois »). Ne touche ni au chiffrement, ni au vocabulaire, ni au
   contrat d'écriture.

@@ -2,7 +2,7 @@
 
 <!-- GÉNÉRÉ par `node .github/ci/generer-index.mjs` : ne pas modifier à la main (`--verifier` échoue si ce fichier est périmé). -->
 
-52 document(s). Ancien titre -> nouveau chemin : [correspondance.md](correspondance.md).
+53 document(s). Ancien titre -> nouveau chemin : [correspondance.md](correspondance.md).
 
 ## docs/
 
@@ -47,6 +47,7 @@
 - [ADR 0031 — Tout ce qui sort des apps arrive chez LIA, par une porte à jeton par app](adr/0031-tout-ce-qui-sort-des-apps-arrive-chez-lia.md) — `docs/adr/0031-tout-ce-qui-sort-des-apps-arrive-chez-lia.md`
 - [ADR 0032 — LIA agit seule dans les limites du catalogue, et tient le journal de ce qu'elle a fait](adr/0032-lia-agit-seule-dans-ses-limites.md) — `docs/adr/0032-lia-agit-seule-dans-ses-limites.md`
 - [ADR 0033 — Les faits que Marc déclare se valident seuls, avec ses mots comme preuve](adr/0033-les-faits-que-marc-declare-se-valident-seuls.md) — `docs/adr/0033-les-faits-que-marc-declare-se-valident-seuls.md`
+- [ADR 0034 — Un seul niveau de lecture : tout est accessible, à Marc seul](adr/0034-un-seul-niveau-de-lecture.md) — `docs/adr/0034-un-seul-niveau-de-lecture.md`
 - [Registre des numéros d'ADR](adr/NUMEROS.md) — `docs/adr/NUMEROS.md`
 
 ## docs/claude/
