@@ -14,6 +14,7 @@ import {
   validateSummary,
 } from "@mokarade/hub-contract";
 import { GET } from "../app/hub/summary/route";
+import { composerSummary } from "../lib/hubSummary";
 
 const JETON = "jeton-de-test-memoryai-0123456789";
 
@@ -52,6 +53,25 @@ async function withHubToken(
     else process.env.HUB_TOKEN = before;
   }
 }
+
+describe("composerSummary — Notes de LIA non lues", () => {
+  const base = { valides: 3, aValider: 0, canaris: 0, dernierValideLe: null, parDomaine: {}, chat: { totalUsd: 0, appels: 0 }, gele: false, papiers: 2 };
+  const metrique = (s: ReturnType<typeof composerSummary>) => s.metrics.find((m) => m.label === "Notes de LIA non lues");
+
+  it("valide : la métrique porte le nombre, 0 compris, et le résumé reste conforme", () => {
+    for (const n of [0, 2]) {
+      const s = validateSummary(composerSummary({ ...base, notesLiaNonLues: n }));
+      expect(metrique(s)).toEqual({ label: "Notes de LIA non lues", value: n, format: "number" });
+      expect(JSON.stringify(s)).not.toMatch(/genre|observation|conseil/);
+    }
+  });
+
+  it("rejeté : métrique absente quand le compte n'est pas lu ou invalide", () => {
+    expect(metrique(composerSummary(base))).toBeUndefined();
+    expect(metrique(composerSummary({ ...base, notesLiaNonLues: -1 }))).toBeUndefined();
+    expect(metrique(composerSummary({ ...base, notesLiaNonLues: 1.5 }))).toBeUndefined();
+  });
+});
 
 describe("GET /hub/summary", () => {
   it("503 si HUB_TOKEN non configuré, sans summary — hub désactivé, pas erreur interne", async () => {
