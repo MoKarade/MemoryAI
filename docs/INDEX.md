@@ -2,7 +2,7 @@
 
 <!-- GÉNÉRÉ par `node .github/ci/generer-index.mjs` : ne pas modifier à la main (`--verifier` échoue si ce fichier est périmé). -->
 
-51 document(s). Ancien titre -> nouveau chemin : [correspondance.md](correspondance.md).
+52 document(s). Ancien titre -> nouveau chemin : [correspondance.md](correspondance.md).
 
 ## docs/
 
@@ -46,6 +46,7 @@
 - [ADR 0030 — La discussion de LIA suit Marc d'une app à l'autre, chiffrée, par l'état partagé](adr/0030-la-discussion-de-lia-suit-marc-entre-les-apps.md) — `docs/adr/0030-la-discussion-de-lia-suit-marc-entre-les-apps.md`
 - [ADR 0031 — Tout ce qui sort des apps arrive chez LIA, par une porte à jeton par app](adr/0031-tout-ce-qui-sort-des-apps-arrive-chez-lia.md) — `docs/adr/0031-tout-ce-qui-sort-des-apps-arrive-chez-lia.md`
 - [ADR 0032 — LIA agit seule dans les limites du catalogue, et tient le journal de ce qu'elle a fait](adr/0032-lia-agit-seule-dans-ses-limites.md) — `docs/adr/0032-lia-agit-seule-dans-ses-limites.md`
+- [ADR 0033 — Les faits que Marc déclare se valident seuls, avec ses mots comme preuve](adr/0033-les-faits-que-marc-declare-se-valident-seuls.md) — `docs/adr/0033-les-faits-que-marc-declare-se-valident-seuls.md`
 - [Registre des numéros d'ADR](adr/NUMEROS.md) — `docs/adr/NUMEROS.md`
 
 ## docs/claude/
