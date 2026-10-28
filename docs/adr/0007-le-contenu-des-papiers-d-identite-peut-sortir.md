@@ -1,6 +1,7 @@
 # ADR 0007 — Le contenu des papiers d'identité peut sortir, sous deux verrous
 
 - **Statut** : ACCEPTÉ (décision de Marc, 2026-09-19)
+- **Amendé par** : l'ADR 0034 (28/10/2026) : les deux verrous (§ 3) et la case par conversation (§ 5) tombent ; il n'y a plus de niveau d'ACCÈS. Le reste de cet ADR décrit l'état du 19/09.
 - **Amende** : l'ADR 0001 §5 (les niveaux) et l'ADR 0004 §3 (ce qui est servi à un modèle).
   Ne touche ni au vocabulaire, ni au contrat d'écriture, ni à la quarantaine.
 
