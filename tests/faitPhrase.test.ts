@@ -169,6 +169,7 @@ describe("LIBELLES_LIEN", () => {
     // compilateur ne voit pas : une entrée qui SURVIT à la suppression de son type. Les deux
     // sens, donc — sinon la table garde des libellés pour des règles qui n'existent plus.
     expect(Object.keys(LIBELLES_LIEN).sort()).toEqual([...TYPES_LIEN].sort());
+    expect(LIBELLES_LIEN["lie-par-lia"]).toContain("deviné");
     // Et aucun libellé ne doit être le nom machine : c'est tout l'objet du lot.
     for (const [type, libelle] of Object.entries(LIBELLES_LIEN)) {
       expect(libelle, `${type} affiche son nom machine`).not.toBe(type);

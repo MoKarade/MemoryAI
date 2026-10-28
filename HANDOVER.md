@@ -3,6 +3,10 @@
 > L'état RÉEL, à lire en premier. Ce qui est décidé vit dans `docs/adr/0001-…`, ce qui reste
 > à faire dans `BACKLOG.md`. Ce fichier dit où on en est, et ce qui attend un geste de Marc.
 
+## ✅ 28/10/2026 : LIA relie ses nouveaux faits à ceux qu'elle a servis (MemoryAI#421, ADR 0033 A5)
+
+`lia_retenir` accepte `lie_a` (cinq identifiants au plus) et ne lie qu'aux faits servis pendant le tour, vivants et d'un niveau au plus égal au nouveau fait. Les liens `lie-par-lia` sont dessinés « devinés », avec une phrase fixe ; le recalcul nocturne de `sens-proche` les conserve. Pas de migration. La preuve de production reste à relever après déploiement.
+
 ## 28/10/2026 : lia-ui v0.47.0, LIA lit les graphiques et ne scanne que sur demande (MemoryAI#408, mission MoKarade/.github#575)
 
 Épingle `@mokarade/lia-ui` v0.47.0 (sha pelé `7f1d7bb`), seul changement (`package.json`, lock). Deux demandes de Marc (28/10, 19 h 40 UTC) : « l'assistant voit toujours pas les graphes, il devrait » (v0.47.0 : `decrireParDefaut` lit lui-même titre, axes, légende et infobulles d'un graphique SVG, sans code chez MemoryAI ; un graphique canvas reste illisible) et « quand il scan, uniquement sur ce que je lui ai demandé » (v0.46.0 : le balayage des nanobots ne joue que sur « Explique-moi ça », « Regarde ça avec moi » ou un ordre de l'hôte, plus sur une visite spontanée). Preuve à lire : relevé du PC dans MemoryAI (réponse sur un graphique citant ce qui y est écrit ; aucun essaim quand LIA va voir seule).
