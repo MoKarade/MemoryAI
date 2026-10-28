@@ -7,6 +7,7 @@
 // 200 { reponse, coutUsd, outilsAppeles }.
 
 import { depotNotesLiaDrizzle } from "@/lib/lia/notes";
+import { retenirLiaDrizzle } from "@/lib/lia/retenir";
 import { sourceMeteoEccc } from "@/lib/monde/meteo";
 import { sourceActualite } from "@/lib/monde/actualite";
 import Anthropic from "@anthropic-ai/sdk";
@@ -94,6 +95,13 @@ export async function POST(request: Request): Promise<Response> {
       messages,
       inclureN2: corps.inclureN2 === true,
       inclureN3: corps.inclureN3 === true,
+      // ADR 0033 : LIA retient seule ce que Marc dit. La preuve est la parole de MARC dans ce chat
+      // (ses messages, jamais ceux de LIA), lue ici et jamais passée par le modèle.
+      retenir: retenirLiaDrizzle(db, {
+        messages,
+        cle,
+        client: { create: (p) => client.messages.create(p as Parameters<typeof client.messages.create>[0]) as never },
+      }),
       outils: {
         lecture: depotLectureDrizzle(db),
         ecriture: depotDrizzle(db),
