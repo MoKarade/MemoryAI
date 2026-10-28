@@ -4,22 +4,22 @@
 // part chez le modèle sans que personne ait dit s'il écrit ou s'il sort), et aucune entrée fantôme
 // (sinon la page de Régler affiche un outil qui n'existe plus).
 //
-// ⚠️ La liste des outils OFFERTS est dérivée du code (`OUTILS` du MCP, plus les quatre outils que
+// ⚠️ La liste des outils OFFERTS est dérivée du code (`OUTILS` du MCP, plus les cinq outils que
 // `tourDeChat` ajoute selon le contexte), pas recopiée ici : une liste recopiée se périme sans rien
 // rougir.
 
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { OUTILS, OUTILS_MCP_SEULS } from "../lib/mcp/outils";
-import { OUTIL_ACTUALITE, OUTIL_BLOCS, OUTIL_METEO, OUTIL_NOTE } from "../lib/chat/agent";
+import { OUTIL_ACTUALITE, OUTIL_BLOCS, OUTIL_METEO, OUTIL_NOTE, OUTIL_RETENIR } from "../lib/chat/agent";
 import { CATALOGUE, exigerNiveaux, LIBELLE_NIVEAU, niveauDe, outilsDeLia } from "../lib/lia/catalogueOutils";
 
-const OFFERTS = [...OUTILS.map((o) => o.name as string), OUTIL_BLOCS.name, OUTIL_NOTE.name, OUTIL_METEO.name, OUTIL_ACTUALITE.name];
+const OFFERTS = [...OUTILS.map((o) => o.name as string), OUTIL_BLOCS.name, OUTIL_NOTE.name, OUTIL_RETENIR.name, OUTIL_METEO.name, OUTIL_ACTUALITE.name];
 
 describe("le catalogue des outils de LIA", () => {
   it("le scan voit les outils — anti-vacuité", () => {
     expect(OUTILS.length).toBeGreaterThanOrEqual(10);
-    expect(OFFERTS.length).toBeGreaterThanOrEqual(14);
+    expect(OFFERTS.length).toBeGreaterThanOrEqual(15);
   });
 
   it("chaque outil offert a un niveau de risque valide", () => {
@@ -54,7 +54,7 @@ describe("le catalogue des outils de LIA", () => {
   it("tout outil qui écrit ou qui sort est classé comme tel", () => {
     // Les cas qui comptent, épinglés un par un : un outil qui change quelque chose ne doit jamais
     // glisser en « lecture » par une retouche de passage.
-    for (const nom of ["memoryai_proposer", "memoryai_demander", "memoryai_consigner", "lia_note"]) {
+    for (const nom of ["memoryai_proposer", "memoryai_demander", "memoryai_consigner", "lia_note", "lia_retenir"]) {
       expect(niveauDe(nom), nom).toBe("ecriture-interne");
     }
     for (const nom of ["monde_meteo", "monde_actualite"]) expect(niveauDe(nom), nom).toBe("sort-de-memoryai");
