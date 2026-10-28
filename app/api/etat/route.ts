@@ -13,7 +13,7 @@
 //
 // ── CE QUI SORT, ET CE QUI NE SORT PAS ─────────────────────────────────────────────────────────────
 //
-// Des NOMBRES. Aucun fait, aucun papier, aucun nom de fichier, aucun domaine, aucune date de
+// Des NOMBRES (dont celui des notes de LIA non lues, jamais le contenu d'une note). Aucun fait, aucun papier, aucun nom de fichier, aucun domaine, aucune date de
 // document. La frontière de l'ADR 0001 n'est pas élargie d'un pouce : on publie des comptes
 // sur la mémoire, jamais un morceau de son contenu. `dernierValideLe` est un horodatage de
 // TRAITEMENT, pas une date lue dans un papier.
@@ -44,6 +44,7 @@ import { comptesAgenda } from "@/lib/agenda/depot";
 import { jourQuebec } from "@/lib/coutChat";
 import { papiersVraisParLia } from "@/lib/pieces/depotRelecture";
 import { valideesParLia } from "@/lib/relectureLia";
+import { comptesNotesLia } from "@/lib/lia/notes";
 import { comptesSorties } from "@/lib/sorties/retention";
 
 export const dynamic = "force-dynamic";
@@ -76,8 +77,10 @@ export async function GET(request: Request): Promise<Response> {
   const agenda = await comptesAgenda(db, jourQuebec(new Date()));
   // Ce qui sort des apps (ADR 0031) : deux nombres globaux, jamais par app.
   const sorties = await comptesSorties(db, new Date());
+  // Les notes de LIA non lues (ADR 0022) : un nombre, jamais le contenu ; compter ne marque rien lu.
+  const notesLia = { nonLues: await comptesNotesLia(db) };
 
   // ⚠️ La composition est PURE et vit dans `lib/etatPublic.ts` : c'est elle que les tests
   // perturbent, sans base. Une seconde mise en forme écrite ici serait « une règle et demie ».
-  return Response.json(composerEtatPublic(faits, papiers, extracteurs, estGele(), parLia, agenda, sorties), { headers: NO_STORE });
+  return Response.json(composerEtatPublic(faits, papiers, extracteurs, estGele(), parLia, agenda, sorties, notesLia), { headers: NO_STORE });
 }
