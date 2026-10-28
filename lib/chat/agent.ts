@@ -298,6 +298,8 @@ export async function tourDeChat(params: {
     const { usage } = lireUsage(reponse.usage);
     const cout = coutUsd(modele, usage);
     await admin.enregistrerDepense({ jour, poste: "chat", modele, ...usage, coutUsd: cout });
+    // Une ligne par appel au journal : la base ne garde ni le cache ni de quoi le prouver sans accès. Nombres et id du modèle seulement.
+    console.info(`[chat] modele=${modele} entree=${usage.entree} sortie=${usage.sortie} cache écrit=${usage.ecritureCache} lu=${usage.lectureCache} cout=${cout.toFixed(6)}`);
     resultat.coutUsd += cout;
     resultat.appels++;
 
