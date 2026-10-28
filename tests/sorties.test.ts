@@ -140,6 +140,8 @@ describe("le niveau ne descend jamais (pur)", () => {
     expect(niveauRetenu("carai", 1)).toBe(2);
     expect(niveauRetenu("carai", 3)).toBe(3);
     expect(niveauRetenu("jobai", null)).toBe(2);
+    expect(niveauRetenu("hubperso", null)).toBe(1);
+    expect(niveauRetenu("hubperso", 2)).toBe(2);
     expect(niveauRetenu("driveai", 1)).toBe(2);
     expect(niveauRetenu("batchchef", null)).toBe(1);
     expect(niveauRetenu("batchchef", 2)).toBe(2);
@@ -151,7 +153,7 @@ describe("le niveau ne descend jamais (pur)", () => {
   });
 
   it("la liste des apps de la porte est fermée, dans le code", () => {
-    expect([...APPS_SORTIES].sort()).toEqual(["batchchef", "carai", "driveai", "financeai", "jobai"]);
+    expect([...APPS_SORTIES].sort()).toEqual(["batchchef", "carai", "driveai", "financeai", "hubperso", "jobai"]);
   });
 });
 

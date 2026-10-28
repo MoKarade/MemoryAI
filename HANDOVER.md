@@ -109,6 +109,7 @@ la discussion niveau 2 derrière les deux portes existantes ; les bornes viennen
 **Sorties des apps** (#281, ADR 0031) : `POST /api/sorties`, `lib/sorties/` et `memoryai_sorties`
 reçoivent, chiffrent et relisent les événements ; refus, rétention et comptes sont en place.
 `en-cours` tant que les jetons d’écrivain par app ne sont pas posés ; l’envoi depuis chaque app reste à brancher.
+La porte accepte aussi `hubperso` (plancher 1, ajoutée le 28/10/2026 sur décision de Marc) ; `MEMORYAI_TOKEN_HUBPERSO_ECRITURE` reste à poser en Production (geste du PC).
 
 **Catalogue des outils** (#282, prérequis de l’ADR 0032) : `lib/lia/catalogueOutils.ts` classe les
 outils ; `lib/chat/agent.ts` refuse ceux sans niveau et `app/regler/page.tsx` affiche le catalogue.

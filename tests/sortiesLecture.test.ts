@@ -199,7 +199,7 @@ describe("l'outil memoryai_sorties", () => {
     const o = outils.find((t) => t.name === "memoryai_sorties");
     expect(o).toBeDefined();
     expect(Object.keys(o!.inputSchema.properties)).not.toContain("inclure_n3");
-    expect(o!.inputSchema.properties.app?.enum).toEqual(["batchchef", "carai", "driveai", "financeai", "jobai"]);
+    expect(o!.inputSchema.properties.app?.enum).toEqual(["batchchef", "carai", "driveai", "financeai", "hubperso", "jobai"]);
     expect(OUTILS_MCP_SEULS.has("memoryai_sorties")).toBe(true);
   });
 
@@ -241,7 +241,7 @@ describe("l'outil memoryai_sorties", () => {
   });
 
   it("une app inconnue ou un instant sans décalage est une erreur, pas un résultat vide", async () => {
-    const a = await appeler({ app: "hubperso" });
+    const a = await appeler({ app: "inconnue" });
     expect(a.isError).toBe(true);
     expect(a.texte).toContain("app");
     const i = await appeler({ depuis: "2026-10-24 12:00" });
