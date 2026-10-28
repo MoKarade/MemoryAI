@@ -95,3 +95,51 @@ Questions de DriveAI (25/10, tâche DriveAI#678), au moment de construire la sec
 - **Conséquence, dite à Marc** : un papier dont la première lecture est Haiku sur OCR ne peut être
   confirmé que par une lecture par la vision, plus chère. La répartition des étiquettes se lit
   dans `parExtracteur`.
+
+## Amendement du 28/10/2026 : une troisième lecture départage les doutes
+
+Choix de Marc, 28/10/2026 à 13 h 09 (heure du Québec), sur la carte « Comment résoudre les doutes
+de la relecture des papiers ? » : « Une 3e lecture départage ». Tâche : MemoryAI#374.
+
+**Pourquoi.** L'essai de relecture par l'image de DriveAI (20 papiers, DriveAI#740) donne 15 papiers
+lus, 0 concordance, 15 doutes ; la première tranche sur OCR en donnait 3 pour 21. [Probable] Cause :
+une comparaison stricte sur quatre champs, alors que deux modèles n'écrivent presque jamais un émetteur
+de la même façon (« Facebook » / « Facebook/Meta », quatre graphies d'« IMERIR » en base). Comme Marc
+ne juge plus, ces doutes ne se résoudraient jamais. [À vérifier] La part exacte d'écarts de format
+n'est pas mesurable : la trace ne garde que les noms des champs qui divergent et des empreintes,
+jamais les valeurs (point 4).
+
+Ce que l'amendement ajoute, sans rien retirer au reste :
+
+1. **Une troisième lecture, à l'aveugle, pour un papier en doute.** Seul un papier dont la seconde
+   lecture a été comparée et déclarée « doute » peut en recevoir une. Elle est faite par DriveAI,
+   qui ne voit ni la première ni la seconde lecture.
+2. **Indépendante des DEUX premières.** La règle `lecturesIndependantes` s'applique à chacune :
+   canal différent (texte ou vision), ou, en vision, modèle différent (premier mot de l'étiquette).
+   Une troisième lecture qui partage son canal ou son modèle avec l'une des deux est refusée
+   (`meme_canal`), parce qu'elle hériterait de la même erreur.
+3. **Le départage.** Les quatre champs de la troisième lecture sont comparés (même forme que le
+   point 1) à chacune des deux premières. Si elle égale l'une des deux sur les quatre champs, deux
+   lectures indépendantes sont d'accord : le papier est jugé « vrai par LIA », avec le même statut
+   et les mêmes effets que le point 5. Sinon il reste « non confirmé » ; il n'y a jamais de
+   quatrième lecture.
+4. **La trace** (colonnes additives, aucune donnée détruite) garde l'empreinte keyée et l'étiquette
+   de la troisième lecture, et dit laquelle des deux elle égale (« première » ou « seconde »).
+   Aucune valeur n'est gardée. Pour la seconde lecture, dont seule l'empreinte du quadruplet est
+   conservée, l'égalité se prouve par l'égalité d'empreinte.
+5. **La porte** : `POST /api/pieces/relecture` accepte un rang de lecture (2 par défaut, 3 pour le
+   départage). Un rang 3 est refusé si le papier n'est pas en doute (`pas_en_doute`), s'il a déjà une
+   troisième lecture (`deja_departage`) ou si l'étiquette n'est pas indépendante des deux premières.
+   Le jeton, les 401 et 503, le gel et le sauvetage ne changent pas. La liste `GET` gagne le paramètre
+   `rang=3` : elle rend les `file_id` des papiers en doute sans troisième lecture, avec les étiquettes
+   des deux premières lectures, rien d'autre.
+6. **Les verrous ne bougent pas** : niveau 2 ou 3, canari, papier oublié, remplacé ou inactif ne
+   sont jamais jugés seuls, troisième lecture ou non (ADR 0007).
+7. **Le coût** est chez DriveAI, sous ses freins. Estimation de DriveAI sur MemoryAI#374 pour
+   environ 1 350 doutes : texte Haiku 5.5 environ 0,3 à 0,4 $, texte Sonnet 5.5 environ 6 à 8 $, vision
+   Opus 5.5 environ 10 à 20 $. Rien ne part en campagne sans le go de Marc ; un essai de 20 papiers au plus
+   précède toute campagne.
+
+**Ce que ça ne prouve pas.** Deux modèles d'accord peuvent se tromper de la même façon sur un scan
+très mauvais. Le départage réduit ce risque, il ne le supprime pas ; les papiers sensibles (niveau ≥ 2)
+restent hors de ce mécanisme.
