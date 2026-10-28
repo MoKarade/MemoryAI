@@ -4,18 +4,18 @@
 
 | numéro | titre | statut | où |
 |---|---|---|---|
-| 0001 | Une base de faits sur Marc existe hors de son compte Google | accepté | main |
+| 0001 | Une base de faits sur Marc existe hors de son compte Google | accepté ; § 5.3 (niveaux d'accès) amendé par 0034 | main |
 | 0002 | La mémoire apprend des conversations, demande ce qui lui manque, et se montre | accepté | main |
 | 0003 | Un fait MÉCANIQUE ne passe pas par l'œil de Marc | accepté | main |
 | 0004 | Tout entre, et tout se retrouve | accepté | main |
 | 0005 | Lia parle juste, et l'interface s'efface | accepté | main |
 | 0006 | Ce qui autorise un remplacement, et ce que devient l'ancien | accepté | main |
 | 0007 | La file de lecture : qui sait ce qui reste à lire | accepté | main |
-| 0007 | Le contenu des papiers d'identité peut sortir, sous deux verrous | accepté | main (numéro en double avec la ligne précédente, laissé tel quel) |
+| 0007 | Le contenu des papiers d'identité peut sortir, sous deux verrous | accepté ; les deux verrous amendés par 0034 | main (numéro en double avec la ligne précédente, laissé tel quel) |
 | 0008 | Relire un papier déjà lu, sans rouvrir la porte que l'ADR 0006 a fermée | accepté | main |
 | 0009 | L'avancement que DriveAI publie à la Mémoire : des comptes, jamais des faits | accepté | main |
 | 0010 | Lire l'IMAGE du papier, et tout ce qu'elle porte | accepté | main |
-| 0011 | Le niveau 3 ouvert par défaut à Marc, et à lui seul | accepté | main |
+| 0011 | Le niveau 3 ouvert par défaut à Marc, et à lui seul | accepté ; la liste fermée de lecteurs amendée par 0034 | main |
 | 0012 | La pile « vrai / faux » : Marc juge ce que la mémoire a lu et déduit | accepté | main |
 | 0013 | La mémoire de l'agence | proposé | PR #79 |
 | 0014 | Le journal d'accès dit aussi les papiers lus, et le bon niveau pour un sommaire | accepté | PR du journal (branche `agence/memoryai-code/journal-adr0014`) |
@@ -37,4 +37,5 @@
 | 0030 | La discussion de LIA suit Marc d'une app à l'autre, chiffrée, par l'état partagé | accepté (carte de Marc, 26/10 13:12Z, « Oui, via MemoryAI » ; OK de Marc sur ce texte, 26/10 17:04Z, « Oui, tel quel ») ; code en cours | MemoryAI#263 |
 | 0031 | Tout ce qui sort des apps arrive chez LIA, par une porte à jeton par app | accepté (demande de Marc, 26/10 14:46Z ; carte du 26/10 14:50Z ; OK de Marc sur ce texte, 26/10 18:18Z, « Oui, tel quel ») ; code à venir | MemoryAI#281 |
 | 0032 | LIA agit seule dans les limites du catalogue, et tient le journal de ce qu'elle a fait | accepté (décision de Marc, 26/10 14:50Z, « Agit aussi dans les apps » ; OK de Marc sur ce texte, 26/10 20:42Z, « Oui, tel quel ») ; code à venir | MemoryAI#283 |
-| 0033 | Les faits que Marc déclare se valident seuls, avec ses mots comme preuve | accepté (carte de Marc, 28/10 20:32Z, « Chat + claude.ai cadré ») ; code à venir | MemoryAI#412 |
+| 0033 | Les faits que Marc déclare se valident seuls, avec ses mots comme preuve | accepté (carte de Marc, 28/10 20:32Z, « Chat + claude.ai cadré ») ; code à venir ; plancher 2 de l'avenant A3 amendé par 0034 | MemoryAI#412 |
+| 0034 | Un seul niveau de lecture : tout est accessible, à Marc seul | accepté (carte de Marc, 28/10 21:42Z, « Un seul niveau, toi seul ») ; code à venir | MemoryAI#433 |
