@@ -609,7 +609,7 @@ export function tableauMonde(meteo: LectureMeteo | null = null, actualite: Actua
         titre: "Sept jours",
         corps: m?.previsions.length ? [{ genre: "liste", elements: m.previsions.map((p) => ({ libelle: p.periode, detail: p.resume })) }] : [vide("Les sept prochains jours viendront avec la météo.")],
       },
-      { cle: "bornes", largeur: 6, icone: "target", titre: "Bornes proches", repliee: true, corps: [vide("Aucune source de bornes de recharge branchée.")] },
+      { cle: "bornes", largeur: 6, icone: "target", titre: "Bornes proches", corps: [vide("Aucune source de bornes de recharge branchée.")] },
       { cle: "sources", largeur: 6, icone: "shield", titre: "Sources", repliee: true, corps: sources.length ? sources.map((s): Corps => ({ genre: "texte", texte: `${s}.` })) : [vide("Aucune source du monde n'est branchée pour l'instant.")] },
     ],
   };

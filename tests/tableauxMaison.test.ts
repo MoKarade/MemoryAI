@@ -23,12 +23,19 @@ function rendre(id: IdEspace) {
 }
 
 describe("Monde, comme la maquette", () => {
-  it("a les cinq tuiles de la maquette, à leur place, les deux dernières repliées", () => {
+  it("a les cinq tuiles de la maquette, à leur place, « Sources » repliée", () => {
     const t = tableauMonde();
     expect(t.question).toBe("Ce que LIA regarde dans le monde");
     expect(t.tuiles.map((x) => x.titre)).toEqual(["Météo", "Actualité", "Sept jours", "Bornes proches", "Sources"]);
     expect(t.tuiles.map((x) => x.largeur)).toEqual([6, 6, 12, 6, 6]);
-    expect(t.tuiles.filter((x) => x.repliee).map((x) => x.cle)).toEqual(["bornes", "sources"]);
+    expect(t.tuiles.filter((x) => x.repliee).map((x) => x.cle)).toEqual(["sources"]);
+    expect(t.tuiles.find((x) => x.cle === "sources")?.repliee).toBe(true);
+  });
+
+  it("montre l'état des bornes proches dans le corps déplié", () => {
+    const html = rendre("monde");
+    const corpsBornes = html.match(/<details class="tuile-m tuile-m--6" open=""><summary>[\s\S]*?<h2>Bornes proches<\/h2>[\s\S]*?<\/summary><div class="tuile-m-corps">([\s\S]*?)<\/div><\/details>/)?.[1];
+    expect(corpsBornes).toBe('<p class="tuile-vide">Aucune source de bornes de recharge branchée.</p>');
   });
 
   it("sans source, chaque tuile est vide : aucun chiffre de la maquette", () => {
