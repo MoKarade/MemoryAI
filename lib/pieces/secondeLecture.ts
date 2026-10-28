@@ -53,6 +53,26 @@ export function lecturesIndependantes(premiere: string, seconde: string): boolea
   return modele(premiere) !== modele(seconde);
 }
 
+/** La troisième lecture est indépendante des DEUX premières (ADR 0026, amendement du 28/10/2026). */
+export function lecturesIndependantesTroisieme(premiere: string, seconde: string, tierce: string): boolean {
+  return lecturesIndependantes(premiere, tierce) && lecturesIndependantes(seconde, tierce);
+}
+
+/**
+ * Le départage : laquelle des deux premières lectures la troisième égale (même empreinte keyée =
+ * même forme sur les quatre champs). Si elle égale les deux, « premiere » d'abord ; sinon `null`.
+ */
+export function departager(empreintePremiere: string, empreinteSeconde: string, empreinteTierce: string): "premiere" | "seconde" | null {
+  if (empreinteTierce === empreintePremiere) return "premiere";
+  if (empreinteTierce === empreinteSeconde) return "seconde";
+  return null;
+}
+
+/** Une lecture qui n'a rien trouvé ne départage rien. */
+export function lectureVide(l: Lecture): boolean {
+  return CHAMPS_COMPARES.every((c) => l[c] === null);
+}
+
 /** Sans casse, sans accents, mots triés ; c'est elle qu'on empreinte : concorder = même empreinte. */
 export function forme(v: string): string {
   return v

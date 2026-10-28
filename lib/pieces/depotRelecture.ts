@@ -18,6 +18,28 @@ export interface DepotRelecture {
   doutesEnPile(jour: string): Promise<number>;
   /** Faux si cette pièce a déjà été relue par ce même extracteur : rien n'est réécrit. */
   ecrire(ligne: NouvelleRelecture): Promise<boolean>;
+  /** Où en est le départage de ce papier : déjà fait, la ligne en doute à départager, ou `null` (pas en doute). */
+  doutePourDepartage(pieceId: string): Promise<"deja_departage" | LigneDoute | null>;
+  /** Écrit la troisième lecture, atomiquement et seulement si la ligne est encore en doute sans troisième lecture. Faux sinon. */
+  departager(ligne: Departage): Promise<boolean>;
+}
+
+/** La ligne d'un papier en doute : de quoi comparer une troisième lecture, jamais une valeur. */
+interface LigneDoute {
+  id: number;
+  empreintePremiere: string;
+  empreinteSeconde: string;
+  extracteurPremiere: string;
+  extracteurSeconde: string;
+}
+
+interface Departage {
+  id: number;
+  pieceId: string;
+  egale: "premiere" | "seconde" | null;
+  empreinteTierce: string;
+  extracteurTierce: string;
+  tierceLe: Date;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -59,6 +81,28 @@ export function depotRelectureDrizzle(db: Base): DepotRelecture {
         .insert(schema.relecturesPieces)
         .values(ligne)
         .onConflictDoNothing()
+        .returning({ id: schema.relecturesPieces.id });
+      return rows.length > 0;
+    },
+
+    async doutePourDepartage(pieceId) {
+      const rows = await db.select().from(schema.relecturesPieces).where(eq(schema.relecturesPieces.pieceId, pieceId)).orderBy(asc(schema.relecturesPieces.reluLe), asc(schema.relecturesPieces.id));
+      if (rows.some((r) => r.empreinteTierce !== null)) return "deja_departage";
+      const l = rows.find((r) => r.decision === "doute");
+      return l ? { id: l.id, empreintePremiere: l.empreintePremiere, empreinteSeconde: l.empreinteSeconde, extracteurPremiere: l.extracteurPremiere, extracteurSeconde: l.extracteurSeconde } : null;
+    },
+
+    async departager(d) {
+      const rows = await db
+        .update(schema.relecturesPieces)
+        .set({
+          ...(d.egale ? { decision: "vrai" as const, enPile: false } : {}),
+          empreinteTierce: d.empreinteTierce,
+          extracteurTierce: d.extracteurTierce,
+          egale: d.egale,
+          tierceLe: d.tierceLe,
+        })
+        .where(and(eq(schema.relecturesPieces.id, d.id), eq(schema.relecturesPieces.pieceId, d.pieceId), eq(schema.relecturesPieces.decision, "doute"), isNull(schema.relecturesPieces.empreinteTierce)))
         .returning({ id: schema.relecturesPieces.id });
       return rows.length > 0;
     },
@@ -126,6 +170,39 @@ export async function papiersARelire(db: Base, canal: "texte" | "vision", limite
     )
     .orderBy(asc(P.creeLe), asc(P.id))
     .limit(limite);
+}
+
+/**
+ * Les papiers en doute sans troisième lecture (ADR 0026, amendement du 28/10/2026) : vivants, de
+ * niveau 0 ou 1. Rend le `file_id` de l'exemplaire principal et les étiquettes des DEUX premières
+ * lectures, rien d'autre. Le plus ancien d'abord.
+ */
+export async function papiersADepartager(db: Base, limite: number): Promise<{ fileId: string; extracteurs: [string, string] }[]> {
+  const X = schema.pieceExemplaires;
+  const rows = await db
+    .select({ pieceId: R.pieceId, fileId: X.fileId, premiere: R.extracteurPremiere, seconde: R.extracteurSeconde })
+    .from(R)
+    .innerJoin(schema.pieces, eq(schema.pieces.id, R.pieceId))
+    .innerJoin(X, and(eq(X.pieceId, R.pieceId), eq(X.principal, true)))
+    .where(
+      and(
+        vivante,
+        lte(schema.pieces.niveau, NIVEAU_MAX_SEUL),
+        eq(R.decision, "doute"),
+        isNull(R.empreinteTierce),
+        notExists(db.select({ un: sql`1` }).from(sql`relectures_pieces r2`).where(sql`r2.piece_id = ${R.pieceId} AND r2.empreinte_tierce IS NOT NULL`)),
+      ),
+    )
+    .orderBy(asc(R.reluLe), asc(R.id));
+  const vus = new Set<string>();
+  const sortie: { fileId: string; extracteurs: [string, string] }[] = [];
+  for (const r of rows) {
+    if (vus.has(r.pieceId)) continue;
+    vus.add(r.pieceId);
+    sortie.push({ fileId: r.fileId, extracteurs: [r.premiere, r.seconde] });
+    if (sortie.length >= limite) break;
+  }
+  return sortie;
 }
 
 /** Combien de papiers attendent une seconde lecture, par étiquette de première lecture (mêmes critères, sans le canal). */

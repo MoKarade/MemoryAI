@@ -1,10 +1,12 @@
 // app/api/pieces/relecture/route.ts — la seconde lecture des papiers par DriveAI (ADR 0026).
 //
 // Jumelle de `POST /api/pieces`, mêmes refus dans le même ordre ; hors du middleware de session.
-//   POST 200 { recus, vrais, doutes, exclus, dejaRelus, refusees: [{ index, code }] }
+//   POST 200 { recus, vrais, doutes, departages, exclus, dejaRelus, refusees: [{ index, code }] }
+//        corps { rang?: 2|3, relectures }. Rang 3 (28/10) : la troisième lecture d'un papier en doute.
 //   GET  200 { aRelire: [{ file_id, extracteur }], parExtracteur: { <étiquette>: n } }
 //        ?canal=texte|vision (le canal de la seconde lecture), ?limite=1..50 : ce qu'il reste à
 //        relire, pour que DriveAI ne paie pas des lectures que la porte refuserait (25/10).
+//   GET ?rang=3 : { aDepartager: [{ file_id, extracteurs: [première, seconde] }] }, les papiers en doute sans 3e lecture.
 // ⚠️ Rien que des nombres et des codes fermés : rendre la première lecture, même pour dire où
 // elle diverge, la donnerait à l'appelant, et la seconde ne serait plus aveugle.
 
@@ -13,7 +15,7 @@ import { baseConfiguree, db } from "@/lib/db";
 import { estGele, reponseGelee } from "@/lib/gel";
 import { ecrivainAutorise, refusJeton } from "@/lib/jetons";
 import { assurerMigrations } from "@/lib/migrations";
-import { aRelireParExtracteur, depotRelectureDrizzle, papiersARelire } from "@/lib/pieces/depotRelecture";
+import { aRelireParExtracteur, depotRelectureDrizzle, papiersADepartager, papiersARelire } from "@/lib/pieces/depotRelecture";
 import { EcriturePiecesRetireeError } from "@/lib/pieces/ecrire";
 import { APPS_PIECES } from "@/lib/pieces/lignee";
 import { LotRelecturesTropGrandError, relireLot } from "@/lib/pieces/relire";
@@ -54,9 +56,12 @@ export async function POST(request: Request): Promise<Response> {
     return erreur(400, "corps_invalide", "Le corps doit être { relectures: [...] }.");
   }
 
+  const rang = (corps as { rang?: unknown }).rang;
+  if (rang !== undefined && rang !== 2 && rang !== 3) return erreur(400, "rang_invalide", "rang : 2 (seconde lecture) ou 3 (départage).");
+
   await assurerMigrations();
   try {
-    const r = await relireLot(relectures, ecrivain, cle, depotRelectureDrizzle(db));
+    const r = await relireLot(relectures, ecrivain, cle, depotRelectureDrizzle(db), new Date(), rang ?? 2);
     return Response.json(r, { status: 200, headers: NO_STORE });
   } catch (err) {
     if (err instanceof SauvetageEnCoursError) return reponseSauvetage();
@@ -76,8 +81,10 @@ export async function GET(request: Request): Promise<Response> {
   if (!baseConfiguree()) return erreur(503, "base_absente", "DATABASE_URL manquante : rien n'est lu.");
 
   const url = new URL(request.url);
+  const rang = url.searchParams.get("rang");
   const canal = url.searchParams.get("canal");
-  if (canal !== "texte" && canal !== "vision") return erreur(400, "canal_invalide", "canal=texte ou canal=vision : le canal de la seconde lecture.");
+  if (rang !== null && rang !== "3") return erreur(400, "rang_invalide", "rang=3 : les papiers en doute à départager.");
+  if (rang === null && canal !== "texte" && canal !== "vision") return erreur(400, "canal_invalide", "canal=texte ou canal=vision : le canal de la seconde lecture.");
   const brut = url.searchParams.get("limite");
   const limite = brut === null ? LOT_MAX_RELECTURES : Number(brut);
   if (!Number.isInteger(limite) || limite < 1 || limite > LOT_MAX_RELECTURES) {
@@ -85,6 +92,10 @@ export async function GET(request: Request): Promise<Response> {
   }
 
   await assurerMigrations();
-  const [lignes, parExtracteur] = await Promise.all([papiersARelire(db, canal, limite), aRelireParExtracteur(db)]);
+  if (rang === "3") {
+    const aDepartager = await papiersADepartager(db, limite);
+    return Response.json({ aDepartager: aDepartager.map((l) => ({ file_id: l.fileId, extracteurs: l.extracteurs })) }, { headers: NO_STORE });
+  }
+  const [lignes, parExtracteur] = await Promise.all([papiersARelire(db, canal as "texte" | "vision", limite), aRelireParExtracteur(db)]);
   return Response.json({ aRelire: lignes.map((l) => ({ file_id: l.fileId, extracteur: l.extracteur })), parExtracteur }, { headers: NO_STORE });
 }
