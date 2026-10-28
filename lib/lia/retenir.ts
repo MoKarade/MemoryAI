@@ -16,6 +16,9 @@
 // ⚠️ UN PRÉDICAT NEUF N'EST PAS REFUSÉ (ADR 0033 A3) : il est créé, et accepté si — et seulement si —
 // le fait est validé par la phrase de Marc. Le niveau PLANCHER 2 reste (servi derrière MEMORYAI_N2_CHAT).
 // ⚠️ La question n'est JAMAIS journalisée, ni la valeur : l'échec écrit le nom de l'erreur, rien d'autre.
+//
+// ⚠️ Ce module importe `ClientModele` du chat ; le chat, lui, ne connaît que la FORME de `RetenirLia`
+// (`tourDeChat`, paramètre `retenir`) : l'inverse ferait un cycle d'imports.
 
 import { and, count, eq, like } from "drizzle-orm";
 import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
@@ -45,7 +48,7 @@ import { validerFait, type FaitValide } from "../validerFait";
 import { definition } from "../vocabulaire";
 
 /** Le nom de cette lecture dans la trace : il VERSIONNE la façon de retenir, comme un extracteur. */
-export const EXTRACTEUR_RETENIR = "lia-retenir-v1";
+const EXTRACTEUR_RETENIR = "lia-retenir-v1";
 /** Haiku : la relecture compare une phrase à un fait, elle n'a pas à raisonner long. */
 const MODELE_RETENIR: IdModele = "claude-haiku-5-5";
 const MAX_TOKENS_SORTIE = 600;
@@ -53,7 +56,7 @@ const MAX_TOKENS_SORTIE = 600;
 const ECRIVAIN_LIA: Ecrivain = { appId: "lia", role: "ecriture", fiabilites: ["marc"] };
 
 /** Ce que l'outil rend au modèle : une phrase vraie, et si le fait est resté hors de la mémoire. */
-export interface ResultatRetenir {
+interface ResultatRetenir {
   ok: boolean;
   phrase: string;
 }
@@ -64,7 +67,7 @@ export interface RetenirLia {
 }
 
 /** Ce que la décision lit et écrit en base, derrière une interface (comme `DepotRelecture`). */
-export interface DepotRetenir {
+interface DepotRetenir {
   /** L'état du prédicat dans la file des propositions, ou `null` s'il n'y est pas. */
   statutPredicat(predicat: string): Promise<string | null>;
   /** Les prédicats d'une contradiction ouverte (une question à choix posée à Marc). */
@@ -75,7 +78,7 @@ export interface DepotRetenir {
   tracer: DepotRelecture["tracer"];
 }
 
-export interface DepsRetenir {
+interface DepsRetenir {
   /** Les mots de Marc (`paroleDeMarc`) : la SEULE preuve. */
   parole: string;
   cle: Cle;
