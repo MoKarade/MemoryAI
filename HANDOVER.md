@@ -3,6 +3,10 @@
 > L'état RÉEL, à lire en premier. Ce qui est décidé vit dans `docs/adr/0001-…`, ce qui reste
 > à faire dans `BACKLOG.md`. Ce fichier dit où on en est, et ce qui attend un geste de Marc.
 
+## 28/10/2026 : lia-ui v0.45.1, le menu du clic droit passe au-dessus de la fenêtre « Sa journée » (MemoryAI#402, mission MoKarade/.github#575)
+
+Épingle `@mokarade/lia-ui` v0.45.1 (sha pelé `b7084b9`), seul changement (`package.json`, lock). Relevé du PC (28/10, 14 h 50) : après v0.44.2, le menu s'ouvrait à la bonne hauteur mais passait SOUS la fenêtre « Sa journée » (menu à z-index 5 dans le conteneur, fenêtre à 10) et débordait de 6 px. Le menu d'un élément s'ouvre maintenant dans sa propre couche pleine page, au-dessus de toute fenêtre. v0.45.0 (faits lus par l'hôte) arrive avec, inactif. Preuve attendue : relevé du PC, clic droit dans « Sa journée ».
+
 ## 28/10/2026 : lia-ui v0.44.2, le menu du clic droit s'ouvre sous le clic dans « Sa journée » (MemoryAI#389, mission MoKarade/.github#575)
 
 Épingle `@mokarade/lia-ui` v0.44.2 (sha pelé `8881751`), seul changement (`package.json`, lock). Relevé du PC (28/10, 15:48Z) : dans la fenêtre « Sa journée » (`PanneauEspace`, `<aside role="dialog">`), le menu s'ouvrait décalé à gauche, hors de la fenêtre : `bounds` exclut le panneau et bornait le menu (lia-ui#152). Le menu d'un élément n'est plus borné que par la fenêtre. v0.44.0 (mode atelier, inactif tant que l'app ne le demande pas) et v0.44.1 (tag automatique) arrivent avec. [À vérifier] relevé du PC dans « Sa journée » après le déploiement de production.
