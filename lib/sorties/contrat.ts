@@ -30,7 +30,7 @@ const CLES_EVENEMENT = new Set(["type", "date", "titre", "resume", "ref", "nivea
  * le descendre. Une app absente d'ici n'a pas la porte (`APPS_SORTIES`) ; au cas où, le défaut est le
  * plus fermé.
  */
-const PLANCHER_NIVEAU: Readonly<Record<string, number>> = { batchchef: 1, carai: 2, driveai: 2, financeai: 3, jobai: 2 };
+const PLANCHER_NIVEAU: Readonly<Record<string, number>> = { batchchef: 1, carai: 2, driveai: 2, financeai: 3, hubperso: 1, jobai: 2 };
 /** Les apps qui ont la porte : une liste fermée, dans le code. En ajouter une est une décision de frontière. */
 export const APPS_SORTIES: ReadonlySet<string> = new Set(Object.keys(PLANCHER_NIVEAU));
 
