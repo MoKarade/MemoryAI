@@ -37,6 +37,11 @@ export interface ComptesMemoire {
    * perte de données. Optionnel, un appelant l'oublierait et la carte mentirait en silence.
    */
   papiers: number;
+  /**
+   * Le NOMBRE de notes de LIA non lues (ADR 0022), jamais leur contenu. Absent : le compte n'a pas
+   * pu être lu, la métrique est alors ABSENTE (jamais un 0 inventé) ; 0 est un vrai nombre.
+   */
+  notesLiaNonLues?: number;
 }
 
 /**
@@ -109,6 +114,9 @@ export function composerSummary(c: ComptesMemoire, maintenant: Date = new Date()
       { label: "Papiers", value: c.papiers, format: "number" },
       { label: "À valider", value: c.aValider, format: "number", severity: c.aValider >= SEUIL_A_VALIDER_ALERTE ? "warn" : "ok" },
       { label: "Domaines", value: domaines.length, format: "number" },
+      ...(c.notesLiaNonLues !== undefined && Number.isInteger(c.notesLiaNonLues) && c.notesLiaNonLues >= 0
+        ? [{ label: "Notes de LIA non lues", value: c.notesLiaNonLues, format: "number" as const }]
+        : []),
     ],
     alerts,
     actions: [

@@ -3,6 +3,10 @@
 > L'état RÉEL, à lire en premier. Ce qui est décidé vit dans `docs/adr/0001-…`, ce qui reste
 > à faire dans `BACKLOG.md`. Ce fichier dit où on en est, et ce qui attend un geste de Marc.
 
+## 28/10/2026 : le nombre de notes de LIA non lues est publié (MemoryAI#399)
+
+`GET /hub/summary` (métrique « Notes de LIA non lues ») et `GET /api/etat` (`notesLia.nonLues`) publient le NOMBRE de notes non lues, jamais leur contenu, genre ou app ; absent si le compte n'a pas pu être lu ; seul `memoryai_notes_lia` marque une note lue. Le signal du coordinateur en dépend.
+
 ## 28/10/2026 : lia-ui v0.44.2, le menu du clic droit s'ouvre sous le clic dans « Sa journée » (MemoryAI#389, mission MoKarade/.github#575)
 
 Épingle `@mokarade/lia-ui` v0.44.2 (sha pelé `8881751`), seul changement (`package.json`, lock). Relevé du PC (28/10, 15:48Z) : dans la fenêtre « Sa journée » (`PanneauEspace`, `<aside role="dialog">`), le menu s'ouvrait décalé à gauche, hors de la fenêtre : `bounds` exclut le panneau et bornait le menu (lia-ui#152). Le menu d'un élément n'est plus borné que par la fenêtre. v0.44.0 (mode atelier, inactif tant que l'app ne le demande pas) et v0.44.1 (tag automatique) arrivent avec. [À vérifier] relevé du PC dans « Sa journée » après le déploiement de production.
