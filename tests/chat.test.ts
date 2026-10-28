@@ -2,7 +2,7 @@
 // lecture, la bascule N2 de la conversation qui écrase celle du modèle, et le prompt système
 // sans aucun fait.
 
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
 import { readdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { randomBytes } from "node:crypto";
@@ -321,5 +321,18 @@ describe("tourDeChat : cache de prompt (tâche MemoryAI 365)", () => {
     const r = await tour(client);
     // Sonnet 5.5 : 2 $ entrée, 10 $ sortie par million, lecture de cache 0,10 $ (×0,05).
     expect(r.coutUsd).toBeCloseTo((100 * 2 + 10 * 10 + 2000 * 2 * 1.25 + 3000 * 2 * 0.05) / 1_000_000);
+  });
+
+  it("chaque appel laisse une ligne au journal avec le modèle et le cache lu : c'est la preuve en production, sans accès à la base", async () => {
+    const info = vi.spyOn(console, "info").mockImplementation(() => {});
+    const avecCache: ReponseModele = {
+      content: [{ type: "text", text: "Bonjour Marc." }],
+      stop_reason: "end_turn",
+      usage: { input_tokens: 100, output_tokens: 10, cache_creation_input_tokens: 0, cache_read_input_tokens: 3000 },
+    };
+    const { client } = fauxPhoto([avecCache]);
+    await tour(client);
+    expect(info).toHaveBeenCalledWith("[chat] modele=claude-sonnet-5-5 entree=100 sortie=10 cache écrit=0 lu=3000 cout=0.000600");
+    info.mockRestore();
   });
 });
