@@ -18,7 +18,7 @@
 import { normaliser, valeurDansSource, type Relecture } from "./validationLia";
 
 /** Qui parle : `marc` = voie A (sa question à LIA), `claude-ai` = voie B (la citation jointe à l'outil). */
-export type Voie = "marc" | "claude-ai";
+type Voie = "marc" | "claude-ai";
 
 /** Au plus tant de validations par jour de Québec, par voie (ADR 0033 § 3 et avenant A4). */
 export const PLAFOND_PAR_JOUR: Readonly<Record<Voie, number>> = { marc: 20, "claude-ai": 5 };
@@ -67,8 +67,8 @@ export interface Declaration {
   dejaValidesAujourdhui: number;
 }
 
-export type RaisonExclu = "oublie" | "canari" | "niveau" | "predicat-refuse" | "hors-liste";
-export type RaisonDoute = "contradiction" | "ecrasement" | "valeur-absente" | "verdict-illisible" | "doute" | "infirme";
+type RaisonExclu = "oublie" | "canari" | "niveau" | "predicat-refuse" | "hors-liste";
+type RaisonDoute = "contradiction" | "ecrasement" | "valeur-absente" | "verdict-illisible" | "doute" | "infirme";
 
 export type DecisionDeclaration =
   | { genre: "exclu"; raison: RaisonExclu }
