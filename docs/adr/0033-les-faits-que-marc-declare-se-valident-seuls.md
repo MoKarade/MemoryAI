@@ -7,7 +7,7 @@
 
 Marc dit à claude.ai « j'ai 26 ans, né en 1999 » ; claude.ai appelle `memoryai_proposer`. Le fait reste « à valider » alors que Marc l'a donné lui-même. Cause, lue dans le code : `memoryai_proposer` écrit la source `claude-ai:<jour>`, sans aucun texte. La relecture de l'ADR 0025 compare la valeur à un extrait de sa source (un papier ou une conversation que MemoryAI détient) ; sans source lisible ici, « le fait reste à Marc » (ADR 0025 § 2). Rien n'est cassé : la règle ne voit simplement pas la phrase de Marc.
 
-La limite qu'aucun mécanisme ne lève : par le MCP, MemoryAI ne peut pas prouver que « c'est Marc qui l'a dit » plutôt qu'un texte lu par claude.ai (page, courriel, document) qui l'aurait poussé à le écrire. C'est le scénario d'injection par les faits, menace n° 1 du dépôt. Cet ADR ne prétend donc pas prouver l'origine : il **borne ce qu'un faux peut écrire**.
+La limite qu'aucun mécanisme ne lève : par le MCP, MemoryAI ne peut pas prouver que « c'est Marc qui l'a dit » plutôt qu'un texte lu par claude.ai (page, courriel, document) qui l'aurait poussé à l'écrire. C'est le scénario d'injection par les faits, menace n° 1 du dépôt. Cet ADR ne prétend donc pas prouver l'origine : il **borne ce qu'un faux peut écrire**.
 
 ## Décision
 
@@ -26,7 +26,7 @@ Deux voies, les mêmes deux signaux que l'ADR 0025, une seule trace.
    - **jamais seul** (ADR 0025 § 3, inchangé) : niveau 2 ou 3, canari, prédicat en quarantaine, fait en contradiction ouverte ; `oublis` consulté d'abord ;
    - **jamais d'écrasement** : si un fait valide du même prédicat porte une autre valeur, le nouveau reste proposé et devient un doute (compté dans les 5 par jour de l'ADR 0025 § 5) ;
    - **un plafond** : 5 auto-validations par jour de Québec pour la voie B ;
-   - **la trace** : une ligne `validations_lia` par validation (voie, verdict, raison, empreinte keyedée de la citation). Le fait se dit « dit par Marc » (voie A) ou « déclaré par claude.ai, non vérifié » (voie B) partout où son statut s'affiche, et Marc le rejette ou l'oublie en un geste ;
+   - **la trace** : une ligne `validations_lia` par validation (voie, verdict, raison, empreinte keyée de la citation). Le fait se dit « dit par Marc » (voie A) ou « déclaré par claude.ai, non vérifié » (voie B) partout où son statut s'affiche, et Marc le rejette ou l'oublie en un geste ;
    - **un interrupteur** : `MEMORYAI_DECLARES_OFF=1` coupe la voie B (la voie A suit le gel `MEMORYAI_GEL`). Sans clé de modèle, ou si la relecture échoue, le fait reste proposé : on échoue fermé.
 4. **Un âge n'est pas un fait déclaré.** Il est DÉDUIT d'une date de naissance (ADR 0023) et change chaque année. Le fait déclarable est la date de naissance ; « 26 ans » en dérive. [À vérifier : le prédicat exact dans le vocabulaire, au moment du code.]
 
