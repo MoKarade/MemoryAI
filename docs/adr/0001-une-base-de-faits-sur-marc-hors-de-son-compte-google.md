@@ -5,6 +5,7 @@
   jour par la session Claude ; aucune ligne de code de la phase 0 n'a été écrite avant cet
   OK — c'est le protocole de l'écosystème (DriveAI CLAUDE.md §9 : « ce qui SORT du compte
   Google de Marc se tranche par un ADR », et COMPTE-RENDU §7 : plan court + OK avant de coder).
+- **Amendé par** : l'ADR 0034 (28/10/2026) : le § 5.3 ne décrit plus des niveaux d'ACCÈS (plus de bascule N2, plus de verrou N3) ; la colonne `niveau` reste, comme régime de chiffrement. Le reste de cet ADR décrit l'état du 15/09.
 - **Portée** : ce dépôt (`MemoryAI`, `memoryai.hubperso.com`). Ce qu'il exige des autres
   dépôts est nommé en §6 ; chacun le livrera par son propre ADR au moment de sa phase.
 - **Amont** : DriveAI ADR-0059 (cadrage de l'assistant transversal, accepté le 15/09) et le
