@@ -1,6 +1,7 @@
 # ADR 0033 — Les faits que Marc déclare se valident seuls, avec ses mots comme preuve
 
 - **Statut** : **accepté** (Marc, 28/10/2026 20:32Z, carte « Comment valider seul les faits que tu donnes à MemoryAI ? », option « Chat + claude.ai cadré », après son message de 20:28Z : « je suis pas sensé valider, ça devrait être auto »). **Avenant du 28/10/2026** (20:41Z, après les essais de Marc avec LIA) ajouté en bas de ce document. Code à venir. Tâches : MemoryAI#412, #416.
+- **Amendé par** : l'ADR 0034 (28/10/2026) : le niveau plancher 2 de l'avenant A3 tombe, il n'y a plus de niveau d'ACCÈS. Le niveau 3 jamais validé seul reste une règle d'ÉCRITURE.
 - **Amont** : ADR 0025 (deux signaux, les deux requis), qu'il **étend** à deux sources nouvelles sans en changer les garde-fous ; ADR 0003 (seul le mécanique s'auto-valide) ; ADR 0023 (un âge est DÉDUIT d'une date de naissance) ; ADR 0001 (frontière, oublis, canaris).
 
 ## Contexte
