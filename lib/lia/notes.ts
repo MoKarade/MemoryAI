@@ -90,6 +90,15 @@ export interface DepotNotesLia {
   lireNonLues(maintenant: Date): Promise<NoteRendue[]>;
 }
 
+/**
+ * Le NOMBRE de notes non lues (`lu_le` nul). Ne lit ni texte, ni genre, ni app, ne déchiffre rien
+ * et ne marque RIEN lu : seul `lireNonLues` le fait.
+ */
+export async function comptesNotesLia(db: Base): Promise<number> {
+  const [n] = await db.select({ n: count() }).from(schema.notesLia).where(isNull(schema.notesLia.luLe));
+  return Number(n?.n ?? 0);
+}
+
 export function depotNotesLiaDrizzle(db: Base, cle: Cle): DepotNotesLia {
   return {
     async deposer(note, maintenant) {

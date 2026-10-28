@@ -55,6 +55,11 @@ export interface EtatPublic {
    * deux nombres GLOBAUX — jamais par app. Absent : la route ne l'a pas lu.
    */
   sorties?: { gardees: number; refusSur7Jours: number };
+  /**
+   * Les notes de LIA au coordinateur (ADR 0022) : le NOMBRE de non lues, jamais le contenu, le genre
+   * ni l'app d'une note. Absent : le compte n'a pas pu être lu (jamais un 0 inventé).
+   */
+  notesLia?: { nonLues: number };
 }
 
 /**
@@ -82,6 +87,7 @@ export function composerEtatPublic(
   parLia: { faits: number; papiers: number },
   agenda?: EtatPublic["agenda"],
   sorties?: EtatPublic["sorties"],
+  notesLia?: EtatPublic["notesLia"],
 ): EtatPublic {
   const valides = faits.parStatut.valide ?? 0;
   return {
@@ -103,5 +109,6 @@ export function composerEtatPublic(
     gele,
     ...(agenda !== undefined ? { agenda } : {}),
     ...(sorties !== undefined ? { sorties } : {}),
+    ...(notesLia !== undefined ? { notesLia } : {}),
   };
 }
