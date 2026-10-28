@@ -3,6 +3,10 @@
 > L'état RÉEL, à lire en premier. Ce qui est décidé vit dans `docs/adr/0001-…`, ce qui reste
 > à faire dans `BACKLOG.md`. Ce fichier dit où on en est, et ce qui attend un geste de Marc.
 
+## Modèles 5.5 (28/10/2026)
+
+Le sélecteur et tous les appels passent en génération 5.5 : `claude-haiku-5-5` (0,10 $ / 0,50 $ par million de jetons), `claude-sonnet-5-5` (2 $ / 10 $, défaut), `claude-opus-5-5` (4 $ / 20 $), relus sur la page officielle des tarifs le 28/10/2026 (`lib/coutChat.ts`, lecture de cache ×0,05 chez Sonnet et Opus, ×0,10 chez Haiku : champ `lecture`). L'ancien tableau comptait Sonnet 5 à 3 $ / 15 $, soit 1,5 fois le vrai prix. Les anciens ids ne sont plus dans le code ; les lignes de dépense passées portent déjà leur coût en dollars. Un modèle gardé dans la session du navigateur avec un ancien id est ignoré (`lib/chat/depart.ts`), le défaut s'applique. ⚠️ La famille 5.5 pense par défaut et la pensée compte dans `max_tokens` : `lib/reglagesModele.ts` coupe la pensée de Haiku (`disabled`), met Sonnet au plus bas (`between_tools`, `disabled` y est refusé) et borne l'effort ; le plafond de la boucle du chat passe de 1 500 à 6 000 jetons. `temperature` n'est envoyée nulle part. Les blocs de pensée du modèle sont renvoyés tels quels avec les résultats d'outils (test). Preuve restante : un tour de chat réel et un cron d'apprentissage après la levée de la limite API.
+
 ## Cache de prompt de LIA (28/10/2026, tâche 365)
 
 La boucle du chat (`lib/chat/agent.ts`) pose `cache_control` sur le bloc système (couvre les outils et les règles) et sur le dernier `tool_result`

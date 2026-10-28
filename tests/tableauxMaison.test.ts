@@ -158,7 +158,7 @@ describe("Budget, comme la maquette", () => {
     plafonds: { chat: 1, apprentissage: 2 },
     parJour: [jourDe("2026-09-30", 9), jourDe("2026-10-20", 1), jourDe("2026-10-22", 0.5, 0.5), jourDe("2026-10-24", 0.25, 0.5)],
     parModele: [
-      { modele: "claude-sonnet-5", usd: 3 },
+      { modele: "claude-sonnet-5-5", usd: 3 },
       { modele: "claude-haiku-5", usd: 1 },
       { modele: "vide", usd: 0 },
     ],
@@ -192,7 +192,7 @@ describe("Budget, comme la maquette", () => {
     const corps = tableauBudget(base).tuiles[3]?.corps[0];
     if (corps?.genre !== "barres") throw new Error("barres attendues");
     expect(corps.barres).toEqual([
-      { libelle: "claude-sonnet-5", valeur: "75 %", part: 1 },
+      { libelle: "claude-sonnet-5-5", valeur: "75 %", part: 1 },
       { libelle: "claude-haiku-5", valeur: "25 %", part: 1 / 3 },
     ]);
   });

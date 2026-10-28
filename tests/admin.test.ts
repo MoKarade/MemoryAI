@@ -119,10 +119,10 @@ describe("dépenses du chat", () => {
   it("somme par jour et au total", async () => {
     const admin = depotAdminDrizzle(db);
     expect(await admin.depenseDuJourUsd("2026-09-15", "chat")).toBe(0);
-    await admin.enregistrerDepense({ jour: "2026-09-15", poste: "chat", modele: "claude-sonnet-5", entree: 100, sortie: 50, coutUsd: 0.4 });
-    await admin.enregistrerDepense({ jour: "2026-09-15", poste: "chat", modele: "claude-sonnet-5", entree: 100, sortie: 50, coutUsd: 0.35 });
-    await admin.enregistrerDepense({ jour: "2026-09-15", poste: "apprentissage", modele: "claude-haiku-4-5", entree: 100, sortie: 50, coutUsd: 0.6 });
-    await admin.enregistrerDepense({ jour: "2026-09-14", poste: "chat", modele: "claude-haiku-4-5", entree: 100, sortie: 50, coutUsd: 0.1 });
+    await admin.enregistrerDepense({ jour: "2026-09-15", poste: "chat", modele: "claude-sonnet-5-5", entree: 100, sortie: 50, coutUsd: 0.4 });
+    await admin.enregistrerDepense({ jour: "2026-09-15", poste: "chat", modele: "claude-sonnet-5-5", entree: 100, sortie: 50, coutUsd: 0.35 });
+    await admin.enregistrerDepense({ jour: "2026-09-15", poste: "apprentissage", modele: "claude-haiku-5-5", entree: 100, sortie: 50, coutUsd: 0.6 });
+    await admin.enregistrerDepense({ jour: "2026-09-14", poste: "chat", modele: "claude-haiku-5-5", entree: 100, sortie: 50, coutUsd: 0.1 });
     // Le poste du chat ne voit PAS ce que l'apprentissage a dépensé — c'est l'invariant qui
     // empêche une passe d'extraction de couper le chat de Marc pour la journée.
     expect(await admin.depenseDuJourUsd("2026-09-15", "chat")).toBeCloseTo(0.75);

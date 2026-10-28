@@ -67,7 +67,7 @@ function faussaire(texte: string, usage: Record<string, number> = { input_tokens
 const extraire = (client: ClientModele, messages: MessageLisible[], conversationId = "conv-1", quand: Date = T0) =>
   extraireDUneConversation({
     client,
-    modele: "claude-sonnet-5",
+    modele: "claude-sonnet-5-5",
     conversationId,
     messages,
     cle,
@@ -232,7 +232,7 @@ describe("le coût et le plafond", () => {
     await admin.enregistrerDepense({
       jour: "2026-09-15",
       poste: "apprentissage",
-      modele: "claude-sonnet-5",
+      modele: "claude-sonnet-5-5",
       entree: 0,
       sortie: 0,
       ecritureCache: 0,
@@ -253,7 +253,7 @@ describe("le coût et le plafond", () => {
     await admin.enregistrerDepense({
       jour: "2026-09-17",
       poste: "chat",
-      modele: "claude-sonnet-5",
+      modele: "claude-sonnet-5-5",
       entree: 0,
       sortie: 0,
       ecritureCache: 0,

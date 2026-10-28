@@ -22,6 +22,7 @@
 
 import type { DepotAdmin } from "../depotAdmin";
 import { budgetOuvert, coutUsd, jourQuebec, lireUsage, type IdModele } from "../coutChat";
+import { reglagesChat, type ReglagesModele } from "../reglagesModele";
 import { cleJournalDepuisEnv } from "../journal";
 import { journaliserAcces } from "../journalAcces";
 import { OUTILS, OUTILS_MCP_SEULS, type ContexteOutils } from "../mcp/outils";
@@ -35,7 +36,8 @@ import { construirePrompt, REGLES_SYSTEME, type Couches } from "./prompt";
 
 export const MAX_TOURS_OUTILS = 6;
 export const MAX_MESSAGES = 40;
-export const MAX_TOKENS_SORTIE = 1500;
+// La pensée de la famille 5.5 compte dans le plafond : de la marge pour elle ET pour la réponse.
+export const MAX_TOKENS_SORTIE = 6000;
 /**
  * La relance d'un tour qui finit SANS TEXTE (journal du 25/10 20:20Z : « réponse vide » après
  * `memoryai_etat` et `memoryai_contexte`, donc LIA muette dans MemoryAI, tâche MemoryAI 235).
@@ -71,6 +73,9 @@ export interface ClientModele {
     system: string;
     tools: { name: string; description: string; input_schema: Record<string, unknown> }[];
     messages: unknown[];
+    /** Réglages de la famille 5.5 (cf. `lib/reglagesModele.ts`). */
+    thinking?: ReglagesModele["thinking"];
+    output_config?: ReglagesModele["output_config"];
   }): Promise<ReponseModele>;
 }
 
@@ -287,7 +292,7 @@ export async function tourDeChat(params: {
     if (!budgetOuvert(depense, "chat", plafondsEffectifs))
       throw new PlafondAtteintError(depense, plafondsEffectifs.chat);
 
-    const reponse = await client.create({ model: modele, max_tokens: MAX_TOKENS_SORTIE, system: systemeEnCache, tools, messages: conversation });
+    const reponse = await client.create({ model: modele, max_tokens: MAX_TOKENS_SORTIE, ...reglagesChat(), system: systemeEnCache, tools, messages: conversation });
 
     // COMPTÉ AVANT D'ÊTRE LU.
     const { usage } = lireUsage(reponse.usage);

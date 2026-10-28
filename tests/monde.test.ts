@@ -178,7 +178,7 @@ describe("le câblage dans la boucle du chat", () => {
   const tour = (client: ClientModele, meteo?: SourceMeteo) =>
     tourDeChat({
       client,
-      modele: "claude-sonnet-5",
+      modele: "claude-sonnet-5-5",
       messages: [{ role: "user", content: "Quel temps fait-il ?" }],
       inclureN2: false,
       inclureN3: false,
