@@ -15,6 +15,7 @@ import { depotLectureDrizzle } from "@/lib/depotLecture";
 import { depotPiecesLectureDrizzle } from "@/lib/pieces/depotLecture";
 import { estGele } from "@/lib/gel";
 import { composerSummary } from "@/lib/hubSummary";
+import { comptesNotesLia } from "@/lib/lia/notes";
 import { assurerMigrations } from "@/lib/migrations";
 
 export const dynamic = "force-dynamic";
@@ -30,7 +31,16 @@ async function construireSummary(): Promise<HubSummary> {
   // validés » sans « Papiers » depuis que l'inventaire a migré (ADR 0004 §6.2) afficherait
   // une chute de 94 % sans dire où l'inventaire est passé.
   const papiers = await depotPiecesLectureDrizzle(db).comptes();
+  // Nombre de notes de LIA non lues : si SA lecture échoue, la métrique est absente (jamais 0) et le
+  // reste du résumé sort ; l'erreur est journalisée, pas avalée.
+  let notesLiaNonLues: number | undefined;
+  try {
+    notesLiaNonLues = await comptesNotesLia(db);
+  } catch (e) {
+    console.error("[hub/summary] compte des notes de LIA illisible :", e instanceof Error ? e.message : "erreur inconnue");
+  }
   return composerSummary({
+    ...(notesLiaNonLues !== undefined ? { notesLiaNonLues } : {}),
     valides: c.parStatut.valide ?? 0,
     aValider: c.parStatut.propose ?? 0,
     papiers: papiers.total,

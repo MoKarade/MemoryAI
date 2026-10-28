@@ -104,6 +104,22 @@ describe("GET /api/etat — le chaînon avec le garde de session", () => {
   });
 });
 
+describe("composerEtatPublic — notesLia", () => {
+  const f = { parStatut: { valide: 1 }, canaris: 0, dernierValideLe: null, migresEnPiece: 0 };
+  const args = [f, { total: 1 }, { lus: 1, nonLus: 0 }, false, { faits: 0, papiers: 0 }] as const;
+
+  it("valide : le nombre sort, seul, 0 compris", () => {
+    expect(composerEtatPublic(...args, undefined, undefined, { nonLues: 2 }).notesLia).toEqual({ nonLues: 2 });
+    expect(composerEtatPublic(...args, undefined, undefined, { nonLues: 0 }).notesLia).toEqual({ nonLues: 0 });
+  });
+
+  it("rejeté : absent quand le compte n'est pas fourni, jamais un 0 inventé", () => {
+    const e = composerEtatPublic(...args);
+    expect("notesLia" in e).toBe(false);
+    expect(JSON.stringify(e)).not.toContain("nonLues");
+  });
+});
+
 describe("composerEtatPublic — ce qui sort, et ce qui ne sort pas", () => {
   const faits = {
     parStatut: { valide: 343, propose: 4, rejete: 7 },

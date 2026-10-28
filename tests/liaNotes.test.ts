@@ -12,7 +12,7 @@ import { PGlite } from "@electric-sql/pglite";
 import { drizzle } from "drizzle-orm/pglite";
 import * as schema from "../lib/db/schema";
 import { deriverCle } from "../lib/chiffrement";
-import { baliserNotes, depotNotesLiaDrizzle, ENTETE_NOTES, lireNote, NOTES_PAR_JOUR } from "../lib/lia/notes";
+import { baliserNotes, comptesNotesLia, depotNotesLiaDrizzle, ENTETE_NOTES, lireNote, NOTES_PAR_JOUR } from "../lib/lia/notes";
 import { tourDeChat, OUTIL_NOTE, type ClientModele, type ReponseModele } from "../lib/chat/agent";
 import { depotAdminDrizzle } from "../lib/depotAdmin";
 import { depotDrizzle } from "../lib/depotFaits";
@@ -101,6 +101,26 @@ describe("la table `notes_lia` (PGlite)", () => {
     expect(await depot.lireNonLues(JOUR2)).toEqual([]);
     const nonLues = await pg.query<{ n: number }>("SELECT count(*)::int AS n FROM notes_lia WHERE lu_le IS NULL");
     expect(nonLues.rows[0]!.n).toBe(0);
+  });
+});
+
+describe("comptesNotesLia (PGlite)", () => {
+  it("suit les notes non lues : 0, puis 2, puis 0 après lireNonLues ; compter ne marque rien lu", async () => {
+    await pg.exec("DELETE FROM notes_lia");
+    const depot = depotNotesLiaDrizzle(db as never, cle);
+    expect(await comptesNotesLia(db as never)).toBe(0);
+    await depot.deposer({ genre: "alerte", app: "hub", texte: "Texte fictif un" }, JOUR1);
+    await depot.deposer({ genre: "conseil", app: "carai", texte: "Texte fictif deux" }, JOUR1);
+    expect(await comptesNotesLia(db as never)).toBe(2);
+    expect(await comptesNotesLia(db as never)).toBe(2);
+    expect(await depot.lireNonLues(JOUR1)).toHaveLength(2);
+    expect(await comptesNotesLia(db as never)).toBe(0);
+  });
+
+  it("rejeté : le compte n'est pas un objet ni un texte de note", async () => {
+    const n = await comptesNotesLia(db as never);
+    expect(typeof n).toBe("number");
+    expect(JSON.stringify(n)).not.toMatch(/fictif|alerte|hub/);
   });
 });
 
