@@ -1,9 +1,9 @@
-// app/chat/page.tsx — PARLER : la conversation complète avec Lia (historique, modèle, niveaux).
+// app/chat/page.tsx — PARLER : LIA en pleine page (mode atelier de lia-ui : historique, modèle, niveaux).
 //
 // [L26] Elle était l'accueil (`/`) depuis le 17/09. MemoryAI#74 (maquette v5, 23/10) rend la
 // racine à la MAISON de LIA (l'orbite, `app/page.tsx`) : la conversation revient ici, à son
 // ancienne adresse, entière. Toucher LIA ouvre aussi une discussion légère partout (`lia-ui`) ;
-// celle-ci reste l'atelier : historique, choix du modèle, niveaux 2 et 3.
+// celle-ci est l'atelier : la MÊME LIA, en pleine page (tâche MemoryAI 367), sans autre interface de chat.
 //
 // ⚠️ `requireSession()` comme partout (`tests/gardePages.test.ts`). Plus aucune pastille
 // « N à juger » nulle part : Marc ne juge plus rien (tâche MemoryAI 231).
@@ -14,14 +14,12 @@
 // avec L30, qui construit la frise et les échéances ensemble.
 
 import { Nav } from "@/components/Nav";
-import { ChatClient } from "./ChatClient";
+import { ChatAtelier } from "./ChatAtelier";
 import { MODELE_DEFAUT, MODELES, PLAFONDS_DEFAUT_USD_PAR_JOUR } from "@/lib/coutChat";
-import { depotConversationsDrizzle } from "@/lib/conversations/depot";
 import { depotAdminDrizzle } from "@/lib/depotAdmin";
 import { n2Autorise, n3Autorise } from "@/lib/lecture";
 import { accesDonnees } from "@/lib/pageDonnees";
 import { requireSession } from "@/lib/session";
-import { vocabulaire } from "@/lib/vocabulaire";
 
 export const dynamic = "force-dynamic";
 
@@ -47,24 +45,13 @@ export default async function ChatPage({
   // règle dans l'app depuis [L34]. Sans base, on montre le défaut — c'est ce qui
   // s'appliquerait aussi, donc la phrase reste vraie.
   const plafondsEffectifs = acces.ok ? await depotAdminDrizzle(acces.db).plafonds() : PLAFONDS_DEFAUT_USD_PAR_JOUR;
-  // [L2, ADR 0011] L'historique à gauche : les conversations du CHAT, avec leur premier
-  // message pour titre. `null` quand la base manque — l'écran le dit, au lieu d'une liste vide
-  // qui laisserait croire qu'aucune conversation n'a jamais été gardée.
-  const historiqueInitial = acces.ok
-    ? (await depotConversationsDrizzle(acces.db).apercus("memoryai", 30, acces.cle)).map((c) => ({
-        id: c.id,
-        quand: c.finLe.toISOString(),
-        titre: c.titre,
-        nbMessages: c.nbMessages,
-      }))
-    : null;
   const brut = (await searchParams)["a-propos"];
   const saisieInitiale = (Array.isArray(brut) ? brut[0] : brut)?.slice(0, MAX_SAISIE_INITIALE);
 
   return (
     <>
       <Nav active="chat" />
-      <ChatClient
+      <ChatAtelier
         modeles={MODELES.map((m) => ({ id: m.id, nom: m.nom }))}
         modeleDefaut={MODELE_DEFAUT}
         n2Possible={n2Autorise()}
@@ -72,10 +59,6 @@ export default async function ChatPage({
         plafondUsd={plafondsEffectifs.chat}
         configure={configure}
         saisieInitiale={saisieInitiale}
-        historiqueInitial={historiqueInitial}
-        predicats={vocabulaire()
-          .filter((p) => !p.deprecie)
-          .map((p) => ({ predicat: p.predicat, description: p.description, types: [...p.types] }))}
       />
     </>
   );

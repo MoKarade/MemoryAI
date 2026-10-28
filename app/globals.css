@@ -2329,3 +2329,9 @@ a.pastille {
   background: var(--succes-texte);
   transform: translateY(-50%);
 }
+
+/* `/chat` : LIA en atelier remplit ce conteneur (tâche MemoryAI 367). */
+.chat-atelier {
+  position: relative;
+  min-height: calc(100dvh - 8rem);
+}

@@ -4,6 +4,7 @@
 // Le corps, la vie et la discussion viennent de `@mokarade/lia-ui` ; ses réponses en blocs sont
 // dessinées par `rendreBlocs` (catalogue de `lib/lia/blocs.ts`). Rien ne se décide ici.
 // ⚠️ Pas dans `/widget` : cette page vit dans un cadre du hub, qui a déjà sa LIA.
+// ⚠️ Pas sur `/chat` : la page monte LIA en atelier (`app/chat/ChatAtelier.tsx`), pleine page.
 // ⚠️ Pas sur l'accueil (`/`) : la maison de LIA la monte elle-même, au centre de son orbite
 // (`app/AccueilClient.tsx`). Deux montages sur une page, et `mountLia` refuse le second.
 
@@ -33,6 +34,6 @@ export function etatLiaMaison(): ReturnType<typeof etatHttp> | undefined {
 
 export function LiaMaison() {
   const chemin = usePathname();
-  if (chemin === "/" || chemin.startsWith("/widget")) return null;
+  if (chemin === "/" || chemin.startsWith("/widget") || chemin === "/chat") return null;
   return <Lia {...OPTIONS_LIA_MAISON} etat={etatLiaMaison()} />;
 }

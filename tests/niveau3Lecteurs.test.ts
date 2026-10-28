@@ -264,14 +264,18 @@ describe("rechercheEnMemoire (PUR)", () => {
   });
 });
 
-describe("ADR 0011 — l'écran du chat", () => {
-  const src = readFileSync(resolve(process.cwd(), "app/chat/ChatClient.tsx"), "utf8");
+describe("ADR 0011 — l'écran du chat (LIA en atelier)", () => {
+  const src = readFileSync(resolve(process.cwd(), "app/chat/ChatAtelier.tsx"), "utf8");
 
-  it("la case N3 est COCHÉE par défaut quand l'interrupteur l'autorise, et le redevient à chaque nouvelle conversation", () => {
-    expect(src).toMatch(/const \[inclureN3, setInclureN3\] = useState\(n3Possible\);/);
-    expect(src).toMatch(/function nouvelleConversation\(\)[\s\S]*?setInclureN3\(n3Possible\);/);
-    // Anti-vacuité : la case existe toujours, décochable pour une conversation.
-    expect(src).toContain("onChange={(e) => setInclureN3(e.target.checked)}");
+  it("la case N3 est COCHÉE par défaut quand l'interrupteur l'autorise, grisée sinon, et le serveur la revérifie", () => {
+    expect(src).toMatch(/id: "n3"[\s\S]*?valeur: n3Possible,\s*desactive: !n3Possible/);
+    // Anti-vacuité : la case existe toujours, décochable pour une conversation (c'est `reglages.n3` qui part).
+    expect(src).toMatch(/inclureN3: n3Possible && \(reglages\?\.n3 \?\? n3Possible\) === true/);
+  });
+
+  it("le niveau 2 reste décoché par défaut, grisé sans MEMORYAI_N2_CHAT, et jamais envoyé sans elle", () => {
+    expect(src).toMatch(/id: "n2"[\s\S]*?valeur: false,\s*desactive: !n2Possible/);
+    expect(src).toMatch(/inclureN2: n2Possible && reglages\?\.n2 === true/);
   });
 
   it("l'écran ne dit plus que la conversation n'est pas gardée — c'est faux depuis l'ADR 0002", () => {
@@ -280,6 +284,6 @@ describe("ADR 0011 — l'écran du chat", () => {
   });
 
   it("une nouvelle conversation remet l'identifiant à zéro (sinon la suite s'écrit dans l'ancienne)", () => {
-    expect(src).toMatch(/function nouvelleConversation\(\)[\s\S]*?setConversationId\(null\);/);
+    expect(src).toMatch(/nouveau: \(\) => \{[\s\S]*?conversationId\.current = null;/);
   });
 });
