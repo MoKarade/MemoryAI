@@ -1,7 +1,9 @@
 // lib/lia/repondre.ts — un tour de LIA, commun aux deux portes (ADR 0016) : le hub
 // (`app/api/ask`, jeton) et la maison (`app/api/lia/ask`, session de Marc). Chaque porte fait
 // SON contrôle d'accès et lit la demande ; ce module fait le reste, à l'identique : niveaux 0 et
-// 1, outils en lecture seule, blocs sourcés. Seul le LECTEUR change, pour le journal.
+// 1, outils de MÉMOIRE en lecture seule, blocs sourcés. Seul le LECTEUR change, pour le journal.
+// ⚠️ Le seul outil qui ÉCRIT est `lia_retenir` (ADR 0033, voie A) : sa preuve est la question de Marc,
+// lue ICI dans la demande et jamais passée par le modèle.
 // ⚠️ La question n'est JAMAIS journalisée en clair, ni dans une erreur (nom et message seulement).
 
 import { depotNotesLiaDrizzle } from "@/lib/lia/notes";
@@ -22,6 +24,7 @@ import { cleJournalDepuisEnv, ClefJournalAbsenteError } from "@/lib/journal";
 import { SOURCE_BILAN_HUB } from "@/lib/lia/blocs";
 import { composerQuestion, composerReponse, CONVERSATIONS_FERMEES, OUTILS_LIA_HUB, type DemandeAsk } from "@/lib/lia/ask";
 import { longueSansBloc } from "@/lib/lia/longueur";
+import { retenirLiaDrizzle } from "@/lib/lia/retenir";
 import { assurerMigrations } from "@/lib/migrations";
 import { depotBancDrizzle } from "@/lib/banc/passe";
 import { depotPiecesLectureDrizzle } from "@/lib/pieces/depotLecture";
@@ -67,11 +70,17 @@ export async function repondreLia(demande: DemandeAsk, origine: string, lecteur:
       inclureN3: false,
       outilsPermis: OUTILS_LIA_HUB,
       blocs: true,
+      // ADR 0033 : LIA retient seule ce que Marc dit. La preuve est SA question, pas le bilan du hub.
+      retenir: retenirLiaDrizzle(db, {
+        messages: [{ role: "user", content: demande.question }],
+        cle,
+        client: { create: (p) => client.messages.create(p as Parameters<typeof client.messages.create>[0]) as never },
+      }),
       // Le bilan du hub est une source servie SEULEMENT quand il est joint à cette question.
       sourcesServies: demande.contexte ? new Set([SOURCE_BILAN_HUB]) : undefined,
       outils: {
         lecture: depotLectureDrizzle(db),
-        // Requis par le type ; aucun outil de `OUTILS_LIA_HUB` n'écrit.
+        // Requis par le type ; aucun outil de `OUTILS_LIA_HUB` n'écrit (`lia_retenir` a son propre dépôt).
         ecriture: depotDrizzle(db),
         pieces: depotPiecesLectureDrizzle(db),
         banc: depotBancDrizzle(db),

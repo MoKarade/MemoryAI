@@ -45,6 +45,7 @@ export const CATALOGUE: readonly EntreeCatalogue[] = [
   { nom: "memoryai_sorties", fait: "relire ce que les apps ont envoyé à MemoryAI", niveau: "lecture", mcpSeul: true },
   { nom: "lia_blocs", fait: "montrer sa réponse en blocs visuels (n'écrit rien)", niveau: "lecture" },
   { nom: "lia_note", fait: "laisser une note courte au coordinateur", niveau: "ecriture-interne" },
+  { nom: "lia_retenir", fait: "retenir seule ce que tu lui dis sur toi, après ses propres vérifications", niveau: "ecriture-interne" },
   { nom: "monde_meteo", fait: "lire la météo d'Environnement Canada pour ta ville", niveau: "sort-de-memoryai" },
   { nom: "monde_actualite", fait: "lire des titres d'actualité de fils publics", niveau: "sort-de-memoryai" },
 ];
