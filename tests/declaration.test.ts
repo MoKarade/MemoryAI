@@ -151,7 +151,11 @@ describe("phraseDeclaration — LIA dit la vérité à Marc", () => {
     expect(new Set(phrases).size).toBe(toutes.length);
   });
   it("seule la validation dit « validé »", () => {
-    for (const d of toutes) expect(/validé\b/.test(phraseDeclaration(d)) && !/pas validé|à valider/.test(phraseDeclaration(d))).toBe(d.genre === "valider");
+    // Pas de \b : « é » n'est pas un caractère de mot pour JavaScript, la frontière n'y existerait pas.
+    for (const d of toutes) {
+      const p = phraseDeclaration(d);
+      expect(/validé/.test(p) && !/pas validé/.test(p), p).toBe(d.genre === "valider");
+    }
   });
 });
 
