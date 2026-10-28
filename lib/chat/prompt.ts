@@ -67,6 +67,20 @@ export const REGLE_BLOCS: string =
   "puis garde le texte court : il commente les blocs, il ne les répète pas. Une analyse se MONTRE : préfère un bloc " +
   "à une phrase chargée de chiffres. Sans donnée sourcée, aucun bloc.";
 
+/**
+ * La règle de `lia_retenir`, ajoutée seulement quand l'outil est offert (ADR 0033). Le 28/10, LIA
+ * répondait à Marc « l'outil pour proposer un fait n'est pas disponible dans cette session » : la règle
+ * des règles ci-dessus parle de `memoryai_proposer`, qu'elle n'a pas depuis le hub. Celle-ci la REMPLACE
+ * quand l'outil est là. Une règle de FORME : ce que le serveur écrit, valide ou refuse, c'est lui qui le
+ * décide (`lib/lia/retenir.ts`), jamais ce que le modèle en dit.
+ */
+export const REGLE_RETENIR: string =
+  "Quand Marc te dit quelque chose de durable sur lui dans CE message (un prénom, une date, un goût, un lieu…), " +
+  "retiens-le toi-même avec lia_retenir : c'est ton outil pour cela, et il remplace memoryai_proposer, que tu n'as pas ici. " +
+  "Un appel par fait, la valeur écrite EXACTEMENT comme Marc l'a dite. Si rien dans memoryai_inventaire ne colle, crée un " +
+  "prédicat de la forme domaine.sujet plutôt que de refuser. Le serveur vérifie et valide seul : recopie en une phrase ce que " +
+  "l'outil répond, et ne dis jamais « validé » s'il ne l'a pas dit. Jamais un montant, une position, un numéro d'identité.";
+
 /** Les deux blocs de données, DÉJÀ balisés (`baliserVoix`, `baliserProfil`) ; `null` quand il n'y en a pas. */
 export interface Couches {
   voix: string | null;
@@ -74,11 +88,11 @@ export interface Couches {
 }
 
 /**
- * Règles (et celle des blocs si l'outil est offert), puis voix, puis profil. Les règles sont
- * toujours là, intactes et en tête.
+ * Règles (et celles des blocs et de `lia_retenir` si ces outils sont offerts), puis voix, puis
+ * profil. Les règles sont toujours là, intactes et en tête.
  */
-export function construirePrompt(couches: Couches = { voix: null, profil: null }, options: { blocs?: boolean } = {}): string {
-  return [REGLES_SYSTEME, options.blocs ? REGLE_BLOCS : null, couches.voix, couches.profil]
+export function construirePrompt(couches: Couches = { voix: null, profil: null }, options: { blocs?: boolean; retenir?: boolean } = {}): string {
+  return [REGLES_SYSTEME, options.blocs ? REGLE_BLOCS : null, options.retenir ? REGLE_RETENIR : null, couches.voix, couches.profil]
     .filter((b): b is string => b !== null && b !== "")
     .join("\n\n");
 }
