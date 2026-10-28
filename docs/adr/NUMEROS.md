@@ -37,3 +37,4 @@
 | 0030 | La discussion de LIA suit Marc d'une app à l'autre, chiffrée, par l'état partagé | accepté (carte de Marc, 26/10 13:12Z, « Oui, via MemoryAI » ; OK de Marc sur ce texte, 26/10 17:04Z, « Oui, tel quel ») ; code en cours | MemoryAI#263 |
 | 0031 | Tout ce qui sort des apps arrive chez LIA, par une porte à jeton par app | accepté (demande de Marc, 26/10 14:46Z ; carte du 26/10 14:50Z ; OK de Marc sur ce texte, 26/10 18:18Z, « Oui, tel quel ») ; code à venir | MemoryAI#281 |
 | 0032 | LIA agit seule dans les limites du catalogue, et tient le journal de ce qu'elle a fait | accepté (décision de Marc, 26/10 14:50Z, « Agit aussi dans les apps » ; OK de Marc sur ce texte, 26/10 20:42Z, « Oui, tel quel ») ; code à venir | MemoryAI#283 |
+| 0033 | Les faits que Marc déclare se valident seuls, avec ses mots comme preuve | accepté (carte de Marc, 28/10 20:32Z, « Chat + claude.ai cadré ») ; code à venir | MemoryAI#412 |
