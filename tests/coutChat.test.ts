@@ -19,19 +19,22 @@ import {
 import { POSTES_DEPENSE } from "../lib/db/schema";
 
 describe("coûts du chat", () => {
-  it("les trois modèles de Q13, Sonnet 5 par défaut, jamais Fable", () => {
-    expect(MODELES.map((m) => m.id)).toEqual(["claude-haiku-4-5", "claude-sonnet-5", "claude-opus-5"]);
-    expect(MODELE_DEFAUT).toBe("claude-sonnet-5");
+  it("les trois modèles de Q13, Sonnet 5.5 par défaut, jamais Fable", () => {
+    expect(MODELES.map((m) => m.id)).toEqual(["claude-haiku-5-5", "claude-sonnet-5-5", "claude-opus-5-5"]);
+    expect(MODELE_DEFAUT).toBe("claude-sonnet-5-5");
     expect(estModele("claude-fable-5-1")).toBe(false);
-    expect(estModele("claude-sonnet-5")).toBe(true);
+    expect(estModele("claude-sonnet-5-5")).toBe(true);
   });
 
-  it("calcule un coût par million de tokens, cache dérivé du prix d'entrée", () => {
-    expect(coutUsd("claude-sonnet-5", { entree: 1_000_000, sortie: 0, ecritureCache: 0, lectureCache: 0 })).toBe(3);
-    expect(coutUsd("claude-sonnet-5", { entree: 0, sortie: 1_000_000, ecritureCache: 0, lectureCache: 0 })).toBe(15);
-    expect(coutUsd("claude-sonnet-5", { entree: 0, sortie: 0, ecritureCache: 1_000_000, lectureCache: 0 })).toBeCloseTo(3.75);
-    expect(coutUsd("claude-sonnet-5", { entree: 0, sortie: 0, ecritureCache: 0, lectureCache: 1_000_000 })).toBeCloseTo(0.3);
-    expect(coutUsd("claude-haiku-4-5", { entree: 1000, sortie: 500, ecritureCache: 0, lectureCache: 0 })).toBeCloseTo(0.0035);
+  it("calcule un coût par million de tokens, cache dérivé du prix d'entrée (Sonnet 5.5 : 2 $ / 10 $)", () => {
+    expect(coutUsd("claude-sonnet-5-5", { entree: 1_000_000, sortie: 0, ecritureCache: 0, lectureCache: 0 })).toBe(2);
+    expect(coutUsd("claude-sonnet-5-5", { entree: 0, sortie: 1_000_000, ecritureCache: 0, lectureCache: 0 })).toBe(10);
+    expect(coutUsd("claude-sonnet-5-5", { entree: 0, sortie: 0, ecritureCache: 1_000_000, lectureCache: 0 })).toBeCloseTo(2.5);
+    // Lecture de cache : 0,10 $ par million chez Sonnet 5.5 (×0,05), pas ×0,10.
+    expect(coutUsd("claude-sonnet-5-5", { entree: 0, sortie: 0, ecritureCache: 0, lectureCache: 1_000_000 })).toBeCloseTo(0.1);
+    expect(coutUsd("claude-opus-5-5", { entree: 0, sortie: 0, ecritureCache: 0, lectureCache: 1_000_000 })).toBeCloseTo(0.2);
+    expect(coutUsd("claude-haiku-5-5", { entree: 0, sortie: 0, ecritureCache: 0, lectureCache: 1_000_000 })).toBeCloseTo(0.01);
+    expect(coutUsd("claude-haiku-5-5", { entree: 1000, sortie: 500, ecritureCache: 0, lectureCache: 0 })).toBeCloseTo(0.00035);
   });
 
   // Un `undefined` dans une somme donne NaN et empoisonne tout le cumul (leçon DriveAI).
@@ -40,7 +43,7 @@ describe("coûts du chat", () => {
     const u = lireUsage({ input_tokens: 10, output_tokens: 5, cache_read_input_tokens: null });
     expect(u.usage).toEqual({ entree: 10, sortie: 5, ecritureCache: 0, lectureCache: 0 });
     expect(u.lisible).toBe(true);
-    expect(Number.isNaN(coutUsd("claude-opus-5", lireUsage({ input_tokens: -1 }).usage))).toBe(false);
+    expect(Number.isNaN(coutUsd("claude-opus-5-5", lireUsage({ input_tokens: -1 }).usage))).toBe(false);
   });
 
   it("chaque poste a SON plafond, et il se ferme STRICTEMENT quand il est atteint", () => {

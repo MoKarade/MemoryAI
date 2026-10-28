@@ -19,6 +19,7 @@ import { chiffrer, dechiffrer, empreinte, type Cle } from "./chiffrement";
 import type { ClientModele } from "./chat/agent";
 import { depotConversationsDrizzle } from "./conversations/depot";
 import { budgetOuvert, coutUsd, jourQuebec, lireUsage, type IdModele } from "./coutChat";
+import { reglagesLecture } from "./reglagesModele";
 import type { DepotAdmin } from "./depotAdmin";
 import type { FaitAvecProvenance } from "./depotLecture";
 import { rendreLisible, type FaitLisible, type PolitiqueLecture } from "./lecture";
@@ -29,7 +30,7 @@ import { decider, demandeRelecture, extraits, lireVerdicts, placeDoutes, PROMPT_
 /** Le nom de cette relecture dans la trace : il VERSIONNE la façon de relire, comme un extracteur. */
 const EXTRACTEUR_RELECTURE = "lia-relecture-v1";
 /** Haiku : la relecture compare un extrait court à une valeur, elle n'a pas à raisonner long. */
-const MODELE_RELECTURE: IdModele = "claude-haiku-4-5";
+const MODELE_RELECTURE: IdModele = "claude-haiku-5-5";
 /** Au plus tant de faits lus par passe, et tant par appel au modèle (ceux d'une même source). */
 const LOT_RELECTURE = 400;
 const FAITS_PAR_APPEL = 8;
@@ -304,6 +305,7 @@ async function relire(ctx: ContexteRelecture): Promise<ResultatRelecture> {
         const reponse = await ctx.client.create({
           model: MODELE_RELECTURE,
           max_tokens: MAX_TOKENS_SORTIE,
+          ...reglagesLecture(MODELE_RELECTURE),
           system: PROMPT_RELECTURE,
           tools: [],
           messages: [{ role: "user", content: demandeRelecture(extrait, lot.map(({ r }) => r.lisible)) }],

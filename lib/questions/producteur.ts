@@ -25,6 +25,7 @@
 import { z } from "zod";
 import type { ClientModele } from "../chat/agent";
 import { budgetOuvert, coutUsd, jourQuebec, lireUsage, type IdModele } from "../coutChat";
+import { reglagesLecture } from "../reglagesModele";
 import { PlafondApprentissageError } from "../conversations/extraction";
 import type { DepotAdmin } from "../depotAdmin";
 import type { DepotQuestions } from "../depotQuestions";
@@ -129,6 +130,7 @@ export async function produireDesQuestions(params: {
   const reponse = await client.create({
     model: modele,
     max_tokens: MAX_TOKENS_SORTIE,
+    ...reglagesLecture(modele),
     system: PROMPT_QUESTIONS,
     tools: [],
     messages: [{ role: "user", content: etatPourPrompt(comptesParPredicat) }],

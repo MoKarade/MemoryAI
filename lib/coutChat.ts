@@ -71,18 +71,24 @@ export function plafondValide(brut: unknown, poste: Poste): number {
  */
 export const PLAFOND_TOTAL_USD_PAR_JOUR = 3;
 
-/** Les trois modèles du sélecteur (Q13). Pas de Fable 5.1 : rétention de 30 jours (Q5). */
+/**
+ * Les trois modèles du sélecteur (Q13), en génération 5.5. Pas de Fable 5.1 : rétention de 30 jours (Q5).
+ * Prix en dollars par million de jetons, relus sur la page officielle des tarifs le 28/10/2026
+ * (platform.claude.com/docs/en/about-claude/pricing). `lecture` : lecture de cache, multiple du prix
+ * d'entrée (0,10 $ chez Sonnet 5.5 et 0,20 $ chez Opus 5.5, soit ×0,05 ; 0,01 $ chez Haiku 5.5, soit ×0,10).
+ * Haiku 5.5 : grille des prompts de 100 000 jetons ou moins (au-delà 0,50 $ / 2,50 $, aucun appel n'en approche).
+ * Les anciens modèles n'y sont plus : chaque ligne de dépense passée porte déjà son coût en dollars.
+ */
 export const MODELES = [
-  { id: "claude-haiku-4-5", nom: "Haiku 4.5", entree: 1, sortie: 5 },
-  { id: "claude-sonnet-5", nom: "Sonnet 5", entree: 3, sortie: 15 },
-  { id: "claude-opus-5", nom: "Opus 5", entree: 5, sortie: 25 },
+  { id: "claude-haiku-5-5", nom: "Haiku 5.5", entree: 0.1, sortie: 0.5, lecture: 0.1 },
+  { id: "claude-sonnet-5-5", nom: "Sonnet 5.5", entree: 2, sortie: 10, lecture: 0.05 },
+  { id: "claude-opus-5-5", nom: "Opus 5.5", entree: 4, sortie: 20, lecture: 0.05 },
 ] as const;
 export type IdModele = (typeof MODELES)[number]["id"];
-export const MODELE_DEFAUT: IdModele = "claude-sonnet-5";
+export const MODELE_DEFAUT: IdModele = "claude-sonnet-5-5";
 
-/** Écriture de cache ×1,25 et lecture ×0,10 du prix d'entrée — dérivés, jamais recopiés. */
+/** Écriture de cache ×1,25 du prix d'entrée — dérivé, jamais recopié (la lecture est dans `MODELES`). */
 const FACTEUR_ECRITURE_CACHE = 1.25;
-const FACTEUR_LECTURE_CACHE = 0.1;
 
 /**
  * Un poste de dépense reconnu. [L34] — le jumeau d'`estModele`, et pour la même raison : une
@@ -130,7 +136,7 @@ export function coutUsd(modele: IdModele, u: UsageAppel): number {
     u.entree * m.entree +
     u.sortie * m.sortie +
     u.ecritureCache * m.entree * FACTEUR_ECRITURE_CACHE +
-    u.lectureCache * m.entree * FACTEUR_LECTURE_CACHE;
+    u.lectureCache * m.entree * m.lecture;
   return parMtok / 1_000_000;
 }
 

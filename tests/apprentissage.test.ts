@@ -215,7 +215,7 @@ describe("produireDesQuestions — la garde qui décide est celle que l'écritur
   const produire = (client: ClientModele, quand: Date) =>
     produireDesQuestions({
       client,
-      modele: "claude-sonnet-5",
+      modele: "claude-sonnet-5-5",
       admin: depotAdminDrizzle(db),
       questions: depotQuestionsDrizzle(db),
       comptesParPredicat: {},
@@ -268,7 +268,7 @@ describe("produireDesQuestions — la garde qui décide est celle que l'écritur
     await depotAdminDrizzle(db).enregistrerDepense({
       jour: j,
       poste: "apprentissage",
-      modele: "claude-sonnet-5",
+      modele: "claude-sonnet-5-5",
       entree: 1,
       sortie: 1,
       coutUsd: PLAFONDS_DEFAUT_USD_PAR_JOUR.apprentissage,
@@ -286,7 +286,7 @@ describe("produireDesQuestions — la garde qui décide est celle que l'écritur
     await depotAdminDrizzle(db).enregistrerDepense({
       jour: j,
       poste: "chat",
-      modele: "claude-sonnet-5",
+      modele: "claude-sonnet-5-5",
       entree: 1,
       sortie: 1,
       coutUsd: PLAFONDS_DEFAUT_USD_PAR_JOUR.chat * 2,
@@ -302,7 +302,7 @@ describe("passeApprentissage — elle dit toujours pourquoi elle s'arrête", () 
   const passe = (client: ClientModele, quand: Date) =>
     passeApprentissage({
       client,
-      modele: "claude-sonnet-5",
+      modele: "claude-sonnet-5-5",
       cle,
       conversations: depotConversationsDrizzle(db),
       ecriture: depotDrizzle(db),
@@ -341,7 +341,7 @@ describe("passeApprentissage — elle dit toujours pourquoi elle s'arrête", () 
     await depotAdminDrizzle(db).enregistrerDepense({
       jour: j,
       poste: "apprentissage",
-      modele: "claude-sonnet-5",
+      modele: "claude-sonnet-5-5",
       entree: 1,
       sortie: 1,
       coutUsd: PLAFONDS_DEFAUT_USD_PAR_JOUR.apprentissage,
@@ -389,7 +389,7 @@ describe("apprendreDeLaConversation — le déclencheur du chat lit UNE conversa
   const apprendre = (client: ClientModele, conversationId: string, quand: Date) =>
     apprendreDeLaConversation({
       client,
-      modele: "claude-sonnet-5",
+      modele: "claude-sonnet-5-5",
       conversationId,
       cle,
       conversations: depotConversationsDrizzle(db),

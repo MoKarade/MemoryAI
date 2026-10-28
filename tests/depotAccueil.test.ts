@@ -55,13 +55,13 @@ describe("depenseParModeleDepuis", () => {
   it("somme la dépense par modèle depuis le jour (inclus), la plus forte d'abord", async () => {
     const ligne = (jour: string, modele: string, coutUsd: number) => ({ jour, modele, coutUsd, poste: "chat" as const });
     await db.insert(schema.depensesChat).values([
-      ligne("2026-09-24", "claude-sonnet-5", 9),
+      ligne("2026-09-24", "claude-sonnet-5-5", 9),
       ligne("2026-09-25", "claude-haiku-5", 0.5),
-      ligne("2026-10-20", "claude-sonnet-5", 2),
+      ligne("2026-10-20", "claude-sonnet-5-5", 2),
       ligne("2026-10-21", "claude-haiku-5", 0.25),
     ]);
     expect(await depotAccueilDrizzle(db).depenseParModeleDepuis("2026-09-25")).toEqual([
-      { modele: "claude-sonnet-5", usd: 2 },
+      { modele: "claude-sonnet-5-5", usd: 2 },
       { modele: "claude-haiku-5", usd: 0.75 },
     ]);
   });
@@ -70,8 +70,8 @@ describe("depenseParModeleDepuis", () => {
 describe("activiteDuJour (tâche MemoryAI 232)", () => {
   it("compte les appels du jour par poste et rend la dernière heure de chaque vérification", async () => {
     await db.insert(schema.depensesChat).values([
-      { jour: "2026-10-24", modele: "claude-sonnet-5", coutUsd: 0.01, poste: "chat", creeLe: new Date("2026-10-24T15:00:00Z") },
-      { jour: "2026-10-24", modele: "claude-sonnet-5", coutUsd: 0.01, poste: "chat", creeLe: new Date("2026-10-24T16:00:00Z") },
+      { jour: "2026-10-24", modele: "claude-sonnet-5-5", coutUsd: 0.01, poste: "chat", creeLe: new Date("2026-10-24T15:00:00Z") },
+      { jour: "2026-10-24", modele: "claude-sonnet-5-5", coutUsd: 0.01, poste: "chat", creeLe: new Date("2026-10-24T16:00:00Z") },
       { jour: "2026-10-24", modele: "claude-haiku-5", coutUsd: 0.01, poste: "apprentissage", creeLe: new Date("2026-10-24T17:00:00Z") },
     ]);
     await db.insert(schema.mondeCache).values([

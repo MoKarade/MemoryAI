@@ -240,7 +240,7 @@ describe("TRAVERSE — l'outil déclare ce qu'il a servi, le tour de chat le gar
     };
     const r = await tourDeChat({
       client,
-      modele: "claude-sonnet-5",
+      modele: "claude-sonnet-5-5",
       messages: [{ role: "user", content: "quand expire mon passeport ?" }],
       inclureN2: true,
       inclureN3: true,
@@ -275,7 +275,7 @@ describe("TRAVERSE — l'outil déclare ce qu'il a servi, le tour de chat le gar
     };
     const r = await tourDeChat({
       client,
-      modele: "claude-sonnet-5",
+      modele: "claude-sonnet-5-5",
       messages: [{ role: "user", content: "quand expire mon passeport ?" }],
       inclureN2: true,
       inclureN3: false, // ⚠️ le point du test : la politique ne sert pas le contenu N3.
