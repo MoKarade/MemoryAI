@@ -69,14 +69,15 @@ export const REGLE_BLOCS: string =
 
 /**
  * La règle de `lia_retenir`, ajoutée seulement quand l'outil est offert (ADR 0033). Le 28/10, LIA
- * répondait à Marc « l'outil pour proposer un fait n'est pas disponible dans cette session » : la règle
- * des règles ci-dessus parle de `memoryai_proposer`, qu'elle n'a pas depuis le hub. Celle-ci la REMPLACE
- * quand l'outil est là. Une règle de FORME : ce que le serveur écrit, valide ou refuse, c'est lui qui le
- * décide (`lib/lia/retenir.ts`), jamais ce que le modèle en dit.
+ * répondait à Marc « l'outil pour proposer un fait n'est pas disponible dans cette session » : depuis le
+ * hub elle n'a pas `memoryai_proposer`, et les règles ci-dessus ne parlent que de lui. Celle-ci passe
+ * devant pour ce que Marc dit LUI-MÊME. Une règle de FORME : ce que le serveur écrit, valide ou refuse,
+ * c'est lui qui le décide (`lib/lia/retenir.ts`), jamais ce que le modèle en dit.
  */
 export const REGLE_RETENIR: string =
   "Quand Marc te dit quelque chose de durable sur lui dans CE message (un prénom, une date, un goût, un lieu…), " +
-  "retiens-le toi-même avec lia_retenir : c'est ton outil pour cela, et il remplace memoryai_proposer, que tu n'as pas ici. " +
+  "retiens-le toi-même avec lia_retenir : c'est ton outil pour ce que Marc te dit lui-même, à la place de memoryai_proposer " +
+  "(que tu n'as pas toujours). Ne réponds jamais que l'outil n'est pas disponible : s'il échoue, recopie ce qu'il dit. " +
   "Un appel par fait, la valeur écrite EXACTEMENT comme Marc l'a dite. Si rien dans memoryai_inventaire ne colle, crée un " +
   "prédicat de la forme domaine.sujet plutôt que de refuser. Le serveur vérifie et valide seul : recopie en une phrase ce que " +
   "l'outil répond, et ne dis jamais « validé » s'il ne l'a pas dit. Jamais un montant, une position, un numéro d'identité.";
