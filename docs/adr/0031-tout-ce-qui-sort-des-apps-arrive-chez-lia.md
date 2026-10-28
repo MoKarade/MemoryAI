@@ -37,7 +37,7 @@ une instruction.
    - Jeton d'écrivain, rôle `ecriture` : `MEMORYAI_TOKEN_<APP>_ECRITURE` (ADR 0015). **L'app se déduit
      du nom de la variable qui a reconnu le jeton, jamais du corps.** Un `app` écrit dans le corps est
      ignoré et nommé dans `ignores`.
-   - Liste fermée dans le code : `APPS_SORTIES = { batchchef, carai, driveai, financeai, jobai }`. Une
+   - Liste fermée dans le code : `APPS_SORTIES = { batchchef, carai, driveai, financeai, jobai, hubperso }`. Une
      app qui n'y figure pas reçoit le même `401 non_autorise` qu'un jeton inconnu (`refusJeton()`).
      En ajouter une est une décision de frontière : un ADR et l'OK de Marc.
    - Ordre des gardes, comme l'agenda : gel (`MEMORYAI_GEL=1` → 503), jeton (401 indiscernable), clé
@@ -77,6 +77,7 @@ une instruction.
    | carai | 2 | trajets et recharges : lieux et habitudes |
    | driveai | 2 | tout ce qu'elle publie vient de documents |
    | jobai | 2 | candidatures et réponses de recruteurs |
+   | hubperso | 1 | métadonnées de travail du chantier, aucun montant ni donnée perso (ajoutée le 28/10/2026 sur décision de Marc (18:11Z) : le hub pousse le chantier, plancher 1) |
    | batchchef | 1 | recettes et listes d'épicerie |
 
 4. **Le stockage** (migration additive, numéro pris au code) : trois tables, hors `schema.ts` comme
