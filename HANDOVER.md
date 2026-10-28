@@ -3,6 +3,10 @@
 > L'état RÉEL, à lire en premier. Ce qui est décidé vit dans `docs/adr/0001-…`, ce qui reste
 > à faire dans `BACKLOG.md`. Ce fichier dit où on en est, et ce qui attend un geste de Marc.
 
+## 28/10/2026 : lia-ui v0.44.2, le menu du clic droit s'ouvre sous le clic dans « Sa journée » (MemoryAI#389, mission MoKarade/.github#575)
+
+Épingle `@mokarade/lia-ui` v0.44.2 (sha pelé `8881751`), seul changement (`package.json`, lock). Relevé du PC (28/10, 15:48Z) : dans la fenêtre « Sa journée » (`PanneauEspace`, `<aside role="dialog">`), le menu s'ouvrait décalé à gauche, hors de la fenêtre : `bounds` exclut le panneau et bornait le menu (lia-ui#152). Le menu d'un élément n'est plus borné que par la fenêtre. v0.44.0 (mode atelier, inactif tant que l'app ne le demande pas) et v0.44.1 (tag automatique) arrivent avec. [À vérifier] relevé du PC dans « Sa journée » après le déploiement de production.
+
 ## 28/10/2026 : lia-ui v0.43.0, le clic droit de LIA marche partout (MemoryAI#386, mission MoKarade/.github#575)
 
 Épingle `@mokarade/lia-ui` v0.43.0 (sha pelé `c0f1ff7`), seul changement (`package.json`, lock). Marc, 28/10/2026 : « faut qu'il marche partout ». Le clic droit (et l'appui long) de LIA s'ouvre maintenant sur le fond de page, dans une fenêtre modale `<dialog>.showModal()`, et même quand un gestionnaire de la page bloque le menu natif ; les champs de saisie gardent le menu du navigateur. Rien à brancher. Preuve : déploiement de production `READY` sur le commit fusionné, puis relevé du PC (lia-ui#147).
