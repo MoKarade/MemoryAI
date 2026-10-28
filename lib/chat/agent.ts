@@ -28,6 +28,7 @@ import { journaliserAcces } from "../journalAcces";
 import { OUTILS, OUTILS_MCP_SEULS, type ContexteOutils } from "../mcp/outils";
 import { exigerNiveaux } from "../lia/catalogueOutils";
 import { lireNote, LONGUEUR_MAX_NOTE, NOTES_PAR_JOUR, GENRES_NOTE, APPS_NOTE } from "../lia/notes";
+import type { RetenirLia } from "../lia/retenir";
 import { baliserMeteo } from "../monde/meteo";
 import { baliserActualite } from "../monde/actualite";
 import { MAX_BLOCS, SIGNATURES_BLOCS, SOURCE_BILAN_HUB, trierBlocs, type Bloc } from "../lia/blocs";
@@ -163,6 +164,31 @@ export const OUTIL_NOTE = {
 };
 
 /**
+ * L'outil par lequel LIA RETIENT ce que Marc vient de lui dire (ADR 0033, voie A). Pas un outil
+ * `memoryai_` : la preuve est la parole de Marc, lue par le serveur, jamais ce que le modèle en dit. Offert
+ * seulement quand l'appelant branche `retenir` ; tout le reste (valeur retrouvée dans ses mots, relecture
+ * indépendante, plafond, niveau) se décide dans `lib/lia/retenir.ts`.
+ */
+export const OUTIL_RETENIR = {
+  name: "lia_retenir",
+  description:
+    "Retiens UN fait que Marc vient de te dire de lui dans son message (« je m'appelle… », « je suis né le… »). " +
+    "Le serveur vérifie que `valeur` se lit TELLE QUELLE dans les mots de Marc, la fait relire par un autre modèle, " +
+    "puis la valide seul : tu n'as rien à lui demander. `predicat` : un prédicat de memoryai_inventaire ; si aucun ne colle, " +
+    "crée-en un de la forme domaine.sujet (minuscules, chiffres, _ et un point, ex. identite.prenom_2). " +
+    "Jamais un montant, une position, un numéro d'identité, ni rien que Marc n'a pas écrit lui-même.",
+  input_schema: {
+    type: "object",
+    properties: {
+      predicat: { type: "string", description: "Ex. identite.prenom_2, gout.cuisine, vehicule.bail.fin." },
+      valeur: { type: "string", description: "200 caractères au plus, EXACTEMENT comme Marc l'a écrite (une date : AAAA-MM-JJ)." },
+      valeur_type: { type: "string", enum: ["texte", "date"] },
+    },
+    required: ["predicat", "valeur", "valeur_type"],
+  } as Record<string, unknown>,
+};
+
+/**
  * La météo que LIA lit (ADR 0024) : Environnement Canada, pour la ville réglée par Marc. Pas un outil
  * `memoryai_` : rien de Marc n'y est lu. Offert seulement quand le contexte porte la source.
  */
@@ -229,11 +255,16 @@ export async function tourDeChat(params: {
    * un bilan du hub. Absentes, seuls les faits et papiers lus pendant le tour comptent.
    */
   sourcesServies?: ReadonlySet<string>;
+  /**
+   * LIA peut RETENIR seule ce que Marc dit (ADR 0033, voie A) : `lia_retenir` est offert. L'appelant
+   * le branche sur la parole de Marc qu'il a LUE lui-même (`retenirLiaDrizzle`) ; absent, l'outil n'existe pas.
+   */
+  retenir?: RetenirLia;
 }): Promise<ResultatTour> {
   const { client, modele, inclureN2, inclureN3, outils, admin, outilsPermis } = params;
   // Les outils du MCP seul (les notes que LIA laisse au coordinateur) ne sont jamais offerts ici.
   const offerts = (outilsPermis ? OUTILS.filter((o) => outilsPermis.has(o.name)) : OUTILS).filter((o) => !OUTILS_MCP_SEULS.has(o.name));
-  const systeme = construirePrompt(params.couches, { blocs: params.blocs });
+  const systeme = construirePrompt(params.couches, { blocs: params.blocs, retenir: params.retenir !== undefined });
   // Cache de prompt (tâche MemoryAI 365). L'ordre rendu par l'API est outils → système → messages :
   // UN marqueur sur le dernier bloc système met en cache les outils ET les règles, soit le gros du
   // préfixe relu à chaque tour d'outils. ⚠️ Rien de variable ne doit entrer AVANT ce marqueur (ni
@@ -252,6 +283,7 @@ export async function tourDeChat(params: {
   }));
   if (params.blocs) tools.push(OUTIL_BLOCS);
   if (outils.notes) tools.push(OUTIL_NOTE);
+  if (params.retenir) tools.push(OUTIL_RETENIR);
   if (outils.meteo) tools.push(OUTIL_METEO);
   if (outils.actualite) tools.push(OUTIL_ACTUALITE);
   // Un outil sans niveau de risque au catalogue n'atteint jamais le modèle (tâche MemoryAI 282).
@@ -354,6 +386,12 @@ export async function tourDeChat(params: {
           erreur = !r.ok;
           if (r.ok) resultat.outilsAppeles.push(OUTIL_NOTE.name);
         }
+      } else if (params.retenir && appel.name === OUTIL_RETENIR.name) {
+        // `retenir` ne lève jamais : tout échec devient une phrase vraie (« rien n'est validé »).
+        const r = await params.retenir.retenir(appel.input, outils.maintenant());
+        texte = r.phrase;
+        erreur = !r.ok;
+        if (r.ok) resultat.outilsAppeles.push(OUTIL_RETENIR.name);
       } else if (outils.meteo && appel.name === OUTIL_METEO.name) {
         const l = await outils.meteo.lire(outils.maintenant());
         texte = baliserMeteo(l);
