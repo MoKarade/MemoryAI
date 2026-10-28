@@ -225,7 +225,7 @@ describe("dans la passe d'apprentissage : sans modèle, et dans la pile", () => 
   const passe = (client: ClientModele, extra: { comblerLesTrous?: boolean } = {}) =>
     passeApprentissage({
       client,
-      modele: "claude-sonnet-5",
+      modele: "claude-sonnet-5-5",
       cle,
       conversations: depotConversationsDrizzle(db),
       ecriture: depotDrizzle(db),

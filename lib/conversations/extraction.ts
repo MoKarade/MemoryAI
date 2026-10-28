@@ -30,6 +30,7 @@ import { ecrireLot, type ResultatLot } from "../ecrireFaits";
 import type { Ecrivain } from "../jetons";
 import type { Cle } from "../chiffrement";
 import type { ClientModele } from "../chat/agent";
+import { reglagesLecture } from "../reglagesModele";
 import { domaines as domainesDuVocabulaire, vocabulaire } from "../vocabulaire";
 import type { MessageLisible } from "./depot";
 
@@ -196,6 +197,7 @@ export async function extraireDUneConversation(params: {
   const reponse = await client.create({
     model: modele,
     max_tokens: MAX_TOKENS_SORTIE,
+    ...reglagesLecture(modele),
     system: `${PROMPT_EXTRACTION}\n\n${inventairePourPrompt()}`,
     tools: [],
     messages: [{ role: "user", content: baliserConversation(messages) }],

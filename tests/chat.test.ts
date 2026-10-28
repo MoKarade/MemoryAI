@@ -90,7 +90,7 @@ describe("tourDeChat", () => {
 
   it("un tour simple : réponse, coût compté et ENREGISTRÉ", async () => {
     const { client } = faux([texte("Bonjour Marc.")]);
-    const r = await tourDeChat({ client, modele: "claude-sonnet-5", messages: [{ role: "user", content: "salut" }], inclureN2: false, inclureN3: false, outils: outils(), admin: depotAdminDrizzle(db) });
+    const r = await tourDeChat({ client, modele: "claude-sonnet-5-5", messages: [{ role: "user", content: "salut" }], inclureN2: false, inclureN3: false, outils: outils(), admin: depotAdminDrizzle(db) });
     expect(r.reponse).toBe("Bonjour Marc.");
     expect(r.appels).toBe(1);
     expect(r.coutUsd).toBeCloseTo(0.0045);
@@ -99,7 +99,7 @@ describe("tourDeChat", () => {
 
   it("un tour d'outil : le fait arrive en tool_result balisé, jamais dans le système ; l'accès est journalisé", async () => {
     const { client, recus } = faux([appel("memoryai_chercher", { question: "employeur" }), texte("Tu travailles à la Entreprise Exemple (fait proposé).")]);
-    const r = await tourDeChat({ client, modele: "claude-haiku-4-5", messages: [{ role: "user", content: "où je travaille ?" }], inclureN2: false, inclureN3: false, outils: outils(), admin: depotAdminDrizzle(db) });
+    const r = await tourDeChat({ client, modele: "claude-haiku-5-5", messages: [{ role: "user", content: "où je travaille ?" }], inclureN2: false, inclureN3: false, outils: outils(), admin: depotAdminDrizzle(db) });
     expect(r.outilsAppeles).toEqual(["memoryai_chercher"]);
     expect(r.appels).toBe(2);
     const second = recus[1] as { role: string; content: unknown }[];
@@ -115,7 +115,7 @@ describe("tourDeChat", () => {
   it("une fin de tour vide se relance UNE fois, par un nouveau message ; vide encore, rien n'est inventé", async () => {
     const vide: ReponseModele = { content: [], stop_reason: "end_turn", usage: { input_tokens: 1000, output_tokens: 3 } };
     const { client, recus } = faux([appel("memoryai_contexte", {}), vide, texte("Voilà ce que je sais.")]);
-    const r = await tourDeChat({ client, modele: "claude-sonnet-5", messages: [{ role: "user", content: "quoi de neuf ?" }], inclureN2: false, inclureN3: false, outils: outils(), admin: depotAdminDrizzle(db) });
+    const r = await tourDeChat({ client, modele: "claude-sonnet-5-5", messages: [{ role: "user", content: "quoi de neuf ?" }], inclureN2: false, inclureN3: false, outils: outils(), admin: depotAdminDrizzle(db) });
     expect(r.reponse).toBe("Voilà ce que je sais.");
     expect(r.appels).toBe(3);
     const troisieme = recus[2] as { role: string; content: unknown }[];
@@ -124,7 +124,7 @@ describe("tourDeChat", () => {
     expect((troisieme[troisieme.length - 2]!.content as { type: string }[])[0]!.type).toBe("tool_result");
 
     const deuxFois = faux([vide, vide]);
-    const r2 = await tourDeChat({ client: deuxFois.client, modele: "claude-sonnet-5", messages: [{ role: "user", content: "salut" }], inclureN2: false, inclureN3: false, outils: outils(), admin: depotAdminDrizzle(db) });
+    const r2 = await tourDeChat({ client: deuxFois.client, modele: "claude-sonnet-5-5", messages: [{ role: "user", content: "salut" }], inclureN2: false, inclureN3: false, outils: outils(), admin: depotAdminDrizzle(db) });
     expect(r2.reponse).toBe("");
     expect(r2.appels).toBe(2);
   });
@@ -132,12 +132,12 @@ describe("tourDeChat", () => {
   // LA garde Q11 : la bascule de la CONVERSATION écrase ce que le modèle demande.
   it("le modèle demande inclure_n2=true, la conversation dit non : N2 ne sort pas", async () => {
     const { client, recus } = faux([appel("memoryai_contexte", { inclure_n2: true }), texte("ok")]);
-    await tourDeChat({ client, modele: "claude-haiku-4-5", messages: [{ role: "user", content: "tout" }], inclureN2: false, inclureN3: false, outils: outils({ MEMORYAI_N2_CHAT: "1" }), admin: depotAdminDrizzle(db) });
+    await tourDeChat({ client, modele: "claude-haiku-5-5", messages: [{ role: "user", content: "tout" }], inclureN2: false, inclureN3: false, outils: outils({ MEMORYAI_N2_CHAT: "1" }), admin: depotAdminDrizzle(db) });
     const dernier = (m: unknown[]) => (m[m.length - 1] as { content: { content: string }[] }).content[0]!.content;
     expect(dernier(recus[1]!)).not.toContain("Arachides");
     // Et l'inverse : conversation oui + variable oui ⇒ N2 servi.
     const second = faux([appel("memoryai_contexte", { inclure_n2: false }), texte("ok")]);
-    await tourDeChat({ client: second.client, modele: "claude-haiku-4-5", messages: [{ role: "user", content: "tout" }], inclureN2: true, inclureN3: false, outils: outils({ MEMORYAI_N2_CHAT: "1" }), admin: depotAdminDrizzle(db) });
+    await tourDeChat({ client: second.client, modele: "claude-haiku-5-5", messages: [{ role: "user", content: "tout" }], inclureN2: true, inclureN3: false, outils: outils({ MEMORYAI_N2_CHAT: "1" }), admin: depotAdminDrizzle(db) });
     expect(dernier(second.recus[1]!)).toContain("Arachides");
   });
 
@@ -153,7 +153,7 @@ describe("tourDeChat", () => {
     };
     const r = await tourDeChat({
       client,
-      modele: "claude-haiku-4-5",
+      modele: "claude-haiku-5-5",
       messages: [{ role: "user", content: "retiens ça" }],
       inclureN2: false,
       inclureN3: false,
@@ -185,7 +185,7 @@ describe("tourDeChat", () => {
         return reponses.shift()!;
       },
     };
-    const base = { modele: "claude-haiku-4-5" as const, messages: [{ role: "user" as const, content: "montre" }], inclureN2: false, inclureN3: false, outils: outils(), admin: depotAdminDrizzle(db) };
+    const base = { modele: "claude-haiku-5-5" as const, messages: [{ role: "user" as const, content: "montre" }], inclureN2: false, inclureN3: false, outils: outils(), admin: depotAdminDrizzle(db) };
     const r = await tourDeChat({ ...base, client, blocs: true });
     expect(outilsVus[0]).toContain("lia_blocs");
     expect(systemes[0]).toContain(REGLE_BLOCS);
@@ -214,19 +214,19 @@ describe("tourDeChat", () => {
 
   it("le plafond ferme la porte AVANT l'appel, y compris entre deux tours d'outils", async () => {
     const admin = depotAdminDrizzle(db);
-    await admin.enregistrerDepense({ jour: "2026-09-15", modele: "claude-opus-5", entree: 0, sortie: 0, coutUsd: 0.999 });
+    await admin.enregistrerDepense({ jour: "2026-09-15", modele: "claude-opus-5-5", entree: 0, sortie: 0, coutUsd: 0.999 });
     // 0,999 + le petit tour précédent < 1 ? Non : les tours précédents ont déjà dépensé ; on force au-dessus.
-    await admin.enregistrerDepense({ jour: "2026-09-15", modele: "claude-opus-5", entree: 0, sortie: 0, coutUsd: 0.01 });
+    await admin.enregistrerDepense({ jour: "2026-09-15", modele: "claude-opus-5-5", entree: 0, sortie: 0, coutUsd: 0.01 });
     const { client } = faux([texte("jamais rendu")]);
     await expect(
-      tourDeChat({ client, modele: "claude-opus-5", messages: [{ role: "user", content: "x" }], inclureN2: false, inclureN3: false, outils: outils(), admin }),
+      tourDeChat({ client, modele: "claude-opus-5-5", messages: [{ role: "user", content: "x" }], inclureN2: false, inclureN3: false, outils: outils(), admin }),
     ).rejects.toThrow(PlafondAtteintError);
   });
 
   it("refuse un historique dont le dernier message n'est pas de Marc", async () => {
     const { client } = faux([]);
     await expect(
-      tourDeChat({ client, modele: "claude-sonnet-5", messages: [{ role: "assistant", content: "?" }], inclureN2: false, inclureN3: false, outils: outils(), admin: depotAdminDrizzle(db) }),
+      tourDeChat({ client, modele: "claude-sonnet-5-5", messages: [{ role: "assistant", content: "?" }], inclureN2: false, inclureN3: false, outils: outils(), admin: depotAdminDrizzle(db) }),
     ).rejects.toThrow(/dernier message/);
   });
 });
@@ -236,10 +236,10 @@ describe("tourDeChat : cache de prompt (tâche MemoryAI 365)", () => {
   const JOUR_CACHE = new Date("2026-09-16T21:00:00Z");
   /** Comme `faux`, mais PHOTOGRAPHIE chaque requête : la boucle retire et déplace des marqueurs après coup. */
   function fauxPhoto(reponses: ReponseModele[]) {
-    const requetes: { system: unknown; tools: unknown; messages: { role: string; content: unknown }[] }[] = [];
+    const requetes: { system: unknown; tools: unknown; messages: { role: string; content: unknown }[]; max_tokens: number; thinking?: unknown; output_config?: unknown; temperature?: unknown }[] = [];
     const client: ClientBoucle = {
       async create(p) {
-        requetes.push(JSON.parse(JSON.stringify({ system: p.system, tools: p.tools, messages: p.messages })));
+        requetes.push(JSON.parse(JSON.stringify({ system: p.system, tools: p.tools, messages: p.messages, max_tokens: p.max_tokens, thinking: p.thinking, output_config: p.output_config, temperature: (p as { temperature?: unknown }).temperature })));
         const r = reponses.shift();
         if (!r) throw new Error("le faux modèle n'a plus de réponse");
         return r;
@@ -247,7 +247,7 @@ describe("tourDeChat : cache de prompt (tâche MemoryAI 365)", () => {
     };
     return { client, requetes };
   }
-  const tour = (client: ClientBoucle, modele: "claude-sonnet-5" | "claude-haiku-4-5" = "claude-sonnet-5") =>
+  const tour = (client: ClientBoucle, modele: "claude-sonnet-5-5" | "claude-haiku-5-5" = "claude-sonnet-5-5") =>
     tourDeChat({ client, modele, messages: [{ role: "user", content: "où je travaille ?" }], inclureN2: false, inclureN3: false, outils: outils({}, JOUR_CACHE), admin: depotAdminDrizzle(db) });
   const marqueurs = (messages: { content: unknown }[]) =>
     messages.flatMap((m, i) => (Array.isArray(m.content) ? m.content.flatMap((b: { cache_control?: unknown }, j) => (b.cache_control ? [`${i}.${j}`] : [])) : []));
@@ -289,7 +289,29 @@ describe("tourDeChat : cache de prompt (tâche MemoryAI 365)", () => {
     expect(JSON.stringify(requetes[1]!.system)).toBe(JSON.stringify(requetes[0]!.system));
   });
 
-  it("le coût compte l'écriture (×1,25) et la lecture (×0,10) du cache : le plafond voit la vraie dépense", async () => {
+  it("famille 5.5 : effort réglé, plafond large (la pensée y compte), jamais `temperature`", async () => {
+    const { client, requetes } = fauxPhoto([texte("Bonjour Marc.")]);
+    await tour(client);
+    expect(requetes[0]!.output_config).toEqual({ effort: "medium" });
+    expect(requetes[0]!.thinking).toBeUndefined();
+    expect(requetes[0]!.temperature).toBeUndefined();
+    expect(requetes[0]!.max_tokens).toBeGreaterThanOrEqual(4000);
+  });
+
+  it("un bloc de pensée du modèle est renvoyé tel quel avec les résultats d'outils", async () => {
+    const pensee = { type: "thinking", thinking: "", signature: "sig-abc" };
+    const avecPensee = {
+      content: [pensee, { type: "tool_use", id: "toolu_1", name: "memoryai_chercher", input: { question: "employeur" } }],
+      stop_reason: "tool_use",
+      usage: { input_tokens: 10, output_tokens: 5 },
+    } as unknown as ReponseModele;
+    const { client, requetes } = fauxPhoto([avecPensee, texte("ok")]);
+    await tour(client);
+    const assistant = requetes[1]!.messages.find((m) => m.role === "assistant")!;
+    expect((assistant.content as unknown[])[0]).toEqual(pensee);
+  });
+
+  it("le coût compte l'écriture (×1,25) et la lecture (×0,05 chez Sonnet 5.5) du cache : le plafond voit la vraie dépense", async () => {
     const avecCache: ReponseModele = {
       content: [{ type: "text", text: "Bonjour Marc." }],
       stop_reason: "end_turn",
@@ -297,7 +319,7 @@ describe("tourDeChat : cache de prompt (tâche MemoryAI 365)", () => {
     };
     const { client } = fauxPhoto([avecCache]);
     const r = await tour(client);
-    // Sonnet 5 : 3 $ entrée, 15 $ sortie par million.
-    expect(r.coutUsd).toBeCloseTo((100 * 3 + 10 * 15 + 2000 * 3 * 1.25 + 3000 * 3 * 0.1) / 1_000_000);
+    // Sonnet 5.5 : 2 $ entrée, 10 $ sortie par million, lecture de cache 0,10 $ (×0,05).
+    expect(r.coutUsd).toBeCloseTo((100 * 2 + 10 * 10 + 2000 * 2 * 1.25 + 3000 * 2 * 0.05) / 1_000_000);
   });
 });

@@ -143,7 +143,7 @@ describe("le câblage dans la boucle du chat", () => {
   const tour = (client: ClientModele, avecNotes: boolean) =>
     tourDeChat({
       client,
-      modele: "claude-sonnet-5",
+      modele: "claude-sonnet-5-5",
       messages: [{ role: "user", content: "Bonjour" }],
       inclureN2: false,
       inclureN3: false,
