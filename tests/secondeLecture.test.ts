@@ -4,7 +4,7 @@
 // sensible, un canari ou deux lectures vides ne sont jamais jugés seuls.
 
 import { describe, it, expect } from "vitest";
-import { deciderPapier, divergents, phraseDoutePapier, schemaRelecture, type Lecture } from "../lib/pieces/secondeLecture";
+import { deciderPapier, departager, divergents, lecturesIndependantesTroisieme, lectureVide, phraseDoutePapier, schemaRelecture, type Lecture } from "../lib/pieces/secondeLecture";
 
 const L: Lecture = { titulaire: "Camille Exemple", emetteur: "Hydro Exemple", dateDocument: "2026-03-01", dateEcheance: "2026-04-01" };
 const ACTIF = { niveau: 1, statut: "active", supprime: false };
@@ -68,5 +68,25 @@ describe("schemaRelecture et phraseDoutePapier", () => {
     expect(phraseDoutePapier(["titulaire", "emetteur", "dateDocument"])).toBe(
       "LIA a relu ce papier : le titulaire, l'émetteur et la date du document ne concordent pas entre les deux lectures.",
     );
+  });
+});
+
+describe("troisième lecture (amendement du 28/10)", () => {
+  it("lecturesIndependantesTroisieme : indépendante des DEUX, sinon non", () => {
+    expect(lecturesIndependantesTroisieme("sonnet-vision-v3-a", "haiku-ocr-relecture-v1", "opus-vision-relecture-v1")).toBe(true);
+    expect(lecturesIndependantesTroisieme("sonnet-vision-v3-a", "haiku-ocr-relecture-v1", "haiku-ocr-relecture-v2")).toBe(false);
+    expect(lecturesIndependantesTroisieme("sonnet-vision-v3-a", "haiku-ocr-relecture-v1", "sonnet-vision-relecture-v1")).toBe(false);
+  });
+
+  it("departager : égale la première, la seconde (la première d'abord), ou aucune", () => {
+    expect(departager("a", "b", "a")).toBe("premiere");
+    expect(departager("a", "b", "b")).toBe("seconde");
+    expect(departager("a", "a", "a")).toBe("premiere");
+    expect(departager("a", "b", "c")).toBeNull();
+  });
+
+  it("une lecture dont tous les champs sont null est vide", () => {
+    expect(lectureVide({ titulaire: null, emetteur: null, dateDocument: null, dateEcheance: null })).toBe(true);
+    expect(lectureVide(L)).toBe(false);
   });
 });

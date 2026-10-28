@@ -1069,11 +1069,17 @@ export const relecturesPieces = pgTable(
     jour: text("jour").notNull(),
     enPile: boolean("en_pile").notNull().default(false),
     reluLe: timestamp("relu_le", { withTimezone: true }).notNull().defaultNow(),
+    // Troisième lecture (ADR 0026, amendement du 28/10/2026) : empreinte keyée et étiquette, jamais de valeur.
+    empreinteTierce: text("empreinte_tierce"),
+    extracteurTierce: text("extracteur_tierce"),
+    egale: text("egale", { enum: ["premiere", "seconde"] }),
+    tierceLe: timestamp("tierce_le", { withTimezone: true }),
   },
   (t) => [
     uniqueIndex("relectures_pieces_unicite").on(t.pieceId, t.extracteurSeconde),
     index("relectures_pieces_jour").on(t.jour, t.enPile),
     check("relectures_pieces_decision", sql`${t.decision} IN ('vrai', 'doute')`),
+    check("relectures_pieces_egale", sql`${t.egale} IN ('premiere', 'seconde')`),
   ],
 );
 
