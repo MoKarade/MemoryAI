@@ -56,6 +56,13 @@ export interface MessageChat {
   content: string;
 }
 
+/** Un bloc `system` du SDK Anthropic, avec son point de cache éventuel. */
+export interface BlocSysteme {
+  type: "text";
+  text: string;
+  cache_control?: { type: "ephemeral" };
+}
+
 /** Ce que la boucle attend d'un client : le sous-ensemble de `messages.create` qu'elle emploie. */
 export interface ClientModele {
   create(params: {
@@ -66,6 +73,18 @@ export interface ClientModele {
     messages: unknown[];
   }): Promise<ReponseModele>;
 }
+
+/**
+ * Ce que la BOUCLE DU CHAT envoie : comme `ClientModele`, mais `system` peut être une liste de blocs
+ * pour porter un point de cache. Les autres appelants (extraction, questions, relecture) gardent
+ * `ClientModele` : leurs prompts sont sous le minimum cachable, un marqueur n'y servirait à rien.
+ */
+export interface ClientBoucle {
+  create(params: Omit<Parameters<ClientModele["create"]>[0], "system"> & { system: string | BlocSysteme[] }): Promise<ReponseModele>;
+}
+
+/** Le marqueur de cache (5 min, le défaut) : écriture ×1,25, lecture ×0,10 — `coutChat.ts` les compte déjà. */
+const POINT_DE_CACHE = { type: "ephemeral" } as const;
 
 export interface ReponseModele {
   content: ({ type: "text"; text: string } | { type: "tool_use"; id: string; name: string; input: Record<string, unknown> })[];
@@ -179,7 +198,7 @@ export class PlafondAtteintError extends Error {
 }
 
 export async function tourDeChat(params: {
-  client: ClientModele;
+  client: ClientBoucle;
   modele: IdModele;
   messages: MessageChat[];
   inclureN2: boolean;
@@ -210,6 +229,12 @@ export async function tourDeChat(params: {
   // Les outils du MCP seul (les notes que LIA laisse au coordinateur) ne sont jamais offerts ici.
   const offerts = (outilsPermis ? OUTILS.filter((o) => outilsPermis.has(o.name)) : OUTILS).filter((o) => !OUTILS_MCP_SEULS.has(o.name));
   const systeme = construirePrompt(params.couches, { blocs: params.blocs });
+  // Cache de prompt (tâche MemoryAI 365). L'ordre rendu par l'API est outils → système → messages :
+  // UN marqueur sur le dernier bloc système met en cache les outils ET les règles, soit le gros du
+  // préfixe relu à chaque tour d'outils. ⚠️ Rien de variable ne doit entrer AVANT ce marqueur (ni
+  // date, ni compte, ni le bilan du hub : il vit dans le message de Marc, après) et la liste des
+  // outils reste déterministe : un octet de différence réécrit tout le préfixe au tarif ×1,25.
+  const systemeEnCache: BlocSysteme[] = [{ type: "text", text: systeme, cache_control: POINT_DE_CACHE }];
   const historique = params.messages.slice(-MAX_MESSAGES);
   if (historique.length === 0 || historique[historique.length - 1]!.role !== "user") {
     throw new Error("Le dernier message doit venir de Marc.");
@@ -247,6 +272,11 @@ export async function tourDeChat(params: {
   };
 
   let relancee = false;
+  // Le second point de cache : le DERNIER tool_result de la conversation. Il avance à chaque tour
+  // (l'API limite à 4 points) : on retire l'ancien, ce qui n'invalide rien, un marqueur n'est pas
+  // du contenu. Posé seulement après un premier tour d'outils : une réponse sans outil n'a rien à
+  // relire, et lui écrire la question en cache serait une écriture ×1,25 jamais récupérée.
+  let dernierRetourMarque: { cache_control?: { type: "ephemeral" } } | null = null;
   for (let tour = 0; tour <= MAX_TOURS_OUTILS; tour++) {
     // Le budget se lit en base à CHAQUE appel : deux onglets ne se partagent pas un compteur en mémoire.
     // Le poste `chat` et rien d'autre : une passe d'apprentissage ne doit pas fermer le chat.
@@ -257,7 +287,7 @@ export async function tourDeChat(params: {
     if (!budgetOuvert(depense, "chat", plafondsEffectifs))
       throw new PlafondAtteintError(depense, plafondsEffectifs.chat);
 
-    const reponse = await client.create({ model: modele, max_tokens: MAX_TOKENS_SORTIE, system: systeme, tools, messages: conversation });
+    const reponse = await client.create({ model: modele, max_tokens: MAX_TOKENS_SORTIE, system: systemeEnCache, tools, messages: conversation });
 
     // COMPTÉ AVANT D'ÊTRE LU.
     const { usage } = lireUsage(reponse.usage);
@@ -286,7 +316,7 @@ export async function tourDeChat(params: {
     }
 
     conversation.push({ role: "assistant", content: reponse.content });
-    const retours = [];
+    const retours: { type: "tool_result"; tool_use_id: string; content: string; is_error?: true; cache_control?: { type: "ephemeral" } }[] = [];
     for (const appel of appels) {
       const outil = offerts.find((o) => o.name === appel.name);
       let texte: string;
@@ -362,6 +392,10 @@ export async function tourDeChat(params: {
       }
       retours.push({ type: "tool_result", tool_use_id: appel.id, content: texte, ...(erreur ? { is_error: true } : {}) });
     }
+    if (dernierRetourMarque) delete dernierRetourMarque.cache_control;
+    const dernierRetour = retours[retours.length - 1]!;
+    dernierRetour.cache_control = POINT_DE_CACHE;
+    dernierRetourMarque = dernierRetour;
     conversation.push({ role: "user", content: retours });
   }
   return resultat;

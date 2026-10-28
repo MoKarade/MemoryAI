@@ -3,6 +3,12 @@
 > L'état RÉEL, à lire en premier. Ce qui est décidé vit dans `docs/adr/0001-…`, ce qui reste
 > à faire dans `BACKLOG.md`. Ce fichier dit où on en est, et ce qui attend un geste de Marc.
 
+## Cache de prompt de LIA (28/10/2026, tâche 365)
+
+La boucle du chat (`lib/chat/agent.ts`) pose `cache_control` sur le bloc système (couvre les outils et les règles) et sur le dernier `tool_result`
+(déplacé à chaque tour, jamais plus d'un). Les autres appels (extraction, questions, relecture) n'en ont pas : leurs prompts font moins de 450 jetons, sous
+le minimum cachable. **Preuve attendue** : `cache_read_input_tokens > 0` sur un appel `chat` réel après déploiement (table des dépenses, colonne lecture de cache).
+
 ## 🚨 INCIDENT — 23/10/2026 : clés de chiffrement effacées, mémoire sauvée (ADR 0019), clôture à faire
 
 Une synchro Infisical → Vercel a vidé les variables de `memory-ai`, dont `MEMORYAI_CHIFFREMENT` et
