@@ -12,7 +12,7 @@
 
 import type { IdModele } from "./coutChat";
 
-export type Effort = "low" | "medium" | "high";
+type Effort = "low" | "medium" | "high";
 
 export interface ReglagesModele {
   thinking?: { type: "disabled" } | { type: "between_tools" };
