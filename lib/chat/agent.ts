@@ -28,7 +28,6 @@ import { journaliserAcces } from "../journalAcces";
 import { OUTILS, OUTILS_MCP_SEULS, type ContexteOutils } from "../mcp/outils";
 import { exigerNiveaux } from "../lia/catalogueOutils";
 import { lireNote, LONGUEUR_MAX_NOTE, NOTES_PAR_JOUR, GENRES_NOTE, APPS_NOTE } from "../lia/notes";
-import type { RetenirLia } from "../lia/retenir";
 import { baliserMeteo } from "../monde/meteo";
 import { baliserActualite } from "../monde/actualite";
 import { MAX_BLOCS, SIGNATURES_BLOCS, SOURCE_BILAN_HUB, trierBlocs, type Bloc } from "../lia/blocs";
@@ -258,8 +257,10 @@ export async function tourDeChat(params: {
   /**
    * LIA peut RETENIR seule ce que Marc dit (ADR 0033, voie A) : `lia_retenir` est offert. L'appelant
    * le branche sur la parole de Marc qu'il a LUE lui-même (`retenirLiaDrizzle`) ; absent, l'outil n'existe pas.
+   * Seule la FORME est connue ici (`RetenirLia` de `lib/lia/retenir.ts` la remplit) : importer ce module
+   * ferait un cycle, car il importe `ClientModele` d'ici.
    */
-  retenir?: RetenirLia;
+  retenir?: { retenir(entree: Record<string, unknown>, maintenant: Date): Promise<{ ok: boolean; phrase: string }> };
 }): Promise<ResultatTour> {
   const { client, modele, inclureN2, inclureN3, outils, admin, outilsPermis } = params;
   // Les outils du MCP seul (les notes que LIA laisse au coordinateur) ne sont jamais offerts ici.
