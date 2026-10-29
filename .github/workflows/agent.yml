@@ -49,6 +49,10 @@ jobs:
           node-version-file: .nvmrc
       - name: Installer les dépendances
         run: npm ci
+      # Le bac à sable de Claude Code est obligatoire et a besoin de socat, absent de l'image ubuntu-latest
+      # (échec du 29/10/2026 : « Sandbox dependencies not available: socat not installed »).
+      - name: Installer socat pour le bac à sable
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq socat
       - uses: anthropics/claude-code-action@d70510b174a1244958df0b03166a54912811f3e6 # v1.0.264
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
