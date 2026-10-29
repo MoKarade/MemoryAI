@@ -2,10 +2,11 @@
 
 <!-- GÉNÉRÉ par `node .github/ci/generer-index.mjs` : ne pas modifier à la main (`--verifier` échoue si ce fichier est périmé). -->
 
-53 document(s). Ancien titre -> nouveau chemin : [correspondance.md](correspondance.md).
+54 document(s). Ancien titre -> nouveau chemin : [correspondance.md](correspondance.md).
 
 ## docs/
 
+- [Accès aux données, route par route](ACCES.md) — `docs/ACCES.md`
 - [À FAIRE — Marc](A_FAIRE_MOI.md) — `docs/A_FAIRE_MOI.md`
 - [Convention — Comptes-rendus et communication](COMPTE-RENDU.md) — `docs/COMPTE-RENDU.md`
 - [Refonte de l'interface de MemoryAI — le brief (25/09/2026)](REFONTE-INTERFACE.md) — `docs/REFONTE-INTERFACE.md`
