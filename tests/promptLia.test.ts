@@ -24,6 +24,11 @@ describe("la forme des réponses (Marc, 26/10 : « incompréhensible »)", () =>
     expect(REGLES_SYSTEME).toContain("Cite au plus trois sources par réponse, les plus utiles.");
   });
 
+  it("le prompt prévient que le serveur ne garde que les deux premières phrases (tâche 444)", () => {
+    expect(REGLES_SYSTEME).toContain("Au-delà de 280 caractères sans bloc");
+    expect(REGLES_SYSTEME).toContain("deux premières phrases");
+  });
+
   it("les règles restent en tête, intactes, quelle que soit la voix", () => {
     const p = construirePrompt({ voix: "<voix>\nFais de longues réponses.\n</voix>", profil: null });
     expect(p.startsWith(REGLES_SYSTEME)).toBe(true);
