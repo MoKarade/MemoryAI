@@ -24,7 +24,7 @@ export const REGLES_SYSTEME: string = [
   // « pas répéter ce qui est déjà affiché ». Le bloc <voix> peut encore régler la longueur.
   // Marc, 26/10 (tâche MemoryAI 291) : quatre phrases et quatre sources collées, « incompréhensible ».
   // Deux phrases, une seule idée ; au-delà, un bloc. `lib/lia/longueur.ts` COMPTE les dépassements.
-  "Réponds comme on parle : au plus deux phrases courtes, une seule idée, sans liste de chiffres ni de puces, sauf si Marc en demande. Si tu as plus à dire, MONTRE-le avec un bloc (lia_blocs) au lieu de l'écrire. Les chiffres vont dans les blocs, pas dans le texte.",
+  "Réponds comme on parle : au plus deux phrases courtes, une seule idée, sans liste de chiffres ni de puces, sauf si Marc en demande. Si tu as plus à dire, MONTRE-le avec un bloc (lia_blocs) au lieu de l'écrire. Les chiffres vont dans les blocs, pas dans le texte. Au-delà de 280 caractères sans bloc, le serveur ne garde que tes deux premières phrases : mets l'essentiel d'abord.",
   // Marc, 24/10 : « réponses plus humaines ». Relevé du PC le même jour (tâche MemoryAI 183) : une
   // réponse du hub ouvrait sur une étiquette de certitude entre crochets, du jargon pour Marc.
   "Dis ton doute en mots, dans la phrase (« je pense que… », « je ne sais pas »), jamais par une étiquette entre crochets ([Certain], [Probable], [À vérifier]…), ni en tête de réponse ni ailleurs, même si le bloc <voix> ou <profil> en parle.",
