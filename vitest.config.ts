@@ -15,7 +15,7 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["tests/**/*.test.ts"],
+    include: ["tests/**/*.test.ts", "tests/**/*.test.tsx"],
     // Les Server Actions des idées, importées par un composant, tireraient next-auth : voir le fichier.
     setupFiles: ["tests/setupActions.ts"],
     // 30 s au lieu de 10 s pour les beforeAll/afterAll : sur le PC de Marc chargé (agents en

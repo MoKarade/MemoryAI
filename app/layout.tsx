@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next";
 import "@fontsource-variable/outfit";
 import "./globals.css";
 import { LiaMaison } from "@/components/LiaMaison";
+import NavApps from "@/components/NavApps";
 import { ServiceWorker } from "@/components/ServiceWorker";
 import { liaAutorisee } from "@/lib/lia/monter";
 
@@ -34,6 +35,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body>
         {children}
         {lia ? <LiaMaison /> : null}
+        {lia ? <NavApps courant="memoryai" /> : null}
         <ServiceWorker />
       </body>
     </html>
