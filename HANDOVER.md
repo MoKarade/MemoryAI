@@ -3,6 +3,10 @@
 > L'état RÉEL, à lire en premier. Ce qui est décidé vit dans `docs/adr/0001-…`, ce qui reste
 > à faire dans `BACKLOG.md`. Ce fichier dit où on en est, et ce qui attend un geste de Marc.
 
+## ✅ 29/10/2026 : lia-ui v0.48.0, LIA lit les barres HTML et relit l'état toutes les 2 min
+
+Épingle `@mokarade/lia-ui` v0.48.0 (sha pelé `b0c8524`), seul changement (`package.json`, lock). v0.47.1 relit l'état partagé toutes les 2 min, seulement quand l'écran est visible ; v0.48.0 permet à LIA de lire les barres de graphique dessinées en HTML.
+
 ## ✅ 28/10/2026 : LIA relie ses nouveaux faits à ceux qu'elle a servis (MemoryAI#421, ADR 0033 A5)
 
 `lia_retenir` accepte `lie_a` (cinq identifiants au plus) et ne lie qu'aux faits servis pendant le tour, vivants et d'un niveau au plus égal au nouveau fait. Les liens `lie-par-lia` sont dessinés « devinés », avec une phrase fixe ; le recalcul nocturne de `sens-proche` les conserve. Pas de migration. La preuve de production reste à relever après déploiement.
