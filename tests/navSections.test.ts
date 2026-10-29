@@ -113,7 +113,7 @@ describe("navSections", () => {
     // MemoryAI#74 : l'accueil devient la maison de LIA, la conversation revient à `/chat`.
     // ⚠️ Le fait défendu : la conversation est MONTÉE ici, et rien ne renvoie ailleurs — un
     // `redirect("/")` laissé là ferait tourner Marc en rond entre l'accueil et Parler.
-    expect(s, "/chat ne monte pas ChatClient").toMatch(/<ChatClient\b/);
+    expect(s, "/chat ne monte pas LIA en atelier").toMatch(/<ChatAtelier\b/);
     expect(s).not.toMatch(/\bredirect\(/);
     expect(s).toMatch(/\brequireSession\(\)/);
   });

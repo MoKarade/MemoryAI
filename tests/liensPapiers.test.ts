@@ -370,8 +370,8 @@ describe("le chat NOMME le refus de l'API au lieu d'un 500 muet", () => {
     const apres = route.slice(route.indexOf("classerErreurModele(err)"));
     expect(apres).not.toMatch(/throw err/);
     // Le navigateur n'embarque pas le SDK : l'écran importe le module sans dépendance.
-    expect(readFileSync(resolve(process.cwd(), "app/chat/ChatClient.tsx"), "utf8")).not.toContain("erreursModele");
-    const client = readFileSync(resolve(process.cwd(), "app/chat/ChatClient.tsx"), "utf8");
+    expect(readFileSync(resolve(process.cwd(), "app/chat/ChatAtelier.tsx"), "utf8")).not.toContain("erreursModele");
+    const client = readFileSync(resolve(process.cwd(), "app/chat/ChatAtelier.tsx"), "utf8");
     const envoi = client.slice(client.indexOf('fetch("/api/chat"'), client.indexOf('fetch("/api/chat"') + 1200);
     expect(envoi).toContain("await r.text()");
     expect(envoi).toContain("messageDeReponse(r.status");

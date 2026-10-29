@@ -116,7 +116,7 @@ describe("gardePages", () => {
   });
 
   it("aucune page ni action n'importe le client Anthropic ni ne lit une clé", () => {
-    for (const f of fichiers.filter((x) => /\/(page|actions|ChatClient)\.tsx?$/.test(x))) {
+    for (const f of fichiers.filter((x) => /\/(page|actions|ChatAtelier)\.tsx?$/.test(x))) {
       const s = readFileSync(f, "utf8");
       expect(s, `${f} importe le SDK`).not.toContain("@anthropic-ai/sdk");
       for (const cle of ["MEMORYAI_CHIFFREMENT", "MCP_SIGNING_KEY", "MCP_ACCESS_KEY", "ANTHROPIC_API_KEY", "MEMORYAI_JOURNAL_CLE"]) {
