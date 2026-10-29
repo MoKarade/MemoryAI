@@ -2,7 +2,7 @@
 
 <!-- GÉNÉRÉ par `node .github/ci/generer-index.mjs` : ne pas modifier à la main (`--verifier` échoue si ce fichier est périmé). -->
 
-54 document(s). Ancien titre -> nouveau chemin : [correspondance.md](correspondance.md).
+55 document(s). Ancien titre -> nouveau chemin : [correspondance.md](correspondance.md).
 
 ## docs/
 
@@ -65,4 +65,5 @@
 - [10. Style et compte-rendu](claude/10-style-compte-rendu.md) — `docs/claude/10-style-compte-rendu.md`
 - [11. Protocole (toute modification de la frontière des données)](claude/11-protocole.md) — `docs/claude/11-protocole.md`
 - [12 — Graphe de code local (graphifyy) : hooks, wiki et MCP](claude/12-graphe-code.md) — `docs/claude/12-graphe-code.md`
+- [14 — Navigation entre apps : la liste du parc](claude/14-nav-apps.md) — `docs/claude/14-nav-apps.md`
 - [9. Leçons apprises](claude/lecons.md) — `docs/claude/lecons.md`
