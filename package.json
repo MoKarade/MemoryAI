@@ -24,7 +24,7 @@
     "@anthropic-ai/sdk": "^1.3.0",
     "@fontsource-variable/outfit": "^5.3.0",
     "@huggingface/transformers": "^4.3.2",
-    "@mokarade/hub-contract": "github:MoKarade/hub-contract#v1.5.0",
+    "@mokarade/hub-contract": "github:MoKarade/hub-contract#v1.6.0",
     "@mokarade/lia-ui": "github:MoKarade/lia-ui#v0.47.0",
     "@neondatabase/serverless": "^1.2.0",
     "@sentry/nextjs": "^11.10.0",
